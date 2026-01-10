@@ -14,6 +14,7 @@
     "@Sales_ai_automation_v3/auth": "workspace:*",
     "@Sales_ai_automation_v3/db": "workspace:*",
     "@Sales_ai_automation_v3/env": "workspace:*",
+    "@Sales_ai_automation_v3/services": "workspace:*",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
