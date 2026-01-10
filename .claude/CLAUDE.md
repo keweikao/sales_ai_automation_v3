@@ -1,4 +1,5 @@
 # Ultracite Code Standards
+所有回覆都已請台灣用繁體中文回覆
 
 This project uses **Ultracite**, a zero-config preset that enforces strict code quality standards through automated formatting and linting.
 
