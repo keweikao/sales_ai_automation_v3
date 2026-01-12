@@ -1,8 +1,4 @@
 {
-  "completedPhases": [
-    "leads",
-    "conversations",
-    "meddic"
-  ],
+  "completedPhases": ["leads", "conversations", "meddic"],
   "updatedAt": "2026-01-12T04:16:56.519Z"
 }

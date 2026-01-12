@@ -1,7 +1,7 @@
 // scripts/migration/mappers/conversation-mapper.ts
 
-import type { NewConversation } from "../../../packages/db/src/schema";
 import type { Timestamp } from "firebase-admin/firestore";
+import type { NewConversation } from "../../../packages/db/src/schema";
 import type { FirestoreConversation } from "../types";
 
 /**

@@ -81,7 +81,10 @@ app.get("/", (c) => {
 
 // Health check endpoint for Ops Automation
 app.get("/health", async (c) => {
-  const checks: Record<string, { status: "healthy" | "unhealthy"; latency?: number; error?: string }> = {};
+  const checks: Record<
+    string,
+    { status: "healthy" | "unhealthy"; latency?: number; error?: string }
+  > = {};
 
   // Database check
   const dbStart = Date.now();
@@ -97,7 +100,9 @@ app.get("/health", async (c) => {
   }
 
   // Calculate overall status
-  const isHealthy = Object.values(checks).every((check) => check.status === "healthy");
+  const isHealthy = Object.values(checks).every(
+    (check) => check.status === "healthy"
+  );
   const uptime = Math.floor((Date.now() - startTime) / 1000);
 
   const response = {

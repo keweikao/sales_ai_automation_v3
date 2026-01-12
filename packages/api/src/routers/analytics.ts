@@ -7,14 +7,14 @@
 import { db } from "@Sales_ai_automation_v3/db";
 import {
   conversations,
-  opportunities,
   meddicAnalyses,
+  opportunities,
   teamMembers,
-  userProfiles,
   user,
+  userProfiles,
 } from "@Sales_ai_automation_v3/db/schema";
 import { ORPCError } from "@orpc/server";
-import { and, avg, count, desc, eq, gte, lte, sql, inArray } from "drizzle-orm";
+import { and, avg, count, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { protectedProcedure } from "../index";
@@ -89,22 +89,35 @@ export const getDashboard = protectedProcedure
       .select({ count: count() })
       .from(opportunities)
       .where(eq(opportunities.userId, userId));
-    const totalOpportunitiesResult = totalOpportunitiesResults[0] ?? { count: 0 };
+    const totalOpportunitiesResult = totalOpportunitiesResults[0] ?? {
+      count: 0,
+    };
 
     // Total conversations
     const totalConversationsResults = await db
       .select({ count: count() })
       .from(conversations)
-      .innerJoin(opportunities, eq(conversations.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(conversations.opportunityId, opportunities.id)
+      )
       .where(eq(opportunities.userId, userId));
-    const totalConversationsResult = totalConversationsResults[0] ?? { count: 0 };
+    const totalConversationsResult = totalConversationsResults[0] ?? {
+      count: 0,
+    };
 
     // Total analyses
-    const analysisConditions = [eq(opportunities.userId, userId), ...dateConditions];
+    const analysisConditions = [
+      eq(opportunities.userId, userId),
+      ...dateConditions,
+    ];
     const totalAnalysesResults = await db
       .select({ count: count() })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(and(...analysisConditions));
     const totalAnalysesResult = totalAnalysesResults[0] ?? { count: 0 };
 
@@ -114,7 +127,10 @@ export const getDashboard = protectedProcedure
         avgScore: avg(meddicAnalyses.overallScore),
       })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(and(...analysisConditions));
     const avgScoreResult = avgScoreResults[0];
 
@@ -125,7 +141,10 @@ export const getDashboard = protectedProcedure
         count: count(),
       })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(and(...analysisConditions))
       .groupBy(meddicAnalyses.status);
 
@@ -141,7 +160,10 @@ export const getDashboard = protectedProcedure
         createdAt: meddicAnalyses.createdAt,
       })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(and(...analysisConditions))
       .orderBy(desc(meddicAnalyses.createdAt))
       .limit(10);
@@ -187,7 +209,10 @@ export const getOpportunityAnalytics = protectedProcedure
 
     // Verify opportunity ownership
     const opportunity = await db.query.opportunities.findFirst({
-      where: and(eq(opportunities.id, opportunityId), eq(opportunities.userId, userId)),
+      where: and(
+        eq(opportunities.id, opportunityId),
+        eq(opportunities.userId, userId)
+      ),
     });
 
     if (!opportunity) {
@@ -294,7 +319,10 @@ export const getMeddicTrends = protectedProcedure
         createdAt: meddicAnalyses.createdAt,
       })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(and(...dateConditions))
       .orderBy(meddicAnalyses.createdAt);
 
@@ -400,8 +428,13 @@ export const getRepPerformance = protectedProcedure
         where: eq(userProfiles.userId, currentUserId),
       });
 
-      if (currentUserProfile?.role !== "manager" && currentUserProfile?.role !== "admin") {
-        throw new ORPCError("FORBIDDEN", { message: "只有經理可以查看團隊成員報告" });
+      if (
+        currentUserProfile?.role !== "manager" &&
+        currentUserProfile?.role !== "admin"
+      ) {
+        throw new ORPCError("FORBIDDEN", {
+          message: "只有經理可以查看團隊成員報告",
+        });
       }
 
       // 檢查目標用戶是否是當前經理的團隊成員
@@ -421,15 +454,20 @@ export const getRepPerformance = protectedProcedure
 
     // 建立日期過濾條件
     const dateConditions = [];
-    const currentPeriodStart = dateFrom ? new Date(dateFrom) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const currentPeriodStart = dateFrom
+      ? new Date(dateFrom)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const currentPeriodEnd = dateTo ? new Date(dateTo) : new Date();
 
     dateConditions.push(gte(meddicAnalyses.createdAt, currentPeriodStart));
     dateConditions.push(lte(meddicAnalyses.createdAt, currentPeriodEnd));
 
     // 計算上一期間（用於比較）
-    const periodLength = currentPeriodEnd.getTime() - currentPeriodStart.getTime();
-    const previousPeriodStart = new Date(currentPeriodStart.getTime() - periodLength);
+    const periodLength =
+      currentPeriodEnd.getTime() - currentPeriodStart.getTime();
+    const previousPeriodStart = new Date(
+      currentPeriodStart.getTime() - periodLength
+    );
     const previousPeriodEnd = new Date(currentPeriodStart.getTime() - 1);
 
     // ========== 基本統計 ==========
@@ -443,7 +481,10 @@ export const getRepPerformance = protectedProcedure
     const totalConversationsResult = await db
       .select({ count: count() })
       .from(conversations)
-      .innerJoin(opportunities, eq(conversations.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(conversations.opportunityId, opportunities.id)
+      )
       .where(eq(opportunities.userId, queryUserId));
 
     // 當期分析總數和平均分數
@@ -453,7 +494,10 @@ export const getRepPerformance = protectedProcedure
         avgScore: avg(meddicAnalyses.overallScore),
       })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(and(eq(opportunities.userId, queryUserId), ...dateConditions));
 
     // 上期平均分數（用於計算變化）
@@ -462,7 +506,10 @@ export const getRepPerformance = protectedProcedure
         avgScore: avg(meddicAnalyses.overallScore),
       })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(
         and(
           eq(opportunities.userId, queryUserId),
@@ -477,7 +524,8 @@ export const getRepPerformance = protectedProcedure
     const previousAvgScore = previousPeriodStats[0]?.avgScore
       ? Number(previousPeriodStats[0].avgScore)
       : 0;
-    const scoreChange = previousAvgScore > 0 ? currentAvgScore - previousAvgScore : 0;
+    const scoreChange =
+      previousAvgScore > 0 ? currentAvgScore - previousAvgScore : 0;
 
     // ========== MEDDIC 六維度分析 ==========
     const dimensionStats = await db
@@ -490,7 +538,10 @@ export const getRepPerformance = protectedProcedure
         avgChampion: avg(meddicAnalyses.championScore),
       })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(and(eq(opportunities.userId, queryUserId), ...dateConditions));
 
     // 上期維度分數（用於計算趨勢）
@@ -504,7 +555,10 @@ export const getRepPerformance = protectedProcedure
         avgChampion: avg(meddicAnalyses.championScore),
       })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(
         and(
           eq(opportunities.userId, queryUserId),
@@ -513,7 +567,10 @@ export const getRepPerformance = protectedProcedure
         )
       );
 
-    const calculateTrend = (current: number, previous: number): "up" | "down" | "stable" => {
+    const calculateTrend = (
+      current: number,
+      previous: number
+    ): "up" | "down" | "stable" => {
       if (previous === 0) return "stable";
       const change = current - previous;
       if (change > 0.3) return "up";
@@ -533,8 +590,10 @@ export const getRepPerformance = protectedProcedure
     const previousDimensionScores = {
       metrics: Number(previousDimensionStats[0]?.avgMetrics) || 0,
       economicBuyer: Number(previousDimensionStats[0]?.avgEconomicBuyer) || 0,
-      decisionCriteria: Number(previousDimensionStats[0]?.avgDecisionCriteria) || 0,
-      decisionProcess: Number(previousDimensionStats[0]?.avgDecisionProcess) || 0,
+      decisionCriteria:
+        Number(previousDimensionStats[0]?.avgDecisionCriteria) || 0,
+      decisionProcess:
+        Number(previousDimensionStats[0]?.avgDecisionProcess) || 0,
       identifyPain: Number(previousDimensionStats[0]?.avgIdentifyPain) || 0,
       champion: Number(previousDimensionStats[0]?.avgChampion) || 0,
     };
@@ -542,32 +601,50 @@ export const getRepPerformance = protectedProcedure
     const dimensionAnalysis = {
       metrics: {
         score: dimensionScores.metrics,
-        trend: calculateTrend(dimensionScores.metrics, previousDimensionScores.metrics),
+        trend: calculateTrend(
+          dimensionScores.metrics,
+          previousDimensionScores.metrics
+        ),
         gap: dimensionScores.metrics < 3 ? "需要收集更多量化指標" : "",
       },
       economicBuyer: {
         score: dimensionScores.economicBuyer,
-        trend: calculateTrend(dimensionScores.economicBuyer, previousDimensionScores.economicBuyer),
+        trend: calculateTrend(
+          dimensionScores.economicBuyer,
+          previousDimensionScores.economicBuyer
+        ),
         gap: dimensionScores.economicBuyer < 3 ? "需要接觸經濟買家" : "",
       },
       decisionCriteria: {
         score: dimensionScores.decisionCriteria,
-        trend: calculateTrend(dimensionScores.decisionCriteria, previousDimensionScores.decisionCriteria),
+        trend: calculateTrend(
+          dimensionScores.decisionCriteria,
+          previousDimensionScores.decisionCriteria
+        ),
         gap: dimensionScores.decisionCriteria < 3 ? "需要了解決策標準" : "",
       },
       decisionProcess: {
         score: dimensionScores.decisionProcess,
-        trend: calculateTrend(dimensionScores.decisionProcess, previousDimensionScores.decisionProcess),
+        trend: calculateTrend(
+          dimensionScores.decisionProcess,
+          previousDimensionScores.decisionProcess
+        ),
         gap: dimensionScores.decisionProcess < 3 ? "需要了解決策流程" : "",
       },
       identifyPain: {
         score: dimensionScores.identifyPain,
-        trend: calculateTrend(dimensionScores.identifyPain, previousDimensionScores.identifyPain),
+        trend: calculateTrend(
+          dimensionScores.identifyPain,
+          previousDimensionScores.identifyPain
+        ),
         gap: dimensionScores.identifyPain < 3 ? "需要深挖客戶痛點" : "",
       },
       champion: {
         score: dimensionScores.champion,
-        trend: calculateTrend(dimensionScores.champion, previousDimensionScores.champion),
+        trend: calculateTrend(
+          dimensionScores.champion,
+          previousDimensionScores.champion
+        ),
         gap: dimensionScores.champion < 3 ? "需要培養內部支持者" : "",
       },
     };
@@ -597,7 +674,7 @@ export const getRepPerformance = protectedProcedure
 
     // ========== 團隊對比（百分位）==========
     // 取得所有團隊成員的平均分數
-    let teamComparison = {
+    const teamComparison = {
       overallPercentile: 50,
       dimensionPercentiles: {
         metrics: 50,
@@ -631,28 +708,38 @@ export const getRepPerformance = protectedProcedure
             avgScore: avg(meddicAnalyses.overallScore),
           })
           .from(meddicAnalyses)
-          .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+          .innerJoin(
+            opportunities,
+            eq(meddicAnalyses.opportunityId, opportunities.id)
+          )
           .where(
             and(inArray(opportunities.userId, memberIds), ...dateConditions)
           )
           .groupBy(opportunities.userId);
 
         // 計算百分位
-        const scores = teamScores.map((s) => Number(s.avgScore) || 0).sort((a, b) => a - b);
+        const scores = teamScores
+          .map((s) => Number(s.avgScore) || 0)
+          .sort((a, b) => a - b);
         const userScore = teamScores.find((s) => s.userId === queryUserId);
         const userAvgScore = Number(userScore?.avgScore) || 0;
 
         const rank = scores.filter((s) => s < userAvgScore).length;
-        teamComparison.overallPercentile = Math.round((rank / scores.length) * 100);
+        teamComparison.overallPercentile = Math.round(
+          (rank / scores.length) * 100
+        );
       }
     }
 
     // ========== 個人化教練建議（聚合自 Agent 6）==========
     const recentAnalyses = await db.query.meddicAnalyses.findMany({
       where: and(
-        eq(meddicAnalyses.opportunityId, sql`(
+        eq(
+          meddicAnalyses.opportunityId,
+          sql`(
           SELECT id FROM opportunities WHERE user_id = ${queryUserId}
-        )`),
+        )`
+        ),
         ...dateConditions
       ),
       orderBy: desc(meddicAnalyses.createdAt),
@@ -663,10 +750,12 @@ export const getRepPerformance = protectedProcedure
     const allImprovements: string[] = [];
 
     for (const analysis of recentAnalyses) {
-      const agent6Output = analysis.agentOutputs?.agent6 as {
-        coachingNotes?: string;
-        improvements?: Array<{ area: string; suggestion: string }>;
-      } | undefined;
+      const agent6Output = analysis.agentOutputs?.agent6 as
+        | {
+            coachingNotes?: string;
+            improvements?: Array<{ area: string; suggestion: string }>;
+          }
+        | undefined;
 
       if (agent6Output?.coachingNotes) {
         recentFeedback.push(agent6Output.coachingNotes);
@@ -695,8 +784,10 @@ export const getRepPerformance = protectedProcedure
     // 根據弱項生成改善計畫
     const improvementPlan = weaknesses.map((weakness) => {
       const plans: Record<string, string> = {
-        "量化指標 (Metrics)": "在 Demo 中主動詢問客戶目前的人力成本、營業額等數據",
-        "經濟買家 (Economic Buyer)": "確認老闆是否在場，若不在場要約定下次與老闆溝通",
+        "量化指標 (Metrics)":
+          "在 Demo 中主動詢問客戶目前的人力成本、營業額等數據",
+        "經濟買家 (Economic Buyer)":
+          "確認老闆是否在場，若不在場要約定下次與老闆溝通",
         "決策標準 (Decision Criteria)": "詢問客戶選擇 POS 系統最重視的三個條件",
         "決策流程 (Decision Process)": "了解誰會參與決策、預計多久做決定",
         "痛點識別 (Identify Pain)": "深入詢問目前營運上最困擾的問題",
@@ -711,9 +802,15 @@ export const getRepPerformance = protectedProcedure
     const last30DaysStats = await db
       .select({ avgScore: avg(meddicAnalyses.overallScore) })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(
-        and(eq(opportunities.userId, queryUserId), gte(meddicAnalyses.createdAt, last30DaysStart))
+        and(
+          eq(opportunities.userId, queryUserId),
+          gte(meddicAnalyses.createdAt, last30DaysStart)
+        )
       );
 
     // 前 30 天（30-60 天前）
@@ -721,7 +818,10 @@ export const getRepPerformance = protectedProcedure
     const prev30DaysStats = await db
       .select({ avgScore: avg(meddicAnalyses.overallScore) })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(
         and(
           eq(opportunities.userId, queryUserId),
@@ -735,9 +835,15 @@ export const getRepPerformance = protectedProcedure
     const last90DaysStats = await db
       .select({ avgScore: avg(meddicAnalyses.overallScore) })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(
-        and(eq(opportunities.userId, queryUserId), gte(meddicAnalyses.createdAt, last90DaysStart))
+        and(
+          eq(opportunities.userId, queryUserId),
+          gte(meddicAnalyses.createdAt, last90DaysStart)
+        )
       );
 
     // 前 90 天
@@ -745,7 +851,10 @@ export const getRepPerformance = protectedProcedure
     const prev90DaysStats = await db
       .select({ avgScore: avg(meddicAnalyses.overallScore) })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(
         and(
           eq(opportunities.userId, queryUserId),
@@ -763,14 +872,19 @@ export const getRepPerformance = protectedProcedure
     const milestones: Array<{ date: string; achievement: string }> = [];
 
     // 檢查是否達成特定里程碑
-    const today = new Date().toISOString().split("T")[0] ?? new Date().toISOString().slice(0, 10);
+    const today =
+      new Date().toISOString().split("T")[0] ??
+      new Date().toISOString().slice(0, 10);
     if (last30Avg >= 80 && prev30Avg < 80) {
       milestones.push({
         date: today,
         achievement: "平均分數突破 80 分！",
       });
     }
-    if (currentPeriodStats[0]?.count && Number(currentPeriodStats[0].count) >= 10) {
+    if (
+      currentPeriodStats[0]?.count &&
+      Number(currentPeriodStats[0].count) >= 10
+    ) {
       milestones.push({
         date: today,
         achievement: `本期完成 ${currentPeriodStats[0].count} 筆分析`,
@@ -846,7 +960,10 @@ export const getTeamPerformance = protectedProcedure
       where: eq(userProfiles.userId, currentUserId),
     });
 
-    if (currentUserProfile?.role !== "manager" && currentUserProfile?.role !== "admin") {
+    if (
+      currentUserProfile?.role !== "manager" &&
+      currentUserProfile?.role !== "admin"
+    ) {
       throw new ORPCError("FORBIDDEN", { message: "只有經理可以查看團隊報告" });
     }
 
@@ -864,8 +981,11 @@ export const getTeamPerformance = protectedProcedure
     ];
 
     // 計算上一期間（用於趨勢比較）
-    const periodLength = currentPeriodEnd.getTime() - currentPeriodStart.getTime();
-    const previousPeriodStart = new Date(currentPeriodStart.getTime() - periodLength);
+    const periodLength =
+      currentPeriodEnd.getTime() - currentPeriodStart.getTime();
+    const previousPeriodStart = new Date(
+      currentPeriodStart.getTime() - periodLength
+    );
     const previousPeriodEnd = new Date(currentPeriodStart.getTime() - 1);
 
     // 取得團隊成員列表
@@ -907,7 +1027,10 @@ export const getTeamPerformance = protectedProcedure
     const totalConversations = await db
       .select({ count: count() })
       .from(conversations)
-      .innerJoin(opportunities, eq(conversations.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(conversations.opportunityId, opportunities.id)
+      )
       .where(inArray(opportunities.userId, memberIds));
 
     const teamCurrentStats = await db
@@ -915,7 +1038,10 @@ export const getTeamPerformance = protectedProcedure
         avgScore: avg(meddicAnalyses.overallScore),
       })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(and(inArray(opportunities.userId, memberIds), ...dateConditions));
 
     const teamPreviousStats = await db
@@ -923,7 +1049,10 @@ export const getTeamPerformance = protectedProcedure
         avgScore: avg(meddicAnalyses.overallScore),
       })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(
         and(
           inArray(opportunities.userId, memberIds),
@@ -943,7 +1072,10 @@ export const getTeamPerformance = protectedProcedure
         avgScore: avg(meddicAnalyses.overallScore),
       })
       .from(opportunities)
-      .leftJoin(meddicAnalyses, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .leftJoin(
+        meddicAnalyses,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(and(inArray(opportunities.userId, memberIds), ...dateConditions))
       .groupBy(opportunities.userId);
 
@@ -954,7 +1086,10 @@ export const getTeamPerformance = protectedProcedure
         avgScore: avg(meddicAnalyses.overallScore),
       })
       .from(opportunities)
-      .leftJoin(meddicAnalyses, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .leftJoin(
+        meddicAnalyses,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(
         and(
           inArray(opportunities.userId, memberIds),
@@ -986,21 +1121,31 @@ export const getTeamPerformance = protectedProcedure
         convCount: count(conversations.id),
       })
       .from(opportunities)
-      .leftJoin(conversations, eq(conversations.opportunityId, opportunities.id))
+      .leftJoin(
+        conversations,
+        eq(conversations.opportunityId, opportunities.id)
+      )
       .where(inArray(opportunities.userId, memberIds))
       .groupBy(opportunities.userId);
 
-    const convCountMap = new Map(memberConvCounts.map((m) => [m.userId, m.convCount]));
+    const convCountMap = new Map(
+      memberConvCounts.map((m) => [m.userId, m.convCount])
+    );
 
     const memberRankings = memberStats
       .map((m) => {
         const currentScore = Number(m.avgScore) || 0;
         const prevScore = memberPrevScoreMap.get(m.userId) || 0;
         const trend: "up" | "down" | "stable" =
-          currentScore > prevScore + 5 ? "up" : currentScore < prevScore - 5 ? "down" : "stable";
+          currentScore > prevScore + 5
+            ? "up"
+            : currentScore < prevScore - 5
+              ? "down"
+              : "stable";
 
         // 連續下滑或分數過低需要關注
-        const needsAttention = currentScore < 50 || (trend === "down" && currentScore < 60);
+        const needsAttention =
+          currentScore < 50 || (trend === "down" && currentScore < 60);
 
         return {
           userId: m.userId,
@@ -1025,7 +1170,10 @@ export const getTeamPerformance = protectedProcedure
         avgChampion: avg(meddicAnalyses.championScore),
       })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(and(inArray(opportunities.userId, memberIds), ...dateConditions));
 
     // 每個成員的維度分數（用於找出 top/bottom performer）
@@ -1040,46 +1188,70 @@ export const getTeamPerformance = protectedProcedure
         avgChampion: avg(meddicAnalyses.championScore),
       })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(and(inArray(opportunities.userId, memberIds), ...dateConditions))
       .groupBy(opportunities.userId);
 
     const findTopBottom = (dimension: string) => {
-      const key = `avg${dimension.charAt(0).toUpperCase() + dimension.slice(1)}` as keyof (typeof memberDimensionStats)[0];
+      const key =
+        `avg${dimension.charAt(0).toUpperCase() + dimension.slice(1)}` as keyof (typeof memberDimensionStats)[0];
       const sorted = [...memberDimensionStats].sort(
         (a, b) => (Number(b[key]) || 0) - (Number(a[key]) || 0)
       );
       const topMember = sorted[0];
       const bottomMember = sorted[sorted.length - 1];
       return {
-        topPerformer: topMember ? userNameMap.get(topMember.userId) ?? "未知" : "無",
-        bottomPerformer: bottomMember ? userNameMap.get(bottomMember.userId) ?? "未知" : "無",
+        topPerformer: topMember
+          ? (userNameMap.get(topMember.userId) ?? "未知")
+          : "無",
+        bottomPerformer: bottomMember
+          ? (userNameMap.get(bottomMember.userId) ?? "未知")
+          : "無",
       };
     };
 
     const teamDimensionAnalysis = {
       metrics: {
-        teamAvg: Math.round((Number(teamDimensionStats[0]?.avgMetrics) || 0) * 10) / 10,
+        teamAvg:
+          Math.round((Number(teamDimensionStats[0]?.avgMetrics) || 0) * 10) /
+          10,
         ...findTopBottom("metrics"),
       },
       economicBuyer: {
-        teamAvg: Math.round((Number(teamDimensionStats[0]?.avgEconomicBuyer) || 0) * 10) / 10,
+        teamAvg:
+          Math.round(
+            (Number(teamDimensionStats[0]?.avgEconomicBuyer) || 0) * 10
+          ) / 10,
         ...findTopBottom("economicBuyer"),
       },
       decisionCriteria: {
-        teamAvg: Math.round((Number(teamDimensionStats[0]?.avgDecisionCriteria) || 0) * 10) / 10,
+        teamAvg:
+          Math.round(
+            (Number(teamDimensionStats[0]?.avgDecisionCriteria) || 0) * 10
+          ) / 10,
         ...findTopBottom("decisionCriteria"),
       },
       decisionProcess: {
-        teamAvg: Math.round((Number(teamDimensionStats[0]?.avgDecisionProcess) || 0) * 10) / 10,
+        teamAvg:
+          Math.round(
+            (Number(teamDimensionStats[0]?.avgDecisionProcess) || 0) * 10
+          ) / 10,
         ...findTopBottom("decisionProcess"),
       },
       identifyPain: {
-        teamAvg: Math.round((Number(teamDimensionStats[0]?.avgIdentifyPain) || 0) * 10) / 10,
+        teamAvg:
+          Math.round(
+            (Number(teamDimensionStats[0]?.avgIdentifyPain) || 0) * 10
+          ) / 10,
         ...findTopBottom("identifyPain"),
       },
       champion: {
-        teamAvg: Math.round((Number(teamDimensionStats[0]?.avgChampion) || 0) * 10) / 10,
+        teamAvg:
+          Math.round((Number(teamDimensionStats[0]?.avgChampion) || 0) * 10) /
+          10,
         ...findTopBottom("champion"),
       },
     };
@@ -1096,7 +1268,10 @@ export const getTeamPerformance = protectedProcedure
         nextSteps: meddicAnalyses.nextSteps,
       })
       .from(meddicAnalyses)
-      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(meddicAnalyses.opportunityId, opportunities.id)
+      )
       .where(
         and(
           inArray(opportunities.userId, memberIds),
@@ -1112,9 +1287,11 @@ export const getTeamPerformance = protectedProcedure
       companyName: opp.companyName || "未知店家",
       assignedTo: userNameMap.get(opp.userId) || "未知",
       score: opp.overallScore || 0,
-      risk: (opp.risks as Array<{ risk: string }> | null)?.[0]?.risk || "分數偏低",
+      risk:
+        (opp.risks as Array<{ risk: string }> | null)?.[0]?.risk || "分數偏低",
       suggestedAction:
-        (opp.nextSteps as Array<{ action: string }> | null)?.[0]?.action || "需要經理協助跟進",
+        (opp.nextSteps as Array<{ action: string }> | null)?.[0]?.action ||
+        "需要經理協助跟進",
     }));
 
     // ========== 團隊趨勢 ==========
@@ -1123,13 +1300,18 @@ export const getTeamPerformance = protectedProcedure
 
     // 計算過去 8 週的數據
     for (let i = 7; i >= 0; i--) {
-      const weekStart = new Date(Date.now() - (i + 1) * 7 * 24 * 60 * 60 * 1000);
+      const weekStart = new Date(
+        Date.now() - (i + 1) * 7 * 24 * 60 * 60 * 1000
+      );
       const weekEnd = new Date(Date.now() - i * 7 * 24 * 60 * 60 * 1000);
 
       const weekStats = await db
         .select({ avgScore: avg(meddicAnalyses.overallScore) })
         .from(meddicAnalyses)
-        .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
+        .innerJoin(
+          opportunities,
+          eq(meddicAnalyses.opportunityId, opportunities.id)
+        )
         .where(
           and(
             inArray(opportunities.userId, memberIds),
@@ -1139,7 +1321,9 @@ export const getTeamPerformance = protectedProcedure
         );
 
       weeklyScores.push({
-        week: weekStart.toISOString().split("T")[0] ?? weekStart.toISOString().slice(0, 10),
+        week:
+          weekStart.toISOString().split("T")[0] ??
+          weekStart.toISOString().slice(0, 10),
         avgScore: Math.round((Number(weekStats[0]?.avgScore) || 0) * 10) / 10,
       });
     }
@@ -1149,12 +1333,20 @@ export const getTeamPerformance = protectedProcedure
       .filter((m) => m.needsAttention)
       .map((m) => {
         // 找出該成員最弱的維度
-        const memberDim = memberDimensionStats.find((d) => d.userId === m.userId);
+        const memberDim = memberDimensionStats.find(
+          (d) => d.userId === m.userId
+        );
         const dimensions = [
           { name: "量化指標", score: Number(memberDim?.avgMetrics) || 0 },
           { name: "經濟買家", score: Number(memberDim?.avgEconomicBuyer) || 0 },
-          { name: "決策標準", score: Number(memberDim?.avgDecisionCriteria) || 0 },
-          { name: "決策流程", score: Number(memberDim?.avgDecisionProcess) || 0 },
+          {
+            name: "決策標準",
+            score: Number(memberDim?.avgDecisionCriteria) || 0,
+          },
+          {
+            name: "決策流程",
+            score: Number(memberDim?.avgDecisionProcess) || 0,
+          },
           { name: "痛點識別", score: Number(memberDim?.avgIdentifyPain) || 0 },
           { name: "內部支持者", score: Number(memberDim?.avgChampion) || 0 },
         ].sort((a, b) => a.score - b.score);

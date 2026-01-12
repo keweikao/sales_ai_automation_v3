@@ -13,11 +13,9 @@ import {
   Clock,
   Loader2,
   MessageSquare,
-  Play,
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { MeddicDimensionDetail } from "@/components/meddic/meddic-dimension-detail";
 import { MeddicScoreCard } from "@/components/meddic/meddic-score-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -436,11 +434,7 @@ function ConversationDetailPage() {
                 <CardTitle>音檔</CardTitle>
               </CardHeader>
               <CardContent>
-                <audio
-                  className="w-full"
-                  controls
-                  src={conversation.audioUrl}
-                >
+                <audio className="w-full" controls src={conversation.audioUrl}>
                   <track kind="captions" />
                   您的瀏覽器不支援音檔播放
                 </audio>

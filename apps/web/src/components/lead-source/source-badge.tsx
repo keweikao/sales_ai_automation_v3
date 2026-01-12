@@ -3,15 +3,15 @@
  * 顯示潛客來源的標籤
  */
 
-import { Badge } from "@/components/ui/badge";
 import {
-  Globe,
-  UserPlus,
   FileUp,
-  Webhook,
-  Users,
+  Globe,
   HelpCircle,
+  UserPlus,
+  Users,
+  Webhook,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 type SourceType = "squarespace" | "manual" | "import" | "api" | "referral";
 
@@ -78,7 +78,10 @@ export function SourceBadge({
   const sizeClasses = size === "sm" ? "text-xs py-0" : "";
 
   return (
-    <Badge variant={config.variant} className={`${config.className} ${sizeClasses}`}>
+    <Badge
+      className={`${config.className} ${sizeClasses}`}
+      variant={config.variant}
+    >
       {showIcon && <Icon className="mr-1 h-3 w-3" />}
       {config.label}
     </Badge>

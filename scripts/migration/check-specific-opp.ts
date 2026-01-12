@@ -55,7 +55,9 @@ async function main() {
   const countResult = await db.execute(
     sql`SELECT COUNT(*) as count FROM opportunities`
   );
-  console.log(`\n總共有 ${(countResult.rows[0] as { count: number }).count} 筆 opportunities`);
+  console.log(
+    `\n總共有 ${(countResult.rows[0] as { count: number }).count} 筆 opportunities`
+  );
 }
 
 main();

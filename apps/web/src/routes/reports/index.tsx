@@ -21,8 +21,6 @@ import {
   Users,
 } from "lucide-react";
 import {
-  Bar,
-  BarChart,
   Line,
   LineChart,
   ResponsiveContainer,
@@ -32,7 +30,6 @@ import {
 } from "recharts";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -77,11 +74,7 @@ function ScoreChangeBadge({ change }: { change: number }) {
       </Badge>
     );
   }
-  return (
-    <Badge variant="secondary">
-      {change}
-    </Badge>
-  );
+  return <Badge variant="secondary">{change}</Badge>;
 }
 
 // Stat card for summary
@@ -151,22 +144,15 @@ function DimensionScoreBar({
         </div>
         <span className="font-medium text-sm">{score.toFixed(1)}/5</span>
       </div>
-      <Progress
-        className="h-2"
-        value={(score / 5) * 100}
-      />
-      {gap && (
-        <p className="text-muted-foreground text-xs">{gap}</p>
-      )}
+      <Progress className="h-2" value={(score / 5) * 100} />
+      {gap && <p className="text-muted-foreground text-xs">{gap}</p>}
     </div>
   );
 }
 
 // Rep Performance Report Component
 function RepPerformanceReport() {
-  const reportQuery = useQuery(
-    orpc.analytics.repPerformance.queryOptions({})
-  );
+  const reportQuery = useQuery(orpc.analytics.repPerformance.queryOptions({}));
 
   const report = reportQuery.data;
   const isLoading = reportQuery.isLoading;
@@ -252,9 +238,7 @@ function RepPerformanceReport() {
               <Target className="h-5 w-5" />
               MEDDIC 六維度分析
             </CardTitle>
-            <CardDescription>
-              各維度平均分數與趨勢
-            </CardDescription>
+            <CardDescription>各維度平均分數與趨勢</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {Object.entries(report.dimensionAnalysis).map(([key, dim]) => (
@@ -276,9 +260,7 @@ function RepPerformanceReport() {
               <Medal className="h-5 w-5" />
               強項與弱項
             </CardTitle>
-            <CardDescription>
-              基於 MEDDIC 分數自動識別
-            </CardDescription>
+            <CardDescription>基於 MEDDIC 分數自動識別</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Strengths */}
@@ -290,7 +272,10 @@ function RepPerformanceReport() {
               {report.strengths.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {report.strengths.map((s) => (
-                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" key={s}>
+                    <Badge
+                      className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                      key={s}
+                    >
                       {s}
                     </Badge>
                   ))}
@@ -309,13 +294,18 @@ function RepPerformanceReport() {
               {report.weaknesses.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {report.weaknesses.map((w) => (
-                    <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200" key={w}>
+                    <Badge
+                      className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      key={w}
+                    >
                       {w}
                     </Badge>
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-sm">無弱項維度，繼續保持！</p>
+                <p className="text-muted-foreground text-sm">
+                  無弱項維度，繼續保持！
+                </p>
               )}
             </div>
           </CardContent>
@@ -329,9 +319,7 @@ function RepPerformanceReport() {
             <UserCircle className="h-5 w-5" />
             個人化教練建議
           </CardTitle>
-          <CardDescription>
-            基於 AI 分析的改善建議
-          </CardDescription>
+          <CardDescription>基於 AI 分析的改善建議</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Recurring Patterns */}
@@ -365,11 +353,13 @@ function RepPerformanceReport() {
             <div>
               <h4 className="mb-2 font-medium">最近的教練回饋</h4>
               <div className="space-y-2">
-                {report.coachingInsights.recentFeedback.slice(0, 3).map((feedback, i) => (
-                  <p className="rounded-lg bg-muted p-3 text-sm" key={i}>
-                    {feedback}
-                  </p>
-                ))}
+                {report.coachingInsights.recentFeedback
+                  .slice(0, 3)
+                  .map((feedback, i) => (
+                    <p className="rounded-lg bg-muted p-3 text-sm" key={i}>
+                      {feedback}
+                    </p>
+                  ))}
               </div>
             </div>
           )}
@@ -383,9 +373,7 @@ function RepPerformanceReport() {
             <Calendar className="h-5 w-5" />
             進步追蹤
           </CardTitle>
-          <CardDescription>
-            不同時間區間的表現變化
-          </CardDescription>
+          <CardDescription>不同時間區間的表現變化</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 md:grid-cols-2">
@@ -395,7 +383,9 @@ function RepPerformanceReport() {
                 <span className="font-bold text-2xl">
                   {report.progressTracking.last30Days.avgScore}
                 </span>
-                <ScoreChangeBadge change={report.progressTracking.last30Days.change} />
+                <ScoreChangeBadge
+                  change={report.progressTracking.last30Days.change}
+                />
               </div>
             </div>
             <div className="rounded-lg bg-muted/50 p-4">
@@ -404,7 +394,9 @@ function RepPerformanceReport() {
                 <span className="font-bold text-2xl">
                   {report.progressTracking.last90Days.avgScore}
                 </span>
-                <ScoreChangeBadge change={report.progressTracking.last90Days.change} />
+                <ScoreChangeBadge
+                  change={report.progressTracking.last90Days.change}
+                />
               </div>
             </div>
           </div>
@@ -421,7 +413,9 @@ function RepPerformanceReport() {
                   >
                     <Trophy className="h-4 w-4" />
                     <span className="text-sm">{m.achievement}</span>
-                    <span className="text-muted-foreground text-xs">({m.date})</span>
+                    <span className="text-muted-foreground text-xs">
+                      ({m.date})
+                    </span>
                   </div>
                 ))}
               </div>
@@ -435,9 +429,7 @@ function RepPerformanceReport() {
 
 // Team Performance Report Component
 function TeamPerformanceReport() {
-  const reportQuery = useQuery(
-    orpc.analytics.teamPerformance.queryOptions({})
-  );
+  const reportQuery = useQuery(orpc.analytics.teamPerformance.queryOptions({}));
 
   const report = reportQuery.data;
   const isLoading = reportQuery.isLoading;
@@ -524,9 +516,7 @@ function TeamPerformanceReport() {
               <Trophy className="h-5 w-5" />
               團隊成員排名
             </CardTitle>
-            <CardDescription>
-              依 MEDDIC 平均分數排序
-            </CardDescription>
+            <CardDescription>依 MEDDIC 平均分數排序</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -555,7 +545,8 @@ function TeamPerformanceReport() {
                     <div>
                       <p className="font-medium text-sm">{member.name}</p>
                       <p className="text-muted-foreground text-xs">
-                        {member.opportunityCount} 商機 · {member.conversationCount} 對話
+                        {member.opportunityCount} 商機 ·{" "}
+                        {member.conversationCount} 對話
                       </p>
                     </div>
                   </div>
@@ -579,39 +570,39 @@ function TeamPerformanceReport() {
               <BarChart3 className="h-5 w-5" />
               團隊維度分析
             </CardTitle>
-            <CardDescription>
-              各維度團隊平均與最佳/最差表現
-            </CardDescription>
+            <CardDescription>各維度團隊平均與最佳/最差表現</CardDescription>
           </CardHeader>
           <CardContent>
             {report.teamDimensionAnalysis && (
               <div className="space-y-4">
-                {Object.entries(report.teamDimensionAnalysis).map(([key, dim]) => {
-                  const labels: Record<string, string> = {
-                    metrics: "量化指標",
-                    economicBuyer: "經濟決策者",
-                    decisionCriteria: "決策標準",
-                    decisionProcess: "決策流程",
-                    identifyPain: "痛點識別",
-                    champion: "內部支持者",
-                  };
-                  return (
-                    <div className="space-y-1" key={key}>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>{labels[key] || key}</span>
-                        <span className="font-medium">{dim.teamAvg}/5</span>
+                {Object.entries(report.teamDimensionAnalysis).map(
+                  ([key, dim]) => {
+                    const labels: Record<string, string> = {
+                      metrics: "量化指標",
+                      economicBuyer: "經濟決策者",
+                      decisionCriteria: "決策標準",
+                      decisionProcess: "決策流程",
+                      identifyPain: "痛點識別",
+                      champion: "內部支持者",
+                    };
+                    return (
+                      <div className="space-y-1" key={key}>
+                        <div className="flex items-center justify-between text-sm">
+                          <span>{labels[key] || key}</span>
+                          <span className="font-medium">{dim.teamAvg}/5</span>
+                        </div>
+                        <Progress
+                          className="h-2"
+                          value={(dim.teamAvg / 5) * 100}
+                        />
+                        <div className="flex justify-between text-muted-foreground text-xs">
+                          <span>最佳: {dim.topPerformer}</span>
+                          <span>需加強: {dim.bottomPerformer}</span>
+                        </div>
                       </div>
-                      <Progress
-                        className="h-2"
-                        value={(dim.teamAvg / 5) * 100}
-                      />
-                      <div className="flex justify-between text-muted-foreground text-xs">
-                        <span>最佳: {dim.topPerformer}</span>
-                        <span>需加強: {dim.bottomPerformer}</span>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  }
+                )}
               </div>
             )}
           </CardContent>
@@ -666,27 +657,21 @@ function TeamPerformanceReport() {
             <TrendingUp className="h-5 w-5" />
             團隊趨勢
           </CardTitle>
-          <CardDescription>
-            過去 8 週團隊平均分數變化
-          </CardDescription>
+          <CardDescription>過去 8 週團隊平均分數變化</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer height={200} width="100%">
             <LineChart data={report.teamTrends.weeklyScores}>
               <XAxis
                 dataKey="week"
-                stroke="#888888"
                 fontSize={12}
+                stroke="#888888"
                 tickFormatter={(value) => {
                   const date = new Date(value);
                   return `${date.getMonth() + 1}/${date.getDate()}`;
                 }}
               />
-              <YAxis
-                stroke="#888888"
-                fontSize={12}
-                domain={[0, 100]}
-              />
+              <YAxis domain={[0, 100]} fontSize={12} stroke="#888888" />
               <Tooltip
                 contentStyle={{
                   backgroundColor: "hsl(var(--background))",
@@ -697,10 +682,10 @@ function TeamPerformanceReport() {
               />
               <Line
                 dataKey="avgScore"
+                dot={{ fill: "hsl(var(--primary))" }}
                 name="平均分數"
                 stroke="hsl(var(--primary))"
                 strokeWidth={2}
-                dot={{ fill: "hsl(var(--primary))" }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -715,9 +700,7 @@ function TeamPerformanceReport() {
               <UserCircle className="h-5 w-5" />
               教練優先級
             </CardTitle>
-            <CardDescription>
-              優先需要輔導的團隊成員
-            </CardDescription>
+            <CardDescription>優先需要輔導的團隊成員</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -731,7 +714,9 @@ function TeamPerformanceReport() {
                     <Badge variant="outline">{member.reason}</Badge>
                   </div>
                   <div className="mt-2">
-                    <p className="text-muted-foreground text-sm">建議關注維度:</p>
+                    <p className="text-muted-foreground text-sm">
+                      建議關注維度:
+                    </p>
                     <div className="mt-1 flex gap-2">
                       {member.suggestedFocus.map((focus) => (
                         <Badge key={focus} variant="secondary">
@@ -757,9 +742,7 @@ function ReportsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-bold text-3xl tracking-tight">績效報告</h1>
-          <p className="text-muted-foreground">
-            業務個人報告與經理團隊報告
-          </p>
+          <p className="text-muted-foreground">業務個人報告與經理團隊報告</p>
         </div>
       </div>
 

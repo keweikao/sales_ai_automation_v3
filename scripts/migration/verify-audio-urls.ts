@@ -5,7 +5,7 @@
  */
 
 import { sql } from "drizzle-orm";
-import { db, conversations } from "./config";
+import { conversations, db } from "./config";
 
 interface VerificationResult {
   url: string;
@@ -123,7 +123,9 @@ async function verifyAudioUrls() {
   }
 
   // 輸出結果
-  console.log("\n═══════════════════════════════════════════════════════════════\n");
+  console.log(
+    "\n═══════════════════════════════════════════════════════════════\n"
+  );
 
   if (successCount === sampled.length) {
     console.log(`✅ All ${sampled.length} URLs accessible`);
@@ -146,9 +148,7 @@ async function verifyAudioUrls() {
     console.log("❌ Failed URLs:");
     for (const result of failedResults) {
       console.log(`   - ${result.url}`);
-      console.log(
-        `     Conversation: ${result.conversationId}`
-      );
+      console.log(`     Conversation: ${result.conversationId}`);
       console.log(
         `     Error: ${result.error || `${result.status} ${result.statusText}`}`
       );
@@ -183,7 +183,9 @@ async function verifyAudioUrls() {
   if (failedResults.length > 0) {
     console.log("\n💡 可能的原因與解決方案:");
     console.log("   1. R2 Public Access 尚未啟用");
-    console.log("      → Cloudflare Dashboard → R2 → Bucket → Settings → Enable Public Access");
+    console.log(
+      "      → Cloudflare Dashboard → R2 → Bucket → Settings → Enable Public Access"
+    );
     console.log("   2. Custom Domain 設定有誤");
     console.log("      → 檢查 DNS 設定和 R2 Custom Domain 設定");
     console.log("   3. CORS 設定問題（瀏覽器播放時）");

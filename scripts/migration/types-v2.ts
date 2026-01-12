@@ -77,9 +77,14 @@ export interface V2Case {
 /**
  * 從扁平化的 Firestore 資料轉換為結構化的 V2Case
  */
-export function parseV2Case(docId: string, data: Record<string, unknown>): V2Case {
+export function parseV2Case(
+  docId: string,
+  data: Record<string, unknown>
+): V2Case {
   // 處理可能的扁平化欄位（如 analysis.transcription.step）
-  const transcription = data.transcription as V2Case["transcription"] | undefined;
+  const transcription = data.transcription as
+    | V2Case["transcription"]
+    | undefined;
   const audio = data.audio as V2Case["audio"] | undefined;
   const notification = data.notification as V2Case["notification"] | undefined;
 

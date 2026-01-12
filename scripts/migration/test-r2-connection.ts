@@ -154,14 +154,18 @@ async function testR2Connection() {
   }
 
   // 總結
-  console.log("═══════════════════════════════════════════════════════════════");
+  console.log(
+    "═══════════════════════════════════════════════════════════════"
+  );
   console.log("");
   console.log("✅ Cloudflare R2 connected");
   console.log(`   - Bucket: ${bucket}`);
   console.log("   - Region: auto");
   console.log(`   - Public URL: ${publicUrl}`);
   console.log(`   - Write permission: ${writePermission ? "✓" : "✗"}`);
-  console.log(`   - Read permission: ${readPermission ? "✓" : "⚠️ (需設定 Public Access)"}`);
+  console.log(
+    `   - Read permission: ${readPermission ? "✓" : "⚠️ (需設定 Public Access)"}`
+  );
   console.log("");
 
   if (!writePermission) {
@@ -172,7 +176,9 @@ async function testR2Connection() {
   if (!readPermission) {
     console.log("⚠️ 警告: Public URL 存取可能有問題");
     console.log("   請確認已完成以下其中一項設定:");
-    console.log("   1. R2 Dashboard → Bucket → Settings → Public Access → Enable");
+    console.log(
+      "   1. R2 Dashboard → Bucket → Settings → Public Access → Enable"
+    );
     console.log("   2. 設定 Custom Domain");
     console.log("   3. 使用 Signed URLs（需修改應用程式碼）");
     console.log("");

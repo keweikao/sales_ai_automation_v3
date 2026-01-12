@@ -183,8 +183,7 @@ function DashboardPage() {
                     (sum, s) => sum + s.count,
                     0
                   );
-                  const percentage =
-                    total > 0 ? (item.count / total) * 100 : 0;
+                  const percentage = total > 0 ? (item.count / total) * 100 : 0;
                   return (
                     <div className="space-y-2" key={item.status}>
                       <div className="flex items-center justify-between">

@@ -15,7 +15,7 @@ export function buildMeddicSummaryBlocks(
       type: "header",
       text: {
         type: "plain_text",
-        text: `📊 MEDDIC 分析結果`,
+        text: "📊 MEDDIC 分析結果",
         emoji: true,
       },
     },

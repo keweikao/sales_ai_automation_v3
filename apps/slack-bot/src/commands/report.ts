@@ -7,14 +7,14 @@
  *   /report help - 顯示幫助訊息
  */
 
-import type { CommandContext } from "./index";
+import { ApiClient } from "../api-client";
 import type {
   Env,
-  OpportunityStatsResponse,
   MeddicTrendsResponse,
+  OpportunityStatsResponse,
 } from "../types";
 import type { SlackClient } from "../utils/slack-client";
-import { ApiClient } from "../api-client";
+import type { CommandContext } from "./index";
 
 /**
  * 處理 /report 指令

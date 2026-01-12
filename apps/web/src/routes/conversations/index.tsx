@@ -20,13 +20,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { orpc } from "@/utils/orpc";
 
@@ -101,7 +94,9 @@ function ConversationsPage() {
     ? conversations.filter(
         (c) =>
           c.title?.toLowerCase().includes(search.toLowerCase()) ||
-          c.opportunityCompanyName?.toLowerCase().includes(search.toLowerCase()) ||
+          c.opportunityCompanyName
+            ?.toLowerCase()
+            .includes(search.toLowerCase()) ||
           c.caseNumber?.toLowerCase().includes(search.toLowerCase())
       )
     : conversations;

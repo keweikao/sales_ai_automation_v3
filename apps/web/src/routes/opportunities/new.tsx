@@ -87,7 +87,7 @@ function NewOpportunityPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.customerNumber || !formData.companyName) {
+    if (!(formData.customerNumber && formData.companyName)) {
       toast.error("請填寫客戶編號和公司名稱");
       return;
     }

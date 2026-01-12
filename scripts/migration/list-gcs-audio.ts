@@ -86,7 +86,7 @@ async function listGcsAudio() {
 
       const [files] = await bucket.getFiles({
         prefix,
-        maxResults: 10000,
+        maxResults: 10_000,
       });
 
       for (const file of files) {
@@ -135,9 +135,13 @@ async function listGcsAudio() {
     );
 
     console.log("");
-    console.log("═══════════════════════════════════════════════════════════════");
+    console.log(
+      "═══════════════════════════════════════════════════════════════"
+    );
     console.log("");
-    console.log(`Found ${uniqueFiles.length} audio files in gs://${bucketName}/`);
+    console.log(
+      `Found ${uniqueFiles.length} audio files in gs://${bucketName}/`
+    );
     console.log("");
     console.log("Summary:");
     console.log(`  - Total files: ${uniqueFiles.length}`);

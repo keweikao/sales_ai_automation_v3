@@ -1,5 +1,5 @@
 import { Storage } from "@google-cloud/storage";
-import { readFileSync, existsSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
 
 // Load migration env
@@ -13,7 +13,10 @@ if (existsSync(migrationEnvPath)) {
     if (eqIndex === -1) continue;
     const key = trimmed.slice(0, eqIndex).trim();
     let value = trimmed.slice(eqIndex + 1).trim();
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1);
     }
     if (!process.env[key]) process.env[key] = value;
@@ -41,7 +44,7 @@ async function main() {
 
   let totalSize = 0;
   for (const file of files) {
-    totalSize += parseInt(file.metadata.size || "0", 10);
+    totalSize += Number.parseInt(file.metadata.size || "0", 10);
   }
 
   console.log("\n=== 統計 ===");
@@ -52,7 +55,11 @@ async function main() {
   console.log("\n=== 範例檔案（前 10 個）===");
   for (let i = 0; i < Math.min(10, files.length); i++) {
     const file = files[i];
-    const sizeMB = (parseInt(file.metadata.size || "0", 10) / 1024 / 1024).toFixed(2);
+    const sizeMB = (
+      Number.parseInt(file.metadata.size || "0", 10) /
+      1024 /
+      1024
+    ).toFixed(2);
     console.log("  " + file.name + " (" + sizeMB + " MB)");
   }
 

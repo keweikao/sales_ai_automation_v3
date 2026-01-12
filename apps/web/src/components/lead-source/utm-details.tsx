@@ -3,16 +3,16 @@
  * 顯示 UTM 參數詳情
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
+  ExternalLink,
+  FileText,
   Globe,
   Megaphone,
-  Target,
   Search,
-  FileText,
-  ExternalLink,
+  Target,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface UTMParams {
   utmSource?: string | null;
@@ -47,31 +47,27 @@ export function UTMDetails({
 }: UTMDetailsProps) {
   const hasAnyUTM = Object.values(utm).some((v) => v);
 
-  if (!hasAnyUTM && !landingPage && !referrer) {
-    return (
-      <div className="text-muted-foreground text-sm">
-        無 UTM 追蹤資料
-      </div>
-    );
+  if (!(hasAnyUTM || landingPage || referrer)) {
+    return <div className="text-muted-foreground text-sm">無 UTM 追蹤資料</div>;
   }
 
   if (compact) {
     return (
       <div className="flex flex-wrap gap-1">
         {utm.utmSource && (
-          <Badge variant="outline" className="text-xs">
+          <Badge className="text-xs" variant="outline">
             <Globe className="mr-1 h-3 w-3" />
             {utm.utmSource}
           </Badge>
         )}
         {utm.utmMedium && (
-          <Badge variant="outline" className="text-xs">
+          <Badge className="text-xs" variant="outline">
             <Megaphone className="mr-1 h-3 w-3" />
             {utm.utmMedium}
           </Badge>
         )}
         {utm.utmCampaign && (
-          <Badge variant="outline" className="text-xs">
+          <Badge className="text-xs" variant="outline">
             <Target className="mr-1 h-3 w-3" />
             {utm.utmCampaign}
           </Badge>
@@ -83,7 +79,7 @@ export function UTMDetails({
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium">UTM 追蹤資訊</CardTitle>
+        <CardTitle className="font-medium text-sm">UTM 追蹤資訊</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* UTM 參數 */}
@@ -93,7 +89,7 @@ export function UTMDetails({
             if (!value) return null;
 
             return (
-              <div key={key} className="flex items-center gap-2">
+              <div className="flex items-center gap-2" key={key}>
                 <div
                   className={`flex h-8 w-8 items-center justify-center rounded-md bg-${color}-500/10`}
                 >
@@ -101,7 +97,7 @@ export function UTMDetails({
                 </div>
                 <div>
                   <div className="text-muted-foreground text-xs">{label}</div>
-                  <div className="text-sm font-medium">{value}</div>
+                  <div className="font-medium text-sm">{value}</div>
                 </div>
               </div>
             );
@@ -111,14 +107,14 @@ export function UTMDetails({
         {/* Landing Page */}
         {landingPage && (
           <div className="border-t pt-3">
-            <div className="text-muted-foreground text-xs mb-1">著陸頁面</div>
+            <div className="mb-1 text-muted-foreground text-xs">著陸頁面</div>
             <div className="flex items-center gap-1 text-sm">
-              <span className="truncate max-w-[200px]">{landingPage}</span>
+              <span className="max-w-[200px] truncate">{landingPage}</span>
               <a
-                href={landingPage}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="text-blue-500 hover:text-blue-600"
+                href={landingPage}
+                rel="noopener noreferrer"
+                target="_blank"
               >
                 <ExternalLink className="h-3 w-3" />
               </a>
@@ -129,15 +125,15 @@ export function UTMDetails({
         {/* Referrer */}
         {referrer && (
           <div className="border-t pt-3">
-            <div className="text-muted-foreground text-xs mb-1">來源網站</div>
-            <div className="text-sm truncate">{referrer}</div>
+            <div className="mb-1 text-muted-foreground text-xs">來源網站</div>
+            <div className="truncate text-sm">{referrer}</div>
           </div>
         )}
 
         {/* First Touch */}
         {firstTouchAt && (
           <div className="border-t pt-3">
-            <div className="text-muted-foreground text-xs mb-1">首次接觸</div>
+            <div className="mb-1 text-muted-foreground text-xs">首次接觸</div>
             <div className="text-sm">
               {typeof firstTouchAt === "string"
                 ? new Date(firstTouchAt).toLocaleString("zh-TW")

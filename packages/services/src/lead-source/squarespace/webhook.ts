@@ -3,24 +3,21 @@
  * 處理 Squarespace 表單提交的 webhook
  */
 
-import { createHmac, timingSafeEqual } from "node:crypto";
-import { eq } from "drizzle-orm";
 import {
   db,
-  opportunities,
-  leadSources,
   formSubmissions,
+  leadSources,
+  opportunities,
 } from "@Sales_ai_automation_v3/db";
-import type { WebhookResult, FieldMapping } from "../types";
-import type {
-  SquarespaceFormPayload,
-  SignatureVerificationResult,
-} from "./types";
-import {
-  parseSquarespaceForm,
-  validateFormData,
-} from "./mapper";
+import { createHmac, timingSafeEqual } from "node:crypto";
+import { eq } from "drizzle-orm";
+import type { FieldMapping, WebhookResult } from "../types";
 import { trackUTMCampaign } from "../utm/tracker";
+import { parseSquarespaceForm, validateFormData } from "./mapper";
+import type {
+  SignatureVerificationResult,
+  SquarespaceFormPayload,
+} from "./types";
 
 /**
  * 驗證 Squarespace webhook 簽名
@@ -57,7 +54,10 @@ export function verifySquarespaceSignature(
   } catch (error) {
     return {
       valid: false,
-      error: error instanceof Error ? error.message : "Signature verification failed",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Signature verification failed",
     };
   }
 }

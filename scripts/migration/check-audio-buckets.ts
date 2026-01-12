@@ -43,7 +43,10 @@ async function checkAudioBuckets() {
         const contentType = metadata.contentType || "unknown";
         totalSize += size;
 
-        if (contentType.startsWith("audio/") || file.name.match(/\.(mp3|wav|m4a|ogg|webm)$/i)) {
+        if (
+          contentType.startsWith("audio/") ||
+          file.name.match(/\.(mp3|wav|m4a|ogg|webm)$/i)
+        ) {
           audioCount++;
         }
 
@@ -52,12 +55,11 @@ async function checkAudioBuckets() {
       }
 
       if (files.length > 10) {
-        console.log(`   ... 還有更多檔案`);
+        console.log("   ... 還有更多檔案");
       }
 
       console.log(`\n   音檔數量: ${audioCount}/${files.length}`);
       console.log(`   樣本總大小: ${formatSize(totalSize)}`);
-
     } catch (error) {
       const err = error as Error;
       console.log(`   ❌ 無法存取: ${err.message}`);

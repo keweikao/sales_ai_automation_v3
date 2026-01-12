@@ -1,11 +1,11 @@
 // scripts/migration/validate.ts
 
+import { count, eq, isNull } from "drizzle-orm";
 import {
   conversations,
   meddicAnalyses,
   opportunities,
 } from "../../packages/db/src/schema";
-import { count, eq, isNull } from "drizzle-orm";
 import { db, firestore } from "./config";
 import type { FirestoreConversation } from "./types";
 

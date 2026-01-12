@@ -9,7 +9,8 @@ import { r2Config } from "./config";
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes < 1024 * 1024 * 1024)
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
@@ -48,7 +49,9 @@ async function checkR2Files() {
     continuationToken = response.NextContinuationToken;
   } while (continuationToken);
 
-  console.log("═══════════════════════════════════════════════════════════════\n");
+  console.log(
+    "═══════════════════════════════════════════════════════════════\n"
+  );
   console.log("✅ R2 音檔統計");
   console.log(`   - 總檔案數: ${totalFiles}`);
   console.log(`   - 總大小: ${formatSize(totalSize)}`);

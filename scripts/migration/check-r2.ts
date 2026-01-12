@@ -1,9 +1,12 @@
-import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
 // Load env
-const envContent = readFileSync(resolve(__dirname, "../../apps/server/.env"), "utf-8");
+const envContent = readFileSync(
+  resolve(__dirname, "../../apps/server/.env"),
+  "utf-8"
+);
 const envVars: Record<string, string> = {};
 for (const line of envContent.split("\n")) {
   const trimmed = line.trim();
@@ -12,7 +15,10 @@ for (const line of envContent.split("\n")) {
   if (eqIndex === -1) continue;
   const key = trimmed.slice(0, eqIndex).trim();
   let value = trimmed.slice(eqIndex + 1).trim();
-  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+  if (
+    (value.startsWith('"') && value.endsWith('"')) ||
+    (value.startsWith("'") && value.endsWith("'"))
+  ) {
     value = value.slice(1, -1);
   }
   envVars[key] = value;

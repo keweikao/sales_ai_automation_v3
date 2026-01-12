@@ -5,7 +5,7 @@
  */
 
 import { eq, like, sql } from "drizzle-orm";
-import { db, conversations, migrationConfig } from "./config";
+import { conversations, db, migrationConfig } from "./config";
 
 interface UrlMapping {
   conversationId: string;
@@ -36,10 +36,14 @@ async function rollbackAudioUrls() {
     console.log("⚠️  警告: 此操作將把所有 R2 URL 還原為 GCS URL");
     console.log("");
     console.log("若要執行，請設定環境變數:");
-    console.log("  CONFIRM_ROLLBACK=yes bun run scripts/migration/rollback-audio-urls.ts");
+    console.log(
+      "  CONFIRM_ROLLBACK=yes bun run scripts/migration/rollback-audio-urls.ts"
+    );
     console.log("");
     console.log("或使用 dry run 模式預覽:");
-    console.log("  DRY_RUN=true bun run scripts/migration/rollback-audio-urls.ts");
+    console.log(
+      "  DRY_RUN=true bun run scripts/migration/rollback-audio-urls.ts"
+    );
     process.exit(1);
   }
 
@@ -170,7 +174,9 @@ async function rollbackAudioUrls() {
   const r2CountNum = Number(r2Count[0]?.count || 0);
 
   // 輸出結果
-  console.log("\n═══════════════════════════════════════════════════════════════\n");
+  console.log(
+    "\n═══════════════════════════════════════════════════════════════\n"
+  );
   console.log("✅ URL Rollback Complete");
   console.log(`   Total: ${stats.total}`);
   console.log(`   Rolled back: ${stats.rolledBack}`);

@@ -122,7 +122,12 @@ function NewConversationPage() {
           "audio/ogg",
           "audio/webm",
         ];
-        if (!validTypes.includes(file.type) && !file.name.match(/\.(mp3|wav|m4a|ogg|webm)$/i)) {
+        if (
+          !(
+            validTypes.includes(file.type) ||
+            file.name.match(/\.(mp3|wav|m4a|ogg|webm)$/i)
+          )
+        ) {
           toast.error("不支援的檔案格式，請上傳 MP3、WAV、M4A 等音檔");
           return;
         }
@@ -171,7 +176,9 @@ function NewConversationPage() {
         </Button>
         <div>
           <h1 className="font-bold text-3xl tracking-tight">上傳對話</h1>
-          <p className="text-muted-foreground">上傳銷售對話音檔進行 MEDDIC 分析</p>
+          <p className="text-muted-foreground">
+            上傳銷售對話音檔進行 MEDDIC 分析
+          </p>
         </div>
       </div>
 

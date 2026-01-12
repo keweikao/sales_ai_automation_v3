@@ -1,6 +1,6 @@
+import { ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import { neon } from "@neondatabase/serverless";
-import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
-import { readFileSync, existsSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { resolve } from "path";
 
 // Load env files
@@ -19,7 +19,10 @@ for (const envFile of envFiles) {
       if (eqIndex === -1) continue;
       const key = trimmed.slice(0, eqIndex).trim();
       let value = trimmed.slice(eqIndex + 1).trim();
-      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
         value = value.slice(1, -1);
       }
       if (!process.env[key]) process.env[key] = value;
@@ -41,7 +44,9 @@ const r2Client = new S3Client({
 async function main() {
   console.log("╔════════════════════════════════════════════════════════════╗");
   console.log("║          Sales AI V3 - 最終遷移狀態檢查報告                ║");
-  console.log("╚════════════════════════════════════════════════════════════╝\n");
+  console.log(
+    "╚════════════════════════════════════════════════════════════╝\n"
+  );
 
   // 1. Check Database Tables
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -56,29 +61,43 @@ async function main() {
   `;
 
   const requiredTables = [
-    "user", "account", "session", "verification",
-    "user_profiles", "opportunities", "conversations",
-    "meddic_analyses", "alerts", "lead_sources",
-    "utm_campaigns", "form_submissions"
+    "user",
+    "account",
+    "session",
+    "verification",
+    "user_profiles",
+    "opportunities",
+    "conversations",
+    "meddic_analyses",
+    "alerts",
+    "lead_sources",
+    "utm_campaigns",
+    "form_submissions",
   ];
 
   let allTablesExist = true;
   for (const t of requiredTables) {
-    const exists = tables.some(table => table.table_name === t);
+    const exists = tables.some((table) => table.table_name === t);
     const status = exists ? "✅" : "❌";
     if (!exists) allTablesExist = false;
     console.log(`  ${status} ${t}`);
   }
 
-  console.log(`\n  結果: ${allTablesExist ? "✅ 所有資料表已建立" : "❌ 有資料表缺失"}`);
+  console.log(
+    `\n  結果: ${allTablesExist ? "✅ 所有資料表已建立" : "❌ 有資料表缺失"}`
+  );
 
   // 2. Check Data Migration (Agent 1)
-  console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log(
+    "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  );
   console.log("【2】資料遷移檢查 (Agent 1)");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-  const opportunitiesCount = await sql`SELECT COUNT(*) as count FROM opportunities`;
-  const conversationsCount = await sql`SELECT COUNT(*) as count FROM conversations`;
+  const opportunitiesCount =
+    await sql`SELECT COUNT(*) as count FROM opportunities`;
+  const conversationsCount =
+    await sql`SELECT COUNT(*) as count FROM conversations`;
   const meddicCount = await sql`SELECT COUNT(*) as count FROM meddic_analyses`;
 
   console.log(`  📊 Opportunities (商機): ${opportunitiesCount[0].count} 筆`);
@@ -97,7 +116,9 @@ async function main() {
   }
 
   // 3. Check Audio Migration (Agent 2)
-  console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log(
+    "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  );
   console.log("【3】音檔遷移檢查 (Agent 2)");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
@@ -122,7 +143,9 @@ async function main() {
 
   console.log(`  📁 R2 Bucket: ${process.env.CLOUDFLARE_R2_BUCKET}`);
   console.log(`  📊 總檔案數: ${r2TotalFiles}`);
-  console.log(`  💾 總大小: ${(r2TotalSize / 1024 / 1024 / 1024).toFixed(2)} GB`);
+  console.log(
+    `  💾 總大小: ${(r2TotalSize / 1024 / 1024 / 1024).toFixed(2)} GB`
+  );
 
   if (r2TotalFiles > 0) {
     console.log("\n  結果: ✅ 音檔遷移已完成 (127 個唯一音檔已遷移)");
@@ -131,7 +154,9 @@ async function main() {
   }
 
   // 4. Check Auth Users
-  console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log(
+    "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  );
   console.log("【4】認證系統檢查");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
@@ -140,9 +165,13 @@ async function main() {
   console.log("  結果: ✅ Better Auth 表結構已就緒");
 
   // 5. Summary
-  console.log("\n╔════════════════════════════════════════════════════════════╗");
+  console.log(
+    "\n╔════════════════════════════════════════════════════════════╗"
+  );
   console.log("║                        總結                                ║");
-  console.log("╚════════════════════════════════════════════════════════════╝\n");
+  console.log(
+    "╚════════════════════════════════════════════════════════════╝\n"
+  );
 
   const checks = [
     { name: "資料庫表結構 (Agent 3)", passed: allTablesExist },
@@ -155,14 +184,18 @@ async function main() {
     console.log(`  ${status}  ${check.name}`);
   }
 
-  const allPassed = checks.every(c => c.passed);
-  console.log("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  const allPassed = checks.every((c) => c.passed);
+  console.log(
+    "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  );
   if (allPassed) {
     console.log("  🎉 所有遷移任務已完成！可以進入 Phase 5");
   } else {
     console.log("  ⚠️ 部分任務尚未完成，請檢查上述項目");
   }
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+  console.log(
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+  );
 }
 
 main().catch(console.error);

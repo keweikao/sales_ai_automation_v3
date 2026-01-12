@@ -5,7 +5,10 @@
 
 import { conversations } from "../../packages/db/src/schema";
 import { db, firestore } from "./config";
-import { mapCaseToConversation, normalizeCustomerId } from "./mappers/v2-mapper";
+import {
+  mapCaseToConversation,
+  normalizeCustomerId,
+} from "./mappers/v2-mapper";
 import { parseV2Case } from "./types-v2";
 
 async function main() {
@@ -31,7 +34,9 @@ async function main() {
   console.log(`  id: ${conversation.id}`);
   console.log(`  opportunityId: ${conversation.opportunityId}`);
   console.log(`  title: ${conversation.title}`);
-  console.log(`  transcript 長度: ${JSON.stringify(conversation.transcript || {}).length} 字元`);
+  console.log(
+    `  transcript 長度: ${JSON.stringify(conversation.transcript || {}).length} 字元`
+  );
 
   try {
     console.log("\n嘗試插入...");
@@ -49,7 +54,7 @@ async function main() {
       // 嘗試打印更多詳情
       const anyError = error as Record<string, unknown>;
       for (const key of Object.keys(anyError)) {
-        if (key !== 'message' && key !== 'name' && key !== 'stack') {
+        if (key !== "message" && key !== "name" && key !== "stack") {
           console.log(`  ${key}: ${JSON.stringify(anyError[key])}`);
         }
       }

@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { opportunities } from "./opportunity";
 import { meddicAnalyses } from "./meddic";
+import { opportunities } from "./opportunity";
 
 export const conversations = pgTable("conversations", {
   id: text("id").primaryKey(),

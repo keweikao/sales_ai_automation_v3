@@ -3,8 +3,8 @@
  */
 
 import type { Env, SlackEvent } from "../types";
-import { handleMessageEvent } from "./message";
 import { handleFileSharedEvent } from "./file";
+import { handleMessageEvent } from "./message";
 
 /**
  * 處理 Slack 事件
@@ -17,7 +17,7 @@ export async function handleSlackEvent(
     switch (event.type) {
       case "message":
         // 忽略 bot 訊息和子類型訊息（如編輯、刪除等）
-        if (!event.bot_id && !event.subtype) {
+        if (!(event.bot_id || event.subtype)) {
           await handleMessageEvent(event, env);
         }
         break;

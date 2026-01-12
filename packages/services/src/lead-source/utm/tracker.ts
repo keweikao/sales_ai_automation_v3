@@ -3,11 +3,11 @@
  * 追蹤和統計 UTM 活動效果
  */
 
-import { eq, and, sql } from "drizzle-orm";
 import { db, utmCampaigns } from "@Sales_ai_automation_v3/db";
 import type { UTMCampaign } from "@Sales_ai_automation_v3/db/schema";
-import type { UTMParams, CampaignStats } from "../types";
-import { normalizeUTMParams, hasUTMParams } from "./parser";
+import { and, eq, sql } from "drizzle-orm";
+import type { CampaignStats, UTMParams } from "../types";
+import { hasUTMParams, normalizeUTMParams } from "./parser";
 
 /**
  * 追蹤 UTM Campaign
@@ -135,13 +135,18 @@ export async function getCampaignStats(
   userId: string,
   campaignId?: string
 ): Promise<CampaignStats[]> {
-  let query = db.select().from(utmCampaigns).where(eq(utmCampaigns.userId, userId));
+  let query = db
+    .select()
+    .from(utmCampaigns)
+    .where(eq(utmCampaigns.userId, userId));
 
   if (campaignId) {
     query = db
       .select()
       .from(utmCampaigns)
-      .where(and(eq(utmCampaigns.userId, userId), eq(utmCampaigns.id, campaignId)));
+      .where(
+        and(eq(utmCampaigns.userId, userId), eq(utmCampaigns.id, campaignId))
+      );
   }
 
   const campaigns = await query;
@@ -166,7 +171,7 @@ function calculateROI(
   spent: number | null,
   conversions: number | null
 ): number | undefined {
-  if (!spent || !conversions || conversions === 0) {
+  if (!(spent && conversions) || conversions === 0) {
     return undefined;
   }
   // 簡化的 ROI 計算（需要知道平均客戶價值才能準確計算）
@@ -205,7 +210,11 @@ function capitalizeFirst(str: string): string {
 export async function getSourceAttribution(userId: string): Promise<{
   bySource: Array<{ source: string; leads: number; conversions: number }>;
   byMedium: Array<{ medium: string; leads: number; conversions: number }>;
-  topCampaigns: Array<{ campaign: string; leads: number; conversionRate: number }>;
+  topCampaigns: Array<{
+    campaign: string;
+    leads: number;
+    conversionRate: number;
+  }>;
 }> {
   const campaigns = await db
     .select()

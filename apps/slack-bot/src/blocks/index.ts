@@ -3,12 +3,12 @@
  */
 
 export {
-  buildMeddicSummaryBlocks,
   buildMeddicCompactBlocks,
+  buildMeddicSummaryBlocks,
 } from "./meddic-summary";
 
 export {
   buildOpportunityCardBlocks,
-  buildOpportunityListBlocks,
   buildOpportunityCompactBlocks,
+  buildOpportunityListBlocks,
 } from "./opportunity-card";

@@ -19,16 +19,24 @@ async function checkFirestore() {
     const leadsSnapshot = await firestore.collection("leads").limit(3).get();
     console.log(`leads 集合樣本 (${leadsSnapshot.size} 筆):`);
     for (const doc of leadsSnapshot.docs) {
-      console.log(`  - ${doc.id}:`, JSON.stringify(doc.data()).substring(0, 100) + "...");
+      console.log(
+        `  - ${doc.id}:`,
+        JSON.stringify(doc.data()).substring(0, 100) + "..."
+      );
     }
 
     // 檢查 sales_cases
-    const casesSnapshot = await firestore.collection("sales_cases").limit(3).get();
+    const casesSnapshot = await firestore
+      .collection("sales_cases")
+      .limit(3)
+      .get();
     console.log(`\nsales_cases 集合樣本 (${casesSnapshot.size} 筆):`);
     for (const doc of casesSnapshot.docs) {
-      console.log(`  - ${doc.id}:`, JSON.stringify(doc.data()).substring(0, 100) + "...");
+      console.log(
+        `  - ${doc.id}:`,
+        JSON.stringify(doc.data()).substring(0, 100) + "..."
+      );
     }
-
   } catch (error) {
     console.error("查詢失敗:", error);
   }

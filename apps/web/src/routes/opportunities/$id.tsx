@@ -30,7 +30,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/opportunities/$id")({
@@ -145,10 +144,7 @@ function OpportunityDetailPage() {
         </div>
         <div className="flex gap-2">
           <Button asChild variant="outline">
-            <Link
-              params={{ id: opportunity.id }}
-              to="/opportunities/$id/edit"
-            >
+            <Link params={{ id: opportunity.id }} to="/opportunities/$id/edit">
               <Edit className="mr-2 h-4 w-4" />
               編輯
             </Link>
@@ -261,7 +257,8 @@ function OpportunityDetailPage() {
               </Button>
             </CardHeader>
             <CardContent>
-              {opportunity.conversations && opportunity.conversations.length > 0 ? (
+              {opportunity.conversations &&
+              opportunity.conversations.length > 0 ? (
                 <div className="space-y-4">
                   {opportunity.conversations.map((conv) => (
                     <div

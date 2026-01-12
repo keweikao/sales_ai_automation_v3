@@ -13,7 +13,6 @@ async function checkCasesDetail() {
       const data = doc.data();
       console.log(JSON.stringify(data, null, 2));
     }
-
   } catch (error) {
     console.error("查詢失敗:", error);
   }

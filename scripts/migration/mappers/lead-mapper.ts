@@ -1,7 +1,7 @@
 // scripts/migration/mappers/lead-mapper.ts
 
-import type { NewOpportunity } from "../../../packages/db/src/schema";
 import type { Timestamp } from "firebase-admin/firestore";
+import type { NewOpportunity } from "../../../packages/db/src/schema";
 import type { FirestoreConversation, FirestoreLead } from "../types";
 
 /**

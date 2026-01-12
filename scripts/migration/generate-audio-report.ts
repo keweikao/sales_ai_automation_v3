@@ -4,8 +4,8 @@
  * 彙整所有遷移相關的資訊並產生最終報告
  */
 
-import { sql, like, isNotNull, not } from "drizzle-orm";
-import { db, conversations } from "../../packages/db/src/index";
+import { like, sql } from "drizzle-orm";
+import { conversations, db } from "../../packages/db/src/index";
 import { r2Config } from "./config";
 
 interface AudioMigrationReport {
@@ -66,9 +66,15 @@ async function generateAudioReport() {
   const migrationId = `audio-migration-${now.toISOString().split("T")[0].replace(/-/g, "")}`;
 
   // 載入各個進度/報告檔案
-  const progressFile = Bun.file("scripts/migration/progress/audio-progress.json");
-  const manifestFile = Bun.file("scripts/migration/data/gcs-audio-manifest.json");
-  const urlMappingFile = Bun.file("scripts/migration/data/audio-url-mapping.json");
+  const progressFile = Bun.file(
+    "scripts/migration/progress/audio-progress.json"
+  );
+  const manifestFile = Bun.file(
+    "scripts/migration/data/gcs-audio-manifest.json"
+  );
+  const urlMappingFile = Bun.file(
+    "scripts/migration/data/audio-url-mapping.json"
+  );
 
   let progress: {
     startedAt: string;
@@ -82,7 +88,11 @@ async function generateAudioReport() {
       error: string;
       retryCount: number;
     }>;
-    urlMappings: Array<{ conversationId: string; gcsUri: string; r2Url: string }>;
+    urlMappings: Array<{
+      conversationId: string;
+      gcsUri: string;
+      r2Url: string;
+    }>;
   } | null = null;
 
   let manifest: {
@@ -142,7 +152,10 @@ async function generateAudioReport() {
 
   // 計算遷移統計
   const totalFiles = manifest?.totalFiles || 0;
-  const successfulMigrations = progress?.successCount || urlMapping?.totalMappings || conversationsWithR2Url;
+  const successfulMigrations =
+    progress?.successCount ||
+    urlMapping?.totalMappings ||
+    conversationsWithR2Url;
   const failedMigrations = progress?.failedCount || 0;
   const skippedMigrations = progress?.skippedCount || 0;
   const totalSizeBytes = manifest?.totalSizeBytes || 0;
@@ -150,7 +163,8 @@ async function generateAudioReport() {
   // 計算遷移時間和速度
   const startedAt = progress?.startedAt || now.toISOString();
   const completedAt = progress?.updatedAt || now.toISOString();
-  const durationMs = new Date(completedAt).getTime() - new Date(startedAt).getTime();
+  const durationMs =
+    new Date(completedAt).getTime() - new Date(startedAt).getTime();
   const durationSec = Math.max(durationMs / 1000, 1);
   const speedBytesPerSec = totalSizeBytes / durationSec;
 
@@ -192,7 +206,8 @@ async function generateAudioReport() {
       averageSpeed: `${formatSize(speedBytesPerSec)}/s`,
     },
     sourceStats: {
-      bucket: manifest?.bucket || process.env.FIREBASE_STORAGE_BUCKET || "unknown",
+      bucket:
+        manifest?.bucket || process.env.FIREBASE_STORAGE_BUCKET || "unknown",
       totalOriginalFiles: totalFiles,
       retainedForBackup: true,
     },
@@ -216,9 +231,13 @@ async function generateAudioReport() {
   };
 
   // 輸出報告
-  console.log("═══════════════════════════════════════════════════════════════");
+  console.log(
+    "═══════════════════════════════════════════════════════════════"
+  );
   console.log("                    音檔遷移報告");
-  console.log("═══════════════════════════════════════════════════════════════\n");
+  console.log(
+    "═══════════════════════════════════════════════════════════════\n"
+  );
 
   console.log(`Migration ID: ${report.migrationId}`);
   console.log(`Started: ${report.startedAt}`);
@@ -235,7 +254,9 @@ async function generateAudioReport() {
 
   console.log("🗄️ Source (GCS):");
   console.log(`   Bucket: ${report.sourceStats.bucket}`);
-  console.log(`   Retained for backup: ${report.sourceStats.retainedForBackup}\n`);
+  console.log(
+    `   Retained for backup: ${report.sourceStats.retainedForBackup}\n`
+  );
 
   console.log("☁️ Target (R2):");
   console.log(`   Bucket: ${report.targetStats.bucket}`);
@@ -243,10 +264,16 @@ async function generateAudioReport() {
   console.log(`   Public URL: ${report.targetStats.publicUrl}\n`);
 
   console.log("📦 Database:");
-  console.log(`   Total conversations: ${report.databaseStats.totalConversations}`);
+  console.log(
+    `   Total conversations: ${report.databaseStats.totalConversations}`
+  );
   console.log(`   With R2 URL: ${report.databaseStats.conversationsWithR2Url}`);
-  console.log(`   With GCS URL: ${report.databaseStats.conversationsWithGcsUrl}`);
-  console.log(`   Without audio: ${report.databaseStats.conversationsWithoutAudio}\n`);
+  console.log(
+    `   With GCS URL: ${report.databaseStats.conversationsWithGcsUrl}`
+  );
+  console.log(
+    `   Without audio: ${report.databaseStats.conversationsWithoutAudio}\n`
+  );
 
   if (report.failedFiles.length > 0) {
     console.log("❌ Failed Files:");

@@ -239,15 +239,25 @@ async function checkMigrationUserId() {
 }
 
 async function main() {
-  console.log("═══════════════════════════════════════════════════════════════");
+  console.log(
+    "═══════════════════════════════════════════════════════════════"
+  );
   console.log("              Sales AI Automation V3 - 連線測試");
-  console.log("═══════════════════════════════════════════════════════════════\n");
+  console.log(
+    "═══════════════════════════════════════════════════════════════\n"
+  );
 
   // 顯示環境設定
   console.log("📋 環境設定:");
-  console.log(`   - FIREBASE_PROJECT_ID: ${process.env.FIREBASE_PROJECT_ID || "(not set)"}`);
-  console.log(`   - DATABASE_URL: ${process.env.DATABASE_URL ? "***設定完成***" : "(not set)"}`);
-  console.log(`   - MIGRATION_USER_ID: ${process.env.MIGRATION_USER_ID || "(not set)"}`);
+  console.log(
+    `   - FIREBASE_PROJECT_ID: ${process.env.FIREBASE_PROJECT_ID || "(not set)"}`
+  );
+  console.log(
+    `   - DATABASE_URL: ${process.env.DATABASE_URL ? "***設定完成***" : "(not set)"}`
+  );
+  console.log(
+    `   - MIGRATION_USER_ID: ${process.env.MIGRATION_USER_ID || "(not set)"}`
+  );
   console.log(`   - DRY_RUN: ${process.env.DRY_RUN || "false"}`);
   console.log("");
 
@@ -257,9 +267,13 @@ async function main() {
   const userIdValid = await checkMigrationUserId();
 
   // 總結
-  console.log("═══════════════════════════════════════════════════════════════");
+  console.log(
+    "═══════════════════════════════════════════════════════════════"
+  );
   console.log("                        測試結果總結");
-  console.log("═══════════════════════════════════════════════════════════════\n");
+  console.log(
+    "═══════════════════════════════════════════════════════════════\n"
+  );
 
   const passedCount = results.filter((r) => r.passed).length;
   const totalCount = results.length;
@@ -268,17 +282,21 @@ async function main() {
 
   if (firestoreResult) {
     console.log("✅ Firebase Firestore connected");
-    console.log(`   - leads collection: ${firestoreResult.leadsCount} documents`);
-    console.log(`   - sales_cases collection: ${firestoreResult.salesCasesCount} documents`);
+    console.log(
+      `   - leads collection: ${firestoreResult.leadsCount} documents`
+    );
+    console.log(
+      `   - sales_cases collection: ${firestoreResult.salesCasesCount} documents`
+    );
   } else {
     console.log("❌ Firebase Firestore: 連線失敗");
   }
 
   if (postgresResult) {
     console.log("✅ PostgreSQL connected");
-    console.log(`   - opportunities table: ready`);
-    console.log(`   - conversations table: ready`);
-    console.log(`   - meddic_analyses table: ready`);
+    console.log("   - opportunities table: ready");
+    console.log("   - conversations table: ready");
+    console.log("   - meddic_analyses table: ready");
   } else {
     console.log("❌ PostgreSQL: 連線失敗");
   }

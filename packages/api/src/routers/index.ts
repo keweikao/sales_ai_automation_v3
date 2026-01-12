@@ -1,11 +1,15 @@
 import type { RouterClient } from "@orpc/server";
 
 import { protectedProcedure, publicProcedure } from "../index";
+// TODO: Sales Coach Agent 開發中，暫時停用
+// import { agentRouter } from "./agent";
 import { alertRouter } from "./alert";
 import { analyticsRouter } from "./analytics";
 import { conversationRouter } from "./conversation";
 import { leadSourceRouter } from "./lead-source";
 import { opportunityRouter } from "./opportunity";
+// TODO: Talk Tracks 開發中，暫時停用
+// import { talkTrackRouter } from "./talk-track";
 
 export const appRouter = {
   healthCheck: publicProcedure.handler(() => {
@@ -32,6 +36,12 @@ export const appRouter = {
 
   // Lead source & UTM tracking
   leadSources: leadSourceRouter,
+
+  // TODO: Sales Coach Agent 開發中，暫時停用
+  // agent: agentRouter,
+
+  // TODO: Talk Tracks Knowledge Base 開發中，暫時停用
+  // talkTracks: talkTrackRouter,
 };
 export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;

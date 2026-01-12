@@ -48,7 +48,9 @@ async function main() {
       const char = id[i];
       const code = id.charCodeAt(i);
       if (code > 127) {
-        console.log(`    字元 [${i}]: "${char}" = U+${code.toString(16).toUpperCase().padStart(4, "0")}`);
+        console.log(
+          `    字元 [${i}]: "${char}" = U+${code.toString(16).toUpperCase().padStart(4, "0")}`
+        );
       }
     }
   }
@@ -69,7 +71,9 @@ async function main() {
     for (let i = 0; i < r.id.length; i++) {
       const code = r.id.charCodeAt(i);
       if (code > 127) {
-        console.log(`    字元 [${i}]: "${r.id[i]}" = U+${code.toString(16).toUpperCase().padStart(4, "0")}`);
+        console.log(
+          `    字元 [${i}]: "${r.id[i]}" = U+${code.toString(16).toUpperCase().padStart(4, "0")}`
+        );
       }
     }
   }

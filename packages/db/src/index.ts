@@ -11,8 +11,7 @@ neonConfig.poolQueryViaFetch = true;
 const sql = neon(env.DATABASE_URL || "");
 export const db = drizzle(sql, { schema });
 
-// Export utilities
-export * from "./utils/id-generator";
-
 // Re-export all schema tables for convenience
 export * from "./schema";
+// Export utilities
+export * from "./utils/id-generator";

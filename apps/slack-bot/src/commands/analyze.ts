@@ -6,11 +6,11 @@
  *   /analyze help - 顯示幫助訊息
  */
 
-import type { CommandContext } from "./index";
-import type { Env } from "../types";
-import type { SlackClient } from "../utils/slack-client";
 import { ApiClient } from "../api-client";
 import { buildMeddicSummaryBlocks } from "../blocks/meddic-summary";
+import type { Env } from "../types";
+import type { SlackClient } from "../utils/slack-client";
+import type { CommandContext } from "./index";
 
 /**
  * 處理 /analyze 指令

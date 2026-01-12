@@ -4,23 +4,26 @@
  */
 
 import { db } from "@Sales_ai_automation_v3/db";
+import type {
+  FormSubmission,
+  LeadSource,
+  UTMCampaign,
+} from "@Sales_ai_automation_v3/db/schema";
 import {
+  formSubmissions,
   leadSources,
   utmCampaigns,
-  formSubmissions,
 } from "@Sales_ai_automation_v3/db/schema";
-import type { LeadSource, UTMCampaign, FormSubmission } from "@Sales_ai_automation_v3/db/schema";
+import {
+  getCampaignStats,
+  getSourceAttribution,
+  handleSquarespaceWebhook,
+} from "@Sales_ai_automation_v3/services";
 import { randomUUID } from "node:crypto";
 import { ORPCError } from "@orpc/server";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
-
 import { protectedProcedure, publicProcedure } from "../index";
-import {
-  handleSquarespaceWebhook,
-  getCampaignStats,
-  getSourceAttribution,
-} from "@Sales_ai_automation_v3/services";
 
 // ============================================================
 // Schemas
@@ -247,7 +250,10 @@ export const getSourceStats = protectedProcedure
       .where(eq(leadSources.userId, userId));
 
     // 計算統計
-    const totalLeads = sources.reduce((sum: number, s: LeadSource) => sum + (s.totalLeads || 0), 0);
+    const totalLeads = sources.reduce(
+      (sum: number, s: LeadSource) => sum + (s.totalLeads || 0),
+      0
+    );
 
     return {
       totalLeads,
@@ -368,7 +374,7 @@ export const handleSquarespaceWebhookRoute = publicProcedure
     return {
       success: true,
       opportunityId: result.opportunityId,
-      isDuplicate: result.isDuplicate || false,
+      isDuplicate: result.isDuplicate,
       message: result.message,
     };
   });
@@ -408,7 +414,12 @@ export const listFormSubmissions = protectedProcedure
     }
 
     // 構建查詢條件
-    const conditions = [sql`${formSubmissions.sourceId} IN (${sql.join(sourceIds.map((id: string) => sql`${id}`), sql`, `)})`];
+    const conditions = [
+      sql`${formSubmissions.sourceId} IN (${sql.join(
+        sourceIds.map((id: string) => sql`${id}`),
+        sql`, `
+      )})`,
+    ];
 
     if (input.sourceId) {
       conditions.push(eq(formSubmissions.sourceId, input.sourceId));

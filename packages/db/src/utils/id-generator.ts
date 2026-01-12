@@ -42,7 +42,7 @@ export function parseCaseNumber(caseNumber: string): {
   sequence: number;
 } | null {
   const match = caseNumber.match(/^(\d{6})-IC(\d{3})$/);
-  if (!match || !match[1] || !match[2]) return null;
+  if (!(match && match[1] && match[2])) return null;
   return {
     yearMonth: match[1],
     sequence: Number.parseInt(match[2], 10),

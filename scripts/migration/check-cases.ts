@@ -16,7 +16,6 @@ async function checkCases() {
       console.log("資料:", JSON.stringify(data, null, 2).substring(0, 500));
       console.log("\n");
     }
-
   } catch (error) {
     console.error("查詢失敗:", error);
   }

@@ -1,12 +1,12 @@
 // scripts/migration/config.ts
 
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { Storage } from "@google-cloud/storage";
 import { neon, neonConfig } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { cert, initializeApp, type ServiceAccount } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import ws from "ws";
 
 // Import schema directly

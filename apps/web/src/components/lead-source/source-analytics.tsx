@@ -3,16 +3,16 @@
  * 來源分析圖表與統計
  */
 
+import {
+  BarChart3,
+  Target,
+  TrendingDown,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import {
-  TrendingUp,
-  TrendingDown,
-  Users,
-  Target,
-  BarChart3,
-} from "lucide-react";
 
 interface SourceData {
   source: string;
@@ -45,12 +45,12 @@ export function SourceAnalytics({
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="animate-pulse">
+          <Card className="animate-pulse" key={i}>
             <CardHeader className="pb-2">
-              <div className="h-4 w-24 bg-muted rounded" />
+              <div className="h-4 w-24 rounded bg-muted" />
             </CardHeader>
             <CardContent>
-              <div className="h-32 bg-muted rounded" />
+              <div className="h-32 rounded bg-muted" />
             </CardContent>
           </Card>
         ))}
@@ -66,14 +66,14 @@ export function SourceAnalytics({
       {/* 總覽卡片 */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 font-medium text-sm">
             <Users className="h-4 w-4" />
             總潛客數
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold">{totalLeads}</div>
-          <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
+          <div className="font-bold text-3xl">{totalLeads}</div>
+          <div className="mt-2 flex items-center gap-1 text-muted-foreground text-sm">
             <span>來自 {bySource.length} 個來源</span>
           </div>
         </CardContent>
@@ -82,7 +82,7 @@ export function SourceAnalytics({
       {/* 依來源分布 */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 font-medium text-sm">
             <BarChart3 className="h-4 w-4" />
             依來源
           </CardTitle>
@@ -91,13 +91,13 @@ export function SourceAnalytics({
           <div className="space-y-3">
             {bySource.slice(0, 5).map((item) => (
               <div key={item.source}>
-                <div className="flex items-center justify-between text-sm mb-1">
+                <div className="mb-1 flex items-center justify-between text-sm">
                   <span className="capitalize">{item.source}</span>
                   <span className="font-medium">{item.leads}</span>
                 </div>
                 <Progress
-                  value={(item.leads / maxSourceLeads) * 100}
                   className="h-2"
+                  value={(item.leads / maxSourceLeads) * 100}
                 />
               </div>
             ))}
@@ -111,7 +111,7 @@ export function SourceAnalytics({
       {/* 依媒介分布 */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 font-medium text-sm">
             <Target className="h-4 w-4" />
             依媒介
           </CardTitle>
@@ -120,15 +120,15 @@ export function SourceAnalytics({
           <div className="space-y-3">
             {byMedium.slice(0, 5).map((item) => (
               <div key={item.medium}>
-                <div className="flex items-center justify-between text-sm mb-1">
+                <div className="mb-1 flex items-center justify-between text-sm">
                   <span className="capitalize">
                     {item.medium === "none" ? "直接" : item.medium}
                   </span>
                   <span className="font-medium">{item.leads}</span>
                 </div>
                 <Progress
-                  value={(item.leads / maxMediumLeads) * 100}
                   className="h-2"
+                  value={(item.leads / maxMediumLeads) * 100}
                 />
               </div>
             ))}
@@ -142,15 +142,15 @@ export function SourceAnalytics({
       {/* Top Campaigns */}
       <Card className="md:col-span-2 lg:col-span-3">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium">熱門行銷活動</CardTitle>
+          <CardTitle className="font-medium text-sm">熱門行銷活動</CardTitle>
         </CardHeader>
         <CardContent>
           {topCampaigns.length > 0 ? (
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {topCampaigns.map((campaign) => (
                 <div
+                  className="flex items-center justify-between rounded-lg border p-3"
                   key={campaign.campaign}
-                  className="flex items-center justify-between p-3 border rounded-lg"
                 >
                   <div>
                     <div className="font-medium text-sm">
@@ -175,7 +175,7 @@ export function SourceAnalytics({
               ))}
             </div>
           ) : (
-            <div className="text-muted-foreground text-sm text-center py-4">
+            <div className="py-4 text-center text-muted-foreground text-sm">
               尚無活動資料
             </div>
           )}
@@ -210,15 +210,15 @@ export function SourceStatsCard({
         <div className="flex items-center justify-between">
           <div>
             <div className="text-muted-foreground text-sm">{title}</div>
-            <div className="text-2xl font-bold">{value}</div>
+            <div className="font-bold text-2xl">{value}</div>
           </div>
-          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
             <Icon className="h-6 w-6 text-primary" />
           </div>
         </div>
         {change !== undefined && (
           <div
-            className={`flex items-center gap-1 mt-2 text-sm ${
+            className={`mt-2 flex items-center gap-1 text-sm ${
               isPositive
                 ? "text-green-600"
                 : isNegative

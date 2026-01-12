@@ -67,7 +67,9 @@ async function analyzeFiles() {
   } while (continuationToken);
 
   // 輸出結果
-  console.log("═══════════════════════════════════════════════════════════════\n");
+  console.log(
+    "═══════════════════════════════════════════════════════════════\n"
+  );
   console.log("GCS (來源):");
   console.log(`  總檔案數: ${manifest.totalFiles}`);
   console.log(`  唯一音檔數: ${gcsBaseNames.size}`);
@@ -99,9 +101,13 @@ async function analyzeFiles() {
   }
 
   console.log("");
-  console.log("═══════════════════════════════════════════════════════════════\n");
+  console.log(
+    "═══════════════════════════════════════════════════════════════\n"
+  );
   console.log("💡 結論:");
-  console.log(`   GCS 有 ${manifest.totalFiles} 個檔案，但包含同一音檔的多種格式`);
+  console.log(
+    `   GCS 有 ${manifest.totalFiles} 個檔案，但包含同一音檔的多種格式`
+  );
   console.log(`   實際唯一音檔: ${gcsBaseNames.size} 個`);
   console.log(`   R2 已遷移唯一音檔: ${r2BaseNames.size} 個`);
 

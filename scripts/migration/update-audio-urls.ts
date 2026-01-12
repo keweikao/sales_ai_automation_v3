@@ -4,8 +4,8 @@
  * 更新 PostgreSQL conversations.audio_url 從 GCS URL 到 R2 URL
  */
 
-import { eq, like, sql } from "drizzle-orm";
-import { db, conversations } from "../../packages/db/src/index";
+import { eq, like } from "drizzle-orm";
+import { conversations, db } from "../../packages/db/src/index";
 import { migrationConfig } from "./config";
 
 interface UrlMapping {
@@ -108,7 +108,9 @@ async function updateAudioUrls() {
           })
           .where(eq(conversations.id, conversationId));
 
-        console.log(`   ✓ ${conversationId}: ${current.audioUrl?.slice(0, 30) || "(null)"}... → ${r2Url.split("/").pop()}`);
+        console.log(
+          `   ✓ ${conversationId}: ${current.audioUrl?.slice(0, 30) || "(null)"}... → ${r2Url.split("/").pop()}`
+        );
         stats.updated++;
       } catch (error) {
         const errorMessage =
@@ -151,7 +153,9 @@ async function updateAudioUrls() {
   }
 
   // 輸出結果
-  console.log("\n═══════════════════════════════════════════════════════════════\n");
+  console.log(
+    "\n═══════════════════════════════════════════════════════════════\n"
+  );
   console.log("✅ URL Update Complete");
   console.log(`   Total: ${stats.total}`);
   console.log(`   Updated: ${stats.updated}`);

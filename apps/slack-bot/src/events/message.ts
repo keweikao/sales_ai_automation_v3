@@ -49,13 +49,13 @@ export async function handleMessageEvent(
 function getSuggestionForCategory(category: string): string | null {
   switch (category) {
     case "meddic":
-      return `:bulb: 需要進行 MEDDIC 分析嗎？使用 \`/analyze <conversation_id>\` 指令來分析銷售對話。`;
+      return ":bulb: 需要進行 MEDDIC 分析嗎？使用 `/analyze <conversation_id>` 指令來分析銷售對話。";
 
     case "opportunity":
-      return `:bulb: 需要查看商機資料嗎？使用 \`/opportunity list\` 查看所有商機，或 \`/opportunity <id>\` 查看特定商機。`;
+      return ":bulb: 需要查看商機資料嗎？使用 `/opportunity list` 查看所有商機，或 `/opportunity <id>` 查看特定商機。";
 
     case "report":
-      return `:bulb: 需要查看報表嗎？使用 \`/report dashboard\` 查看銷售儀表板，或 \`/report trends\` 查看趨勢分析。`;
+      return ":bulb: 需要查看報表嗎？使用 `/report dashboard` 查看銷售儀表板，或 `/report trends` 查看趨勢分析。";
 
     default:
       return null;

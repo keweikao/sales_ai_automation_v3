@@ -26,7 +26,9 @@ async function listBuckets() {
           const location = metadata.location || "unknown";
           const storageClass = metadata.storageClass || "unknown";
           console.log(`  📦 ${bucket.name}`);
-          console.log(`     Location: ${location}, Storage Class: ${storageClass}`);
+          console.log(
+            `     Location: ${location}, Storage Class: ${storageClass}`
+          );
         } catch {
           console.log(`  📦 ${bucket.name}`);
         }
@@ -40,8 +42,12 @@ async function listBuckets() {
     console.error("❌ 列出 buckets 失敗:", err.message);
     console.error("");
     console.error("💡 可能原因:");
-    console.error("   - Service Account 需要 'Storage Admin' 或 'Storage Object Viewer' 角色");
-    console.error("   - 前往 Google Cloud Console → IAM → 為 Service Account 新增角色");
+    console.error(
+      "   - Service Account 需要 'Storage Admin' 或 'Storage Object Viewer' 角色"
+    );
+    console.error(
+      "   - 前往 Google Cloud Console → IAM → 為 Service Account 新增角色"
+    );
   }
 }
 

@@ -82,7 +82,9 @@ async function testGcsConnection() {
           bucketName,
           bucketName.replace(".appspot.com", ".firebasestorage.app"),
           bucketName.toLowerCase(),
-          bucketName.toLowerCase().replace(".appspot.com", ".firebasestorage.app"),
+          bucketName
+            .toLowerCase()
+            .replace(".appspot.com", ".firebasestorage.app"),
           `${projectId}.appspot.com`,
           `${projectId}.firebasestorage.app`,
           // 常見的 Firebase 格式變體
@@ -97,7 +99,9 @@ async function testGcsConnection() {
             const [altExists] = await altBucket.exists();
             if (altExists) {
               console.log(`   ✅ 找到正確的 bucket: ${altName}`);
-              console.log(`   💡 請更新 FIREBASE_STORAGE_BUCKET 為: ${altName}\n`);
+              console.log(
+                `   💡 請更新 FIREBASE_STORAGE_BUCKET 為: ${altName}\n`
+              );
               readPermission = true;
               break;
             }
@@ -120,7 +124,10 @@ async function testGcsConnection() {
     } catch (innerError) {
       const innerErr = innerError as Error;
       // 403 錯誤可能表示 bucket 存在但沒有權限
-      if (innerErr.message.includes("403") || innerErr.message.includes("Forbidden")) {
+      if (
+        innerErr.message.includes("403") ||
+        innerErr.message.includes("Forbidden")
+      ) {
         console.log("   ⚠️ Bucket 可能存在但權限不足");
         console.log(`   錯誤: ${innerErr.message}\n`);
         readPermission = false;
@@ -205,7 +212,7 @@ async function testGcsConnection() {
       if (files.length > 0) {
         // 嘗試取得檔案 metadata（不實際下載）
         const [metadata] = await files[0].getMetadata();
-        console.log(`   ✅ 下載權限正常`);
+        console.log("   ✅ 下載權限正常");
         console.log(`      測試檔案: ${files[0].name}`);
         console.log(`      大小: ${formatSize(Number(metadata.size) || 0)}`);
         console.log(`      類型: ${metadata.contentType || "unknown"}\n`);
@@ -213,14 +220,18 @@ async function testGcsConnection() {
     } catch (error) {
       const err = error as Error;
       console.error(`   ⚠️ 下載測試失敗: ${err.message}`);
-      console.error("   💡 如果需要下載檔案，請確認有 Storage Object Admin 權限\n");
+      console.error(
+        "   💡 如果需要下載檔案，請確認有 Storage Object Admin 權限\n"
+      );
     }
   } else {
     console.log("3️⃣ 跳過下載測試（沒有找到音檔）\n");
   }
 
   // 總結
-  console.log("═══════════════════════════════════════════════════════════════");
+  console.log(
+    "═══════════════════════════════════════════════════════════════"
+  );
   console.log("");
   console.log("✅ Google Cloud Storage connected");
   console.log(`   - Bucket: ${bucketName}`);
@@ -233,7 +244,7 @@ async function testGcsConnection() {
   }
   console.log("");
 
-  if (!readPermission || !listPermission) {
+  if (!(readPermission && listPermission)) {
     console.error("❌ GCS 權限不足，無法執行音檔遷移");
     console.error("   請確認 Service Account 具有以下權限:");
     console.error("   - Storage Object Viewer（讀取）");

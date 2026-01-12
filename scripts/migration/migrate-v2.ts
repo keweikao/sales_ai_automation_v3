@@ -16,7 +16,7 @@ import {
   mapCaseToConversation,
   normalizeCustomerId,
 } from "./mappers/v2-mapper";
-import { createProgress, loadProgress, saveProgress } from "./progress";
+import { createProgress, loadProgress } from "./progress";
 import type { MigrationStats } from "./types";
 import { parseV2Case, type V2Case } from "./types-v2";
 
@@ -31,9 +31,13 @@ function createEmptyStats(): MigrationStats {
 }
 
 async function main() {
-  console.log("═══════════════════════════════════════════════════════════════");
+  console.log(
+    "═══════════════════════════════════════════════════════════════"
+  );
   console.log("            V2 Cases → V3 Migration");
-  console.log("═══════════════════════════════════════════════════════════════\n");
+  console.log(
+    "═══════════════════════════════════════════════════════════════\n"
+  );
 
   if (migrationConfig.dryRun) {
     console.log("⚠️  DRY RUN MODE - 不會實際寫入資料\n");
@@ -156,7 +160,10 @@ async function main() {
       }
 
       // 顯示進度
-      const processed = Math.min(i + migrationConfig.batchSize, allCases.length);
+      const processed = Math.min(
+        i + migrationConfig.batchSize,
+        allCases.length
+      );
       const percent = Math.round((processed / allCases.length) * 100);
       console.log(`   進度: ${processed}/${allCases.length} (${percent}%)`);
 
@@ -175,16 +182,20 @@ async function main() {
     // ========== 結果摘要 ==========
     const duration = (Date.now() - startTime) / 1000;
 
-    console.log("═══════════════════════════════════════════════════════════════");
+    console.log(
+      "═══════════════════════════════════════════════════════════════"
+    );
     console.log("                        遷移結果");
-    console.log("═══════════════════════════════════════════════════════════════\n");
+    console.log(
+      "═══════════════════════════════════════════════════════════════\n"
+    );
 
-    console.log(`📊 Opportunities:`);
+    console.log("📊 Opportunities:");
     console.log(`   - 總數: ${opportunityStats.total}`);
     console.log(`   - 成功: ${opportunityStats.success}`);
     console.log(`   - 失敗: ${opportunityStats.failed}`);
 
-    console.log(`\n💬 Conversations:`);
+    console.log("\n💬 Conversations:");
     console.log(`   - 總數: ${conversationStats.total}`);
     console.log(`   - 成功: ${conversationStats.success}`);
     console.log(`   - 失敗: ${conversationStats.failed}`);
@@ -197,10 +208,7 @@ async function main() {
     }
 
     // 顯示錯誤
-    const allErrors = [
-      ...opportunityStats.errors,
-      ...conversationStats.errors,
-    ];
+    const allErrors = [...opportunityStats.errors, ...conversationStats.errors];
     if (allErrors.length > 0) {
       console.log(`\n❌ 錯誤清單 (${allErrors.length} 筆):`);
       for (const err of allErrors.slice(0, 10)) {

@@ -63,8 +63,12 @@ function parseArgs(): {
     );
     console.log("");
     console.log("參數:");
-    console.log("  <gcs-uri>                  GCS 檔案 URI (例: gs://bucket/audio/file.mp3)");
-    console.log("  --conversation-id <id>     指定 conversation ID（預設從檔名提取）");
+    console.log(
+      "  <gcs-uri>                  GCS 檔案 URI (例: gs://bucket/audio/file.mp3)"
+    );
+    console.log(
+      "  --conversation-id <id>     指定 conversation ID（預設從檔名提取）"
+    );
     console.log("  --force                    強制覆蓋已存在的檔案");
     console.log("");
     console.log("範例:");
@@ -79,8 +83,7 @@ function parseArgs(): {
 
   const gcsUri = args[0];
   const convIdIdx = args.indexOf("--conversation-id");
-  const conversationId =
-    convIdIdx !== -1 ? args[convIdIdx + 1] : undefined;
+  const conversationId = convIdIdx !== -1 ? args[convIdIdx + 1] : undefined;
   const force = args.includes("--force");
 
   return { gcsUri, conversationId, force };
@@ -89,9 +92,13 @@ function parseArgs(): {
 async function migrateSingleAudio() {
   const { gcsUri, conversationId: providedConvId, force } = parseArgs();
 
-  console.log("═══════════════════════════════════════════════════════════════");
+  console.log(
+    "═══════════════════════════════════════════════════════════════"
+  );
   console.log("            🎵 Single Audio Migration: GCS → R2");
-  console.log("═══════════════════════════════════════════════════════════════\n");
+  console.log(
+    "═══════════════════════════════════════════════════════════════\n"
+  );
 
   // 解析 GCS URI
   const parsed = parseGcsUri(gcsUri);
@@ -102,8 +109,7 @@ async function migrateSingleAudio() {
   }
 
   // 決定 conversation ID
-  const conversationId =
-    providedConvId || extractConversationId(parsed.path);
+  const conversationId = providedConvId || extractConversationId(parsed.path);
   if (!conversationId) {
     console.error("❌ 無法從檔案路徑提取 conversation ID");
     console.error("   請使用 --conversation-id 參數指定");
@@ -146,7 +152,7 @@ async function migrateSingleAudio() {
     ? new Date(metadata.timeCreated).toISOString()
     : undefined;
 
-  console.log(`   ✅ 檔案存在`);
+  console.log("   ✅ 檔案存在");
   console.log(`      大小: ${formatSize(fileSize)}`);
   console.log(`      類型: ${contentType}`);
   if (createdAt) {
@@ -172,16 +178,16 @@ async function migrateSingleAudio() {
     );
 
     if (!force) {
-      console.log(`   ⚠️ R2 檔案已存在`);
-      console.log(`      使用 --force 參數來覆蓋`);
+      console.log("   ⚠️ R2 檔案已存在");
+      console.log("      使用 --force 參數來覆蓋");
       console.log("");
       console.log(`   ✅ 現有 R2 URL: ${r2Url}`);
       return;
     }
 
-    console.log(`   ⚠️ R2 檔案已存在，將覆蓋...`);
+    console.log("   ⚠️ R2 檔案已存在，將覆蓋...");
   } catch {
-    console.log(`   ✅ R2 檔案不存在，可以上傳`);
+    console.log("   ✅ R2 檔案不存在，可以上傳");
   }
   console.log("");
 
@@ -190,7 +196,9 @@ async function migrateSingleAudio() {
   const startDownload = Date.now();
   const [buffer] = await file.download();
   const downloadTime = Date.now() - startDownload;
-  console.log(`   ✅ 下載完成 (${downloadTime}ms, ${formatSize(buffer.length)})\n`);
+  console.log(
+    `   ✅ 下載完成 (${downloadTime}ms, ${formatSize(buffer.length)})\n`
+  );
 
   // 上傳到 R2
   console.log("4️⃣ 上傳到 R2...");
@@ -215,11 +223,13 @@ async function migrateSingleAudio() {
     const response = await fetch(r2Url, { method: "HEAD" });
     if (response.ok) {
       const contentLength = Number(response.headers.get("content-length") || 0);
-      console.log(`   ✅ R2 檔案可存取`);
+      console.log("   ✅ R2 檔案可存取");
       console.log(`      大小: ${formatSize(contentLength)}`);
       console.log(`      狀態: ${response.status} ${response.statusText}`);
     } else {
-      console.log(`   ⚠️ R2 檔案存取回應: ${response.status} ${response.statusText}`);
+      console.log(
+        `   ⚠️ R2 檔案存取回應: ${response.status} ${response.statusText}`
+      );
       console.log("      可能需要設定 R2 Public Access 或 Custom Domain");
     }
   } catch (error) {
@@ -230,7 +240,9 @@ async function migrateSingleAudio() {
   console.log("");
 
   // 輸出結果
-  console.log("═══════════════════════════════════════════════════════════════");
+  console.log(
+    "═══════════════════════════════════════════════════════════════"
+  );
   console.log("");
   console.log("✅ 音檔遷移完成！");
   console.log("");
@@ -243,7 +255,9 @@ async function migrateSingleAudio() {
   console.log("");
   console.log("💡 下一步:");
   console.log("   1. 更新資料庫中的 audio_url:");
-  console.log(`      UPDATE conversations SET audio_url = '${r2Url}' WHERE id = '${conversationId}';`);
+  console.log(
+    `      UPDATE conversations SET audio_url = '${r2Url}' WHERE id = '${conversationId}';`
+  );
   console.log("");
   console.log("   2. 或使用 update-audio-urls.ts 批次更新:");
   console.log("      bun run scripts/migration/update-audio-urls.ts");

@@ -3,10 +3,12 @@
  */
 
 import type { Env } from "../types";
+import { SlackClient } from "../utils/slack-client";
 import { handleAnalyzeCommand } from "./analyze";
+import { handleCoachCommand } from "./coach";
 import { handleOpportunityCommand } from "./opportunity";
 import { handleReportCommand } from "./report";
-import { SlackClient } from "../utils/slack-client";
+import { handleTalkTrackCommand } from "./talk-track";
 
 export interface CommandContext {
   command: string;
@@ -40,6 +42,14 @@ export async function handleSlackCommand(
         await handleReportCommand(ctx, env, slackClient);
         break;
 
+      case "/coach":
+        await handleCoachCommand(ctx, env, slackClient);
+        break;
+
+      case "/talktrack":
+        await handleTalkTrackCommand(ctx, env, slackClient);
+        break;
+
       // 保留舊的 /lead 指令以向後兼容，重定向到 /opportunity
       case "/lead":
         await slackClient.respondToUrl(ctx.responseUrl, {
@@ -51,7 +61,7 @@ export async function handleSlackCommand(
       default:
         await slackClient.respondToUrl(ctx.responseUrl, {
           response_type: "ephemeral",
-          text: `未知的指令: ${ctx.command}\n\n可用指令:\n• \`/analyze\` - MEDDIC 分析\n• \`/opportunity\` - 商機管理\n• \`/report\` - 報表查詢`,
+          text: `未知的指令: ${ctx.command}\n\n可用指令:\n• \`/analyze\` - MEDDIC 分析\n• \`/opportunity\` - 商機管理\n• \`/report\` - 報表查詢\n• \`/coach\` - AI 銷售教練\n• \`/talktrack\` - 話術查詢`,
         });
     }
   } catch (error) {

@@ -3,7 +3,7 @@
  * 解析 Squarespace 表單資料並映射到標準格式
  */
 
-import type { ParsedFormData, UTMParams, FieldMapping } from "../types";
+import type { FieldMapping, ParsedFormData, UTMParams } from "../types";
 import type { SquarespaceFormData, SquarespaceFormPayload } from "./types";
 
 // 預設欄位映射
@@ -121,16 +121,17 @@ export function generateDeduplicationKey(data: ParsedFormData): string {
 /**
  * 驗證必填欄位
  */
-export function validateFormData(
-  data: ParsedFormData
-): { valid: boolean; errors: string[] } {
+export function validateFormData(data: ParsedFormData): {
+  valid: boolean;
+  errors: string[];
+} {
   const errors: string[] = [];
 
   if (!data.companyName || data.companyName === "未提供公司名稱") {
     errors.push("缺少公司名稱");
   }
 
-  if (!data.contactEmail && !data.contactPhone) {
+  if (!(data.contactEmail || data.contactPhone)) {
     errors.push("至少需要提供 email 或電話");
   }
 

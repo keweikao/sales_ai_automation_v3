@@ -1,11 +1,11 @@
 // scripts/migration/rollback.ts
 
+import { eq } from "drizzle-orm";
 import {
   conversations,
   meddicAnalyses,
   opportunities,
 } from "../../packages/db/src/schema";
-import { eq } from "drizzle-orm";
 import { db } from "./config";
 import { clearProgress } from "./progress";
 

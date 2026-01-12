@@ -63,7 +63,6 @@ async function checkCasesComplete() {
 
     console.log(`\n總計: ${allSnapshot.data().count} 筆 cases`);
     console.log(`已完成: ${completedSnapshot.data().count} 筆`);
-
   } catch (error) {
     console.error("查詢失敗:", error);
   }

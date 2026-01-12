@@ -4,8 +4,7 @@
  * 驗證 GCS 音檔與 PostgreSQL conversations 的對應關係
  */
 
-import { eq, isNotNull, like } from "drizzle-orm";
-import { db, conversations } from "../../packages/db/src/index";
+import { conversations, db } from "../../packages/db/src/index";
 
 interface AudioManifest {
   exportedAt: string;
@@ -104,7 +103,9 @@ async function verifyAudioMapping() {
 
   // 輸出結果
   console.log("Verifying audio file mapping...\n");
-  console.log("═══════════════════════════════════════════════════════════════\n");
+  console.log(
+    "═══════════════════════════════════════════════════════════════\n"
+  );
 
   if (result.orphanedAudio.length === 0) {
     console.log(
@@ -117,7 +118,9 @@ async function verifyAudioMapping() {
   }
 
   console.log(`   - Matched: ${result.matched}`);
-  console.log(`   - Orphaned (no conversation): ${result.orphanedAudio.length}`);
+  console.log(
+    `   - Orphaned (no conversation): ${result.orphanedAudio.length}`
+  );
   console.log(
     `   - Missing (conversation but no audio): ${result.missingAudio.length}`
   );
@@ -167,8 +170,7 @@ async function verifyAudioMapping() {
   console.log(`📄 驗證報告已儲存: ${reportPath}`);
 
   // 回傳是否可以繼續遷移
-  const canProceed =
-    result.matched > 0 || result.gcsMapped.length > 0;
+  const canProceed = result.matched > 0 || result.gcsMapped.length > 0;
 
   if (canProceed) {
     console.log("\n✅ 驗證完成，可以開始音檔遷移");
