@@ -9,39 +9,39 @@
  * - Phase 4-7: Sequential execution (Seller → Summary → CRM → Coach)
  */
 
-import type {
-  AnalysisState,
-  AnalysisMetadata,
-  AnalysisResult,
-  TranscriptSegment,
-  Agent1Output,
-  Agent2Output,
-  Agent3Output,
-  Agent4Output,
-  Agent5Output,
-  Agent6Output,
-} from './types.js';
-import type { GeminiClient } from './gemini.js';
+import type { GeminiClient } from "./gemini.js";
 import {
-  GLOBAL_CONTEXT,
   AGENT1_PROMPT,
   AGENT2_PROMPT,
   AGENT3_PROMPT,
   AGENT4_PROMPT,
   AGENT5_PROMPT,
   AGENT6_PROMPT,
-} from './prompts.js';
+  GLOBAL_CONTEXT,
+} from "./prompts.js";
+import type {
+  Agent1Output,
+  Agent2Output,
+  Agent3Output,
+  Agent4Output,
+  Agent5Output,
+  Agent6Output,
+  AnalysisMetadata,
+  AnalysisResult,
+  AnalysisState,
+  TranscriptSegment,
+} from "./types.js";
 
 export class MeddicOrchestrator {
-  private geminiClient: GeminiClient;
+  private readonly geminiClient: GeminiClient;
   private readonly MAX_REFINEMENTS = 2; // V2 constant
   private readonly COMPETITOR_KEYWORDS = [
-    '競爭對手',
-    'competitor',
-    '其他廠商',
-    'POS',
-    '別的系統',
-    '其他品牌',
+    "競爭對手",
+    "competitor",
+    "其他廠商",
+    "POS",
+    "別的系統",
+    "其他品牌",
   ]; // V2 keywords
 
   constructor(geminiClient: GeminiClient) {
@@ -68,7 +68,9 @@ export class MeddicOrchestrator {
     // Phase 1: Parallel execution (Context + Buyer)
     // V2 logic: These agents can run independently
     // ==============================================================
-    console.log('[Orchestrator] Phase 1: Running Context + Buyer agents in parallel');
+    console.log(
+      "[Orchestrator] Phase 1: Running Context + Buyer agents in parallel"
+    );
 
     const [contextData, buyerData] = await Promise.all([
       this.runAgent1(state),
@@ -82,7 +84,7 @@ export class MeddicOrchestrator {
     // Phase 2: Quality Loop (V2 core logic)
     // If buyer analysis quality is insufficient, refine up to 2 times
     // ==============================================================
-    console.log('[Orchestrator] Phase 2: Quality Loop check');
+    console.log("[Orchestrator] Phase 2: Quality Loop check");
 
     while (
       !this.isQualityPassed(state.buyerData) &&
@@ -98,7 +100,7 @@ export class MeddicOrchestrator {
 
     if (!this.isQualityPassed(state.buyerData)) {
       console.warn(
-        '[Orchestrator] Quality check failed after max refinements. Proceeding with current analysis.'
+        "[Orchestrator] Quality check failed after max refinements. Proceeding with current analysis."
       );
     }
 
@@ -106,7 +108,7 @@ export class MeddicOrchestrator {
     // Phase 3: Conditional competitor analysis
     // V2 logic: Detect if competitors were mentioned
     // ==============================================================
-    console.log('[Orchestrator] Phase 3: Competitor detection');
+    console.log("[Orchestrator] Phase 3: Competitor detection");
 
     state.hasCompetitor = this.detectCompetitor(state.transcript);
     state.competitorKeywords = this.extractCompetitorKeywords(state.transcript);
@@ -115,16 +117,16 @@ export class MeddicOrchestrator {
     // Phase 4-7: Sequential execution
     // V2 logic: These must run in order as they build on each other
     // ==============================================================
-    console.log('[Orchestrator] Phase 4: Seller Agent');
+    console.log("[Orchestrator] Phase 4: Seller Agent");
     state.sellerData = await this.runAgent3(state);
 
-    console.log('[Orchestrator] Phase 5: Summary Agent');
+    console.log("[Orchestrator] Phase 5: Summary Agent");
     state.summaryData = await this.runAgent4(state);
 
-    console.log('[Orchestrator] Phase 6: CRM Extractor');
+    console.log("[Orchestrator] Phase 6: CRM Extractor");
     state.crmData = await this.runAgent5(state);
 
-    console.log('[Orchestrator] Phase 7: Coach Agent');
+    console.log("[Orchestrator] Phase 7: Coach Agent");
     state.coachData = await this.runAgent6(state);
 
     // ==============================================================
@@ -171,7 +173,7 @@ export class MeddicOrchestrator {
       `${GLOBAL_CONTEXT()}\n\n${AGENT2_PROMPT()}\n\n` +
       `## Previous Analysis (needs improvement):\n${previousAnalysis}\n\n` +
       `## Meeting Transcript:\n${transcriptText}\n\n` +
-      `IMPORTANT: The previous analysis was incomplete. Please provide more specific evidence, identify pain points more clearly, and ensure all MEDDIC scores are justified.`;
+      "IMPORTANT: The previous analysis was incomplete. Please provide more specific evidence, identify pain points more clearly, and ensure all MEDDIC scores are justified.";
 
     const response = await this.geminiClient.generateJSON<Agent2Output>(prompt);
     return response;
@@ -258,7 +260,9 @@ export class MeddicOrchestrator {
    * Checks if buyer analysis meets minimum quality standards
    */
   private isQualityPassed(buyerData: Agent2Output | undefined): boolean {
-    if (!buyerData) return false;
+    if (!buyerData) {
+      return false;
+    }
 
     return (
       buyerData.needsIdentified &&
@@ -274,7 +278,7 @@ export class MeddicOrchestrator {
    * Returns true if any competitor keywords are found
    */
   private detectCompetitor(transcript: TranscriptSegment[]): boolean {
-    const fullText = transcript.map((t) => t.text).join(' ');
+    const fullText = transcript.map((t) => t.text).join(" ");
     return this.COMPETITOR_KEYWORDS.some((keyword) =>
       fullText.includes(keyword)
     );
@@ -283,10 +287,8 @@ export class MeddicOrchestrator {
   /**
    * Extract which competitor keywords were mentioned
    */
-  private extractCompetitorKeywords(
-    transcript: TranscriptSegment[]
-  ): string[] {
-    const fullText = transcript.map((t) => t.text).join(' ');
+  private extractCompetitorKeywords(transcript: TranscriptSegment[]): string[] {
+    const fullText = transcript.map((t) => t.text).join(" ");
     return this.COMPETITOR_KEYWORDS.filter((keyword) =>
       fullText.includes(keyword)
     );
@@ -299,10 +301,10 @@ export class MeddicOrchestrator {
     return segments
       .map((s) => {
         const timestamp = this.formatTime(s.start);
-        const speaker = s.speaker || 'Speaker';
+        const speaker = s.speaker || "Speaker";
         return `[${timestamp}] ${speaker}: ${s.text}`;
       })
-      .join('\n');
+      .join("\n");
   }
 
   /**
@@ -311,15 +313,22 @@ export class MeddicOrchestrator {
   private formatTime(seconds: number): string {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   }
 
   /**
    * Build final analysis result
    */
   private buildResult(state: AnalysisState): AnalysisResult {
-    if (!state.buyerData || !state.summaryData || !state.crmData || !state.coachData) {
-      throw new Error('Incomplete analysis state. All agents must complete.');
+    if (
+      !(
+        state.buyerData &&
+        state.summaryData &&
+        state.crmData &&
+        state.coachData
+      )
+    ) {
+      throw new Error("Incomplete analysis state. All agents must complete.");
     }
 
     return {
@@ -364,23 +373,30 @@ export class MeddicOrchestrator {
    * Extract risks from various agent outputs
    */
   private extractRisks(state: AnalysisState) {
-    const risks: Array<{ risk: string; severity: string; mitigation?: string }> = [];
+    const risks: Array<{
+      risk: string;
+      severity: string;
+      mitigation?: string;
+    }> = [];
 
     // From buyer analysis
     if (state.buyerData) {
       if (state.buyerData.overallScore < 40) {
         risks.push({
-          risk: 'Low MEDDIC score indicates weak qualification',
-          severity: 'High',
-          mitigation: 'Focus on identifying economic buyer and pain points',
+          risk: "Low MEDDIC score indicates weak qualification",
+          severity: "High",
+          mitigation: "Focus on identifying economic buyer and pain points",
         });
       }
 
-      if (!state.buyerData.trustAssessment || state.buyerData.trustAssessment.level === 'Low') {
+      if (
+        !state.buyerData.trustAssessment ||
+        state.buyerData.trustAssessment.level === "Low"
+      ) {
         risks.push({
-          risk: 'Low trust level with prospect',
-          severity: 'High',
-          mitigation: 'Build rapport and provide social proof',
+          risk: "Low trust level with prospect",
+          severity: "High",
+          mitigation: "Build rapport and provide social proof",
         });
       }
     }
@@ -388,9 +404,10 @@ export class MeddicOrchestrator {
     // From competitor detection
     if (state.hasCompetitor) {
       risks.push({
-        risk: `Competitors mentioned: ${state.competitorKeywords?.join(', ')}`,
-        severity: 'Medium',
-        mitigation: 'Differentiate value proposition and address competitive concerns',
+        risk: `Competitors mentioned: ${state.competitorKeywords?.join(", ")}`,
+        severity: "Medium",
+        mitigation:
+          "Differentiate value proposition and address competitive concerns",
       });
     }
 
@@ -401,6 +418,8 @@ export class MeddicOrchestrator {
 /**
  * Factory function for creating orchestrator
  */
-export function createOrchestrator(geminiClient: GeminiClient): MeddicOrchestrator {
+export function createOrchestrator(
+  geminiClient: GeminiClient
+): MeddicOrchestrator {
   return new MeddicOrchestrator(geminiClient);
 }

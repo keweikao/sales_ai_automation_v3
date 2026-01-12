@@ -1,17 +1,20 @@
 import type { AppRouterClient } from "@Sales_ai_automation_v3/api/routers/index";
-import type { QueryClient } from "@tanstack/react-query";
-
 import { createORPCClient } from "@orpc/client";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { HeadContent, Outlet, createRootRouteWithContext } from "@tanstack/react-router";
+import {
+  createRootRouteWithContext,
+  HeadContent,
+  Outlet,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { useState } from "react";
 
 import Header from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
-import { link, orpc } from "@/utils/orpc";
+import { link, type orpc } from "@/utils/orpc";
 
 import "../index.css";
 
@@ -54,14 +57,16 @@ function RootComponent() {
         disableTransitionOnChange
         storageKey="vite-ui-theme"
       >
-        <div className="grid grid-rows-[auto_1fr] h-svh">
+        <div className="flex min-h-svh flex-col">
           <Header />
-          <Outlet />
+          <div className="flex-1">
+            <Outlet />
+          </div>
         </div>
         <Toaster richColors />
       </ThemeProvider>
       <TanStackRouterDevtools position="bottom-left" />
-      <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+      <ReactQueryDevtools buttonPosition="bottom-right" position="bottom" />
     </>
   );
 }

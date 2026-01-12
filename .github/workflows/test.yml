@@ -1,0 +1,303 @@
+name: Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  # 測試環境變數
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+  BETTER_AUTH_SECRET: test-secret-for-ci
+  TEST_API_URL: http://localhost:3001
+
+jobs:
+  # 程式碼檢查
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run Ultracite check
+        run: bun x ultracite check
+
+      - name: Type check
+        run: bun run typecheck
+
+  # 單元測試和整合測試
+  unit-integration:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    needs: lint
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run database migrations
+        run: bun run db:migrate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Run unit tests
+        run: bun run test:unit
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
+
+      - name: Run integration tests
+        run: bun run test:integration
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-integration-results
+          path: |
+            coverage/
+            test-results/
+
+  # API 測試
+  api-tests:
+    name: API Tests
+    runs-on: ubuntu-latest
+    needs: lint
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run database migrations
+        run: bun run db:migrate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Start server
+        run: |
+          bun run dev:server &
+          sleep 10
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
+
+      - name: Run API tests
+        run: bun run test:api
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
+          TEST_API_URL: ${{ env.TEST_API_URL }}
+
+  # E2E 測試
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [unit-integration, api-tests]
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+
+      - name: Run database migrations
+        run: bun run db:migrate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Build application
+        run: bun run build
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Start application
+        run: |
+          bun run preview &
+          sleep 15
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
+
+      - name: Run E2E tests
+        run: bun run test:e2e
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+      - name: Upload Playwright screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-screenshots
+          path: test-results/
+          retention-days: 7
+
+  # 效能測試（僅在 main 分支）
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: [unit-integration, api-tests]
+    if: github.ref == 'refs/heads/main'
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run database migrations
+        run: bun run db:migrate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Seed test data
+        run: bun run db:seed
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Start server
+        run: |
+          NODE_ENV=production bun run start:server &
+          sleep 10
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
+
+      - name: Run performance tests
+        run: bun run test:performance
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          TEST_API_URL: ${{ env.TEST_API_URL }}
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: performance-results/
+          retention-days: 90
+
+  # 測試摘要
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [unit-integration, api-tests, e2e-tests]
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          if [ "${{ needs.unit-integration.result }}" == "failure" ] || \
+             [ "${{ needs.api-tests.result }}" == "failure" ] || \
+             [ "${{ needs.e2e-tests.result }}" == "failure" ]; then
+            echo "❌ Some tests failed"
+            exit 1
+          else
+            echo "✅ All tests passed"
+          fi

@@ -3,19 +3,19 @@
  * Optimized for MEDDIC analysis and Chinese language processing
  */
 
-import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
-import type { LLMClient, LLMOptions, LLMResponse } from './types.js';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import type { LLMClient, LLMOptions, LLMResponse } from "./types.js";
 
 export class GeminiClient implements LLMClient {
-  private genAI: GoogleGenerativeAI;
-  private defaultModel = 'gemini-2.0-flash-exp'; // V2 uses Gemini 2.0 Flash
+  private readonly genAI: GoogleGenerativeAI;
+  private readonly defaultModel = "gemini-2.0-flash-exp"; // V2 uses Gemini 2.0 Flash
 
   constructor(apiKey?: string) {
     const key = apiKey || process.env.GEMINI_API_KEY;
 
     if (!key) {
       throw new Error(
-        'GEMINI_API_KEY is required. Set it in environment variables or pass to constructor.'
+        "GEMINI_API_KEY is required. Set it in environment variables or pass to constructor."
       );
     }
 
@@ -26,10 +26,7 @@ export class GeminiClient implements LLMClient {
    * Generate text from prompt
    * Supports exponential backoff retry logic (V2 P0 resilience)
    */
-  async generate(
-    prompt: string,
-    options?: LLMOptions
-  ): Promise<LLMResponse> {
+  async generate(prompt: string, options?: LLMOptions): Promise<LLMResponse> {
     const modelName = options?.model || this.defaultModel;
     const model = this.genAI.getGenerativeModel({ model: modelName });
 
@@ -43,7 +40,7 @@ export class GeminiClient implements LLMClient {
       const result = await model.generateContent({
         contents: [
           {
-            role: 'user',
+            role: "user",
             parts: [{ text: this.buildPrompt(prompt, options) }],
           },
         ],
@@ -78,16 +75,16 @@ export class GeminiClient implements LLMClient {
     try {
       // Remove markdown code blocks if present
       let cleanText = response.text.trim();
-      if (cleanText.startsWith('```json')) {
-        cleanText = cleanText.replace(/^```json\n/, '').replace(/\n```$/, '');
-      } else if (cleanText.startsWith('```')) {
-        cleanText = cleanText.replace(/^```\n/, '').replace(/\n```$/, '');
+      if (cleanText.startsWith("```json")) {
+        cleanText = cleanText.replace(/^```json\n/, "").replace(/\n```$/, "");
+      } else if (cleanText.startsWith("```")) {
+        cleanText = cleanText.replace(/^```\n/, "").replace(/\n```$/, "");
       }
 
       return JSON.parse(cleanText) as T;
     } catch (error) {
-      console.error('Failed to parse JSON from LLM response:', error);
-      console.error('Raw response:', response.text);
+      console.error("Failed to parse JSON from LLM response:", error);
+      console.error("Raw response:", response.text);
       throw new Error(`Invalid JSON response from LLM: ${error}`);
     }
   }
@@ -129,11 +126,11 @@ export class GeminiClient implements LLMClient {
         }
 
         // Calculate exponential backoff delay
-        const delay = baseDelay * Math.pow(2, attempt);
+        const delay = baseDelay * 2 ** attempt;
 
         console.warn(
           `LLM request failed (attempt ${attempt + 1}/${maxRetries + 1}). ` +
-          `Retrying in ${delay}ms...`,
+            `Retrying in ${delay}ms...`,
           error
         );
 
@@ -158,21 +155,8 @@ export class GeminiClient implements LLMClient {
       });
       return true;
     } catch (error) {
-      console.error('Gemini API connection test failed:', error);
+      console.error("Gemini API connection test failed:", error);
       return false;
-    }
-  }
-
-  /**
-   * Get available models
-   */
-  async listModels(): Promise<string[]> {
-    try {
-      const models = await this.genAI.listModels();
-      return models.map((model) => model.name);
-    } catch (error) {
-      console.error('Failed to list models:', error);
-      return [];
     }
   }
 }
@@ -191,10 +175,10 @@ export function extractJSON(text: string): string {
   let cleanText = text.trim();
 
   // Remove markdown code blocks
-  if (cleanText.startsWith('```json')) {
-    cleanText = cleanText.replace(/^```json\n/, '').replace(/\n```$/, '');
-  } else if (cleanText.startsWith('```')) {
-    cleanText = cleanText.replace(/^```\n/, '').replace(/\n```$/, '');
+  if (cleanText.startsWith("```json")) {
+    cleanText = cleanText.replace(/^```json\n/, "").replace(/\n```$/, "");
+  } else if (cleanText.startsWith("```")) {
+    cleanText = cleanText.replace(/^```\n/, "").replace(/\n```$/, "");
   }
 
   return cleanText;

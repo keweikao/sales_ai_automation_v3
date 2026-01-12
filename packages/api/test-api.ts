@@ -14,10 +14,10 @@ async function testApiRoutes() {
 
   const routerKeys = Object.keys(appRouter);
   console.log(`   Found ${routerKeys.length} top-level routes:`);
-  routerKeys.forEach((key) => console.log(`   - ${key}`));
+  for (const key of routerKeys) console.log(`   - ${key}`);
 
-  if (!routerKeys.includes("leads")) {
-    console.error("❌ Missing 'leads' router");
+  if (!routerKeys.includes("opportunities")) {
+    console.error("❌ Missing 'opportunities' router");
     process.exit(1);
   }
 
@@ -33,29 +33,39 @@ async function testApiRoutes() {
 
   console.log("✅ All required routers are present\n");
 
-  // Step 2: Verify lead routes
-  console.log("📋 Step 2: Verifying lead routes...");
-  const leadRoutes = Object.keys(appRouter.leads);
-  console.log(`   Found ${leadRoutes.length} lead routes:`);
-  leadRoutes.forEach((key) => console.log(`   - leads.${key}`));
+  // Step 2: Verify opportunity routes
+  console.log("📋 Step 2: Verifying opportunity routes...");
+  const opportunityRoutes = Object.keys(appRouter.opportunities);
+  console.log(`   Found ${opportunityRoutes.length} opportunity routes:`);
+  for (const key of opportunityRoutes) console.log(`   - opportunities.${key}`);
 
-  const expectedLeadRoutes = ["create", "update", "delete", "list", "get"];
-  const missingLeadRoutes = expectedLeadRoutes.filter(
-    (route) => !leadRoutes.includes(route)
+  const expectedOpportunityRoutes = [
+    "create",
+    "update",
+    "delete",
+    "list",
+    "get",
+    "getByCustomerNumber",
+  ];
+  const missingOpportunityRoutes = expectedOpportunityRoutes.filter(
+    (route) => !opportunityRoutes.includes(route)
   );
 
-  if (missingLeadRoutes.length > 0) {
-    console.error(`❌ Missing lead routes: ${missingLeadRoutes.join(", ")}`);
+  if (missingOpportunityRoutes.length > 0) {
+    console.error(
+      `❌ Missing opportunity routes: ${missingOpportunityRoutes.join(", ")}`
+    );
     process.exit(1);
   }
 
-  console.log("✅ All lead routes are present\n");
+  console.log("✅ All opportunity routes are present\n");
 
   // Step 3: Verify conversation routes
   console.log("📋 Step 3: Verifying conversation routes...");
   const conversationRoutes = Object.keys(appRouter.conversations);
   console.log(`   Found ${conversationRoutes.length} conversation routes:`);
-  conversationRoutes.forEach((key) => console.log(`   - conversations.${key}`));
+  for (const key of conversationRoutes)
+    console.log(`   - conversations.${key}`);
 
   const expectedConversationRoutes = ["upload", "analyze", "list", "get"];
   const missingConversationRoutes = expectedConversationRoutes.filter(
@@ -75,11 +85,11 @@ async function testApiRoutes() {
   console.log("📋 Step 4: Verifying analytics routes...");
   const analyticsRoutes = Object.keys(appRouter.analytics);
   console.log(`   Found ${analyticsRoutes.length} analytics routes:`);
-  analyticsRoutes.forEach((key) => console.log(`   - analytics.${key}`));
+  for (const key of analyticsRoutes) console.log(`   - analytics.${key}`);
 
   const expectedAnalyticsRoutes = [
     "dashboard",
-    "leadAnalytics",
+    "opportunityAnalytics",
     "meddicTrends",
   ];
   const missingAnalyticsRoutes = expectedAnalyticsRoutes.filter(
@@ -98,19 +108,20 @@ async function testApiRoutes() {
   // Step 5: Summary
   console.log("🎉 API Routes Configuration Test Completed!\n");
   console.log("📝 Summary:");
-  console.log(`   ✅ ${leadRoutes.length} lead endpoints`);
+  console.log(`   ✅ ${opportunityRoutes.length} opportunity endpoints`);
   console.log(`   ✅ ${conversationRoutes.length} conversation endpoints`);
   console.log(`   ✅ ${analyticsRoutes.length} analytics endpoints`);
   console.log(
-    `   ✅ Total: ${leadRoutes.length + conversationRoutes.length + analyticsRoutes.length} API endpoints`
+    `   ✅ Total: ${opportunityRoutes.length + conversationRoutes.length + analyticsRoutes.length} API endpoints`
   );
   console.log("\n📚 Available Endpoints:");
-  console.log("\n   Leads:");
-  console.log("   - POST   /api/leads.create");
-  console.log("   - PATCH  /api/leads.update");
-  console.log("   - DELETE /api/leads.delete");
-  console.log("   - GET    /api/leads.list");
-  console.log("   - GET    /api/leads.get");
+  console.log("\n   Opportunities:");
+  console.log("   - POST   /api/opportunities.create");
+  console.log("   - PATCH  /api/opportunities.update");
+  console.log("   - DELETE /api/opportunities.delete");
+  console.log("   - GET    /api/opportunities.list");
+  console.log("   - GET    /api/opportunities.get");
+  console.log("   - GET    /api/opportunities.getByCustomerNumber");
   console.log("\n   Conversations:");
   console.log("   - POST   /api/conversations.upload");
   console.log("   - POST   /api/conversations.analyze");
@@ -118,9 +129,9 @@ async function testApiRoutes() {
   console.log("   - GET    /api/conversations.get");
   console.log("\n   Analytics:");
   console.log("   - GET    /api/analytics.dashboard");
-  console.log("   - GET    /api/analytics.leadAnalytics");
+  console.log("   - GET    /api/analytics.opportunityAnalytics");
   console.log("   - GET    /api/analytics.meddicTrends");
-  console.log("\n✅ Phase 2D: API Routes implementation completed!");
+  console.log("\n✅ V3 API Routes with Salesforce UUID integration completed!");
 }
 
 // Run tests

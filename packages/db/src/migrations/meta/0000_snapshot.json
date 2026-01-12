@@ -110,12 +110,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -202,12 +198,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -217,9 +209,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -283,9 +273,7 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -505,12 +493,8 @@
           "name": "conversations_lead_id_leads_id_fk",
           "tableFrom": "conversations",
           "tableTo": "leads",
-          "columnsFrom": [
-            "lead_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["lead_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -742,12 +726,8 @@
           "name": "meddic_analyses_conversation_id_conversations_id_fk",
           "tableFrom": "meddic_analyses",
           "tableTo": "conversations",
-          "columnsFrom": [
-            "conversation_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["conversation_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -755,12 +735,8 @@
           "name": "meddic_analyses_lead_id_leads_id_fk",
           "tableFrom": "meddic_analyses",
           "tableTo": "leads",
-          "columnsFrom": [
-            "lead_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["lead_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -861,12 +837,8 @@
           "name": "user_profiles_user_id_user_id_fk",
           "tableFrom": "user_profiles",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

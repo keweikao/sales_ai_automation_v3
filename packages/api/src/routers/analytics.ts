@@ -3,15 +3,14 @@
  * MEDDIC analysis statistics and dashboard data
  */
 
-import { db } from "@Sales_ai_automation_v3/db/client";
+import { db } from "@Sales_ai_automation_v3/db";
 import {
   conversations,
-  leads,
+  opportunities,
   meddicAnalyses,
 } from "@Sales_ai_automation_v3/db/schema";
 import { ORPCError } from "@orpc/server";
-import { oz } from "@orpc/zod";
-import { and, avg, count, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, avg, count, desc, eq, gte, lte } from "drizzle-orm";
 import { z } from "zod";
 
 import { protectedProcedure } from "../index";
@@ -20,51 +19,41 @@ import { protectedProcedure } from "../index";
 // Schemas
 // ============================================================
 
-const dashboardSchema = oz.input(
-  z.object({
-    dateFrom: z.string().optional(), // ISO date string
-    dateTo: z.string().optional(),
-  })
-);
+const dashboardSchema = z.object({
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+});
 
-const leadAnalyticsSchema = oz.input(
-  z.object({
-    leadId: z.string(),
-  })
-);
+const opportunityAnalyticsSchema = z.object({
+  opportunityId: z.string(),
+});
 
-const meddicTrendsSchema = oz.input(
-  z.object({
-    dateFrom: z.string().optional(),
-    dateTo: z.string().optional(),
-    dimension: z
-      .enum([
-        "metrics",
-        "economicBuyer",
-        "decisionCriteria",
-        "decisionProcess",
-        "identifyPain",
-        "champion",
-      ])
-      .optional(),
-  })
-);
+const meddicTrendsSchema = z.object({
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+  dimension: z
+    .enum([
+      "metrics",
+      "economicBuyer",
+      "decisionCriteria",
+      "decisionProcess",
+      "identifyPain",
+      "champion",
+    ])
+    .optional(),
+});
 
 // ============================================================
 // Dashboard Overview
 // ============================================================
 
-/**
- * GET /analytics/dashboard
- * Get overview statistics for dashboard
- */
 export const getDashboard = protectedProcedure
   .input(dashboardSchema)
   .handler(async ({ input, context }) => {
     const userId = context.session?.user.id;
 
     if (!userId) {
-      throw new ORPCError("UNAUTHORIZED", "User not authenticated");
+      throw new ORPCError("UNAUTHORIZED");
     }
 
     const { dateFrom, dateTo } = input;
@@ -78,145 +67,130 @@ export const getDashboard = protectedProcedure
       dateConditions.push(lte(meddicAnalyses.createdAt, new Date(dateTo)));
     }
 
-    // Total leads
-    const [totalLeadsResult] = await db
+    // Total opportunities
+    const totalOpportunitiesResults = await db
       .select({ count: count() })
-      .from(leads)
-      .where(eq(leads.userId, userId));
+      .from(opportunities)
+      .where(eq(opportunities.userId, userId));
+    const totalOpportunitiesResult = totalOpportunitiesResults[0] ?? { count: 0 };
 
     // Total conversations
-    const [totalConversationsResult] = await db
+    const totalConversationsResults = await db
       .select({ count: count() })
       .from(conversations)
-      .innerJoin(leads, eq(conversations.leadId, leads.id))
-      .where(eq(leads.userId, userId));
+      .innerJoin(opportunities, eq(conversations.opportunityId, opportunities.id))
+      .where(eq(opportunities.userId, userId));
+    const totalConversationsResult = totalConversationsResults[0] ?? { count: 0 };
 
     // Total analyses
-    const analysisConditions = [eq(leads.userId, userId), ...dateConditions];
-    const [totalAnalysesResult] = await db
+    const analysisConditions = [eq(opportunities.userId, userId), ...dateConditions];
+    const totalAnalysesResults = await db
       .select({ count: count() })
       .from(meddicAnalyses)
-      .innerJoin(leads, eq(meddicAnalyses.leadId, leads.id))
+      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
       .where(and(...analysisConditions));
+    const totalAnalysesResult = totalAnalysesResults[0] ?? { count: 0 };
 
     // Average overall score
-    const [avgScoreResult] = await db
+    const avgScoreResults = await db
       .select({
         avgScore: avg(meddicAnalyses.overallScore),
       })
       .from(meddicAnalyses)
-      .innerJoin(leads, eq(meddicAnalyses.leadId, leads.id))
+      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
       .where(and(...analysisConditions));
+    const avgScoreResult = avgScoreResults[0];
 
-    // Qualification status distribution
-    const qualificationDistribution = await db
+    // Status distribution
+    const statusDistribution = await db
       .select({
-        status: meddicAnalyses.qualificationStatus,
+        status: meddicAnalyses.status,
         count: count(),
       })
       .from(meddicAnalyses)
-      .innerJoin(leads, eq(meddicAnalyses.leadId, leads.id))
+      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
       .where(and(...analysisConditions))
-      .groupBy(meddicAnalyses.qualificationStatus);
-
-    // Competitor detection stats
-    const [competitorStats] = await db
-      .select({
-        total: count(),
-        withCompetitor: sql<number>`SUM(CASE WHEN ${meddicAnalyses.hasCompetitor} THEN 1 ELSE 0 END)`,
-      })
-      .from(meddicAnalyses)
-      .innerJoin(leads, eq(meddicAnalyses.leadId, leads.id))
-      .where(and(...analysisConditions));
+      .groupBy(meddicAnalyses.status);
 
     // Recent analyses
     const recentAnalyses = await db
       .select({
         id: meddicAnalyses.id,
-        leadId: leads.id,
-        leadName: leads.name,
+        opportunityId: opportunities.id,
+        opportunityCompanyName: opportunities.companyName,
+        customerNumber: opportunities.customerNumber,
         overallScore: meddicAnalyses.overallScore,
-        qualificationStatus: meddicAnalyses.qualificationStatus,
-        hasCompetitor: meddicAnalyses.hasCompetitor,
+        status: meddicAnalyses.status,
         createdAt: meddicAnalyses.createdAt,
       })
       .from(meddicAnalyses)
-      .innerJoin(leads, eq(meddicAnalyses.leadId, leads.id))
+      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
       .where(and(...analysisConditions))
       .orderBy(desc(meddicAnalyses.createdAt))
       .limit(10);
 
     return {
       summary: {
-        totalLeads: totalLeadsResult.count,
+        totalOpportunities: totalOpportunitiesResult.count,
         totalConversations: totalConversationsResult.count,
         totalAnalyses: totalAnalysesResult.count,
-        averageScore: avgScoreResult.avgScore
+        averageScore: avgScoreResult?.avgScore
           ? Number(avgScoreResult.avgScore)
           : 0,
-        competitorDetectionRate:
-          competitorStats.total > 0
-            ? (Number(competitorStats.withCompetitor) / competitorStats.total) *
-              100
-            : 0,
       },
-      qualificationDistribution: qualificationDistribution.map((d) => ({
+      statusDistribution: statusDistribution.map((d) => ({
         status: d.status,
         count: d.count,
       })),
       recentAnalyses: recentAnalyses.map((a) => ({
         id: a.id,
-        leadId: a.leadId,
-        leadName: a.leadName,
+        opportunityId: a.opportunityId,
+        opportunityCompanyName: a.opportunityCompanyName,
+        customerNumber: a.customerNumber,
         overallScore: a.overallScore,
-        qualificationStatus: a.qualificationStatus,
-        hasCompetitor: a.hasCompetitor,
+        status: a.status,
         createdAt: a.createdAt,
       })),
     };
   });
 
 // ============================================================
-// Lead Analytics
+// Opportunity Analytics
 // ============================================================
 
-/**
- * GET /analytics/lead/:id
- * Get detailed analytics for a specific lead
- */
-export const getLeadAnalytics = protectedProcedure
-  .input(leadAnalyticsSchema)
+export const getOpportunityAnalytics = protectedProcedure
+  .input(opportunityAnalyticsSchema)
   .handler(async ({ input, context }) => {
-    const { leadId } = input;
+    const { opportunityId } = input;
     const userId = context.session?.user.id;
 
     if (!userId) {
-      throw new ORPCError("UNAUTHORIZED", "User not authenticated");
+      throw new ORPCError("UNAUTHORIZED");
     }
 
-    // Verify lead ownership
-    const lead = await db.query.leads.findFirst({
-      where: and(eq(leads.id, leadId), eq(leads.userId, userId)),
+    // Verify opportunity ownership
+    const opportunity = await db.query.opportunities.findFirst({
+      where: and(eq(opportunities.id, opportunityId), eq(opportunities.userId, userId)),
     });
 
-    if (!lead) {
-      throw new ORPCError("NOT_FOUND", "Lead not found");
+    if (!opportunity) {
+      throw new ORPCError("NOT_FOUND");
     }
 
-    // Get all analyses for this lead
+    // Get all analyses for this opportunity
     const analyses = await db.query.meddicAnalyses.findMany({
-      where: eq(meddicAnalyses.leadId, leadId),
+      where: eq(meddicAnalyses.opportunityId, opportunityId),
       orderBy: desc(meddicAnalyses.createdAt),
     });
 
     if (analyses.length === 0) {
       return {
-        leadId,
+        opportunityId,
+        customerNumber: opportunity.customerNumber,
         totalAnalyses: 0,
         latestAnalysis: null,
         scoreHistory: [],
         dimensionAverages: null,
-        competitorMentions: [],
       };
     }
 
@@ -230,22 +204,14 @@ export const getLeadAnalytics = protectedProcedure
       champion: 0,
     };
 
-    analyses.forEach((a) => {
-      const scores = a.scores as {
-        metrics: number;
-        economicBuyer: number;
-        decisionCriteria: number;
-        decisionProcess: number;
-        identifyPain: number;
-        champion: number;
-      };
-      dimensionSums.metrics += scores.metrics;
-      dimensionSums.economicBuyer += scores.economicBuyer;
-      dimensionSums.decisionCriteria += scores.decisionCriteria;
-      dimensionSums.decisionProcess += scores.decisionProcess;
-      dimensionSums.identifyPain += scores.identifyPain;
-      dimensionSums.champion += scores.champion;
-    });
+    for (const a of analyses) {
+      dimensionSums.metrics += a.metricsScore || 0;
+      dimensionSums.economicBuyer += a.economicBuyerScore || 0;
+      dimensionSums.decisionCriteria += a.decisionCriteriaScore || 0;
+      dimensionSums.decisionProcess += a.decisionProcessScore || 0;
+      dimensionSums.identifyPain += a.identifyPainScore || 0;
+      dimensionSums.champion += a.championScore || 0;
+    }
 
     const dimensionAverages = {
       metrics: dimensionSums.metrics / analyses.length,
@@ -260,26 +226,17 @@ export const getLeadAnalytics = protectedProcedure
     const scoreHistory = analyses.map((a) => ({
       analysisId: a.id,
       overallScore: a.overallScore,
-      qualificationStatus: a.qualificationStatus,
+      status: a.status,
       createdAt: a.createdAt,
     }));
 
-    // Competitor mentions
-    const competitorMentions = analyses
-      .filter((a) => a.hasCompetitor)
-      .map((a) => ({
-        analysisId: a.id,
-        keywords: a.competitorKeywords || [],
-        createdAt: a.createdAt,
-      }));
-
     return {
-      leadId,
+      opportunityId,
+      customerNumber: opportunity.customerNumber,
       totalAnalyses: analyses.length,
       latestAnalysis: analyses[0],
       scoreHistory,
       dimensionAverages,
-      competitorMentions,
     };
   });
 
@@ -287,10 +244,6 @@ export const getLeadAnalytics = protectedProcedure
 // MEDDIC Trends
 // ============================================================
 
-/**
- * GET /analytics/meddic-trends
- * Get MEDDIC dimension trends over time
- */
 export const getMeddicTrends = protectedProcedure
   .input(meddicTrendsSchema)
   .handler(async ({ input, context }) => {
@@ -298,11 +251,11 @@ export const getMeddicTrends = protectedProcedure
     const userId = context.session?.user.id;
 
     if (!userId) {
-      throw new ORPCError("UNAUTHORIZED", "User not authenticated");
+      throw new ORPCError("UNAUTHORIZED");
     }
 
     // Build date filters
-    const dateConditions = [eq(leads.userId, userId)];
+    const dateConditions = [eq(opportunities.userId, userId)];
     if (dateFrom) {
       dateConditions.push(gte(meddicAnalyses.createdAt, new Date(dateFrom)));
     }
@@ -314,24 +267,40 @@ export const getMeddicTrends = protectedProcedure
     const analyses = await db
       .select({
         id: meddicAnalyses.id,
-        scores: meddicAnalyses.scores,
+        metricsScore: meddicAnalyses.metricsScore,
+        economicBuyerScore: meddicAnalyses.economicBuyerScore,
+        decisionCriteriaScore: meddicAnalyses.decisionCriteriaScore,
+        decisionProcessScore: meddicAnalyses.decisionProcessScore,
+        identifyPainScore: meddicAnalyses.identifyPainScore,
+        championScore: meddicAnalyses.championScore,
         overallScore: meddicAnalyses.overallScore,
         createdAt: meddicAnalyses.createdAt,
       })
       .from(meddicAnalyses)
-      .innerJoin(leads, eq(meddicAnalyses.leadId, leads.id))
+      .innerJoin(opportunities, eq(meddicAnalyses.opportunityId, opportunities.id))
       .where(and(...dateConditions))
       .orderBy(meddicAnalyses.createdAt);
 
+    // Map dimension names to score fields
+    const dimensionScoreMap: Record<string, keyof (typeof analyses)[0]> = {
+      metrics: "metricsScore",
+      economicBuyer: "economicBuyerScore",
+      decisionCriteria: "decisionCriteriaScore",
+      decisionProcess: "decisionProcessScore",
+      identifyPain: "identifyPainScore",
+      champion: "championScore",
+    };
+
     // If specific dimension requested, calculate trend
     if (dimension) {
-      const trendData = analyses.map((a) => {
-        const scores = a.scores as Record<string, number>;
-        return {
-          date: a.createdAt,
-          score: scores[dimension] || 0,
-        };
-      });
+      const scoreField = dimensionScoreMap[dimension];
+      if (!scoreField) {
+        throw new ORPCError("BAD_REQUEST");
+      }
+      const trendData = analyses.map((a) => ({
+        date: a.createdAt,
+        score: (a[scoreField] as number | null) || 0,
+      }));
 
       return {
         dimension,
@@ -353,13 +322,14 @@ export const getMeddicTrends = protectedProcedure
     ] as const;
 
     const trends = allDimensions.map((dim) => {
-      const trendData = analyses.map((a) => {
-        const scores = a.scores as Record<string, number>;
-        return {
-          date: a.createdAt,
-          score: scores[dim] || 0,
-        };
-      });
+      const scoreField = dimensionScoreMap[dim];
+      if (!scoreField) {
+        return { dimension: dim, trend: [], average: 0 };
+      }
+      const trendData = analyses.map((a) => ({
+        date: a.createdAt,
+        score: (a[scoreField] as number | null) || 0,
+      }));
 
       return {
         dimension: dim,
@@ -385,6 +355,6 @@ export const getMeddicTrends = protectedProcedure
 
 export const analyticsRouter = {
   dashboard: getDashboard,
-  leadAnalytics: getLeadAnalytics,
+  opportunityAnalytics: getOpportunityAnalytics,
   meddicTrends: getMeddicTrends,
 };

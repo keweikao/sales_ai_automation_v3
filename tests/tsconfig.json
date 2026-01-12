@@ -1,0 +1,14 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"types": ["vitest/globals", "node"],
+		"noEmit": true,
+		"isolatedModules": true,
+		"esModuleInterop": true,
+		"paths": {
+			"@sales_ai_automation_v3/*": ["../packages/*/src"]
+		}
+	},
+	"include": ["./**/*.ts", "./**/*.tsx"],
+	"exclude": ["node_modules"]
+}

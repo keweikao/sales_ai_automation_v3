@@ -9,28 +9,28 @@
  * - Cost: $0.04/hour (far cheaper than Deepgram)
  */
 
-import Groq from 'groq-sdk';
+import Groq from "groq-sdk";
 import type {
-  TranscriptionService,
+  AudioChunk,
+  ChunkedTranscriptResult,
   TranscriptionOptions,
+  TranscriptionService,
   TranscriptResult,
   TranscriptSegment,
-  ChunkedTranscriptResult,
-  AudioChunk,
-} from './types.js';
+} from "./types.js";
 
 export class GroqWhisperService implements TranscriptionService {
-  private client: Groq;
+  private readonly client: Groq;
   private readonly CHUNK_SIZE_BYTES = 24_000_000; // V2 logic: 24MB threshold
   private readonly MAX_FILE_SIZE = 25_000_000; // Groq's limit
-  private readonly model = 'whisper-large-v3-turbo';
+  private readonly model = "whisper-large-v3-turbo";
 
   constructor(apiKey?: string) {
     const key = apiKey || process.env.GROQ_API_KEY;
 
     if (!key) {
       throw new Error(
-        'GROQ_API_KEY is required. Set it in environment variables or pass to constructor.'
+        "GROQ_API_KEY is required. Set it in environment variables or pass to constructor."
       );
     }
 
@@ -45,7 +45,7 @@ export class GroqWhisperService implements TranscriptionService {
     audioBuffer: Buffer,
     options?: TranscriptionOptions
   ): Promise<TranscriptResult> {
-    const language = options?.language || 'zh'; // V2 default: Chinese
+    const language = options?.language || "zh"; // V2 default: Chinese
     const chunkIfNeeded = options?.chunkIfNeeded ?? true; // V2 default: auto-chunk
 
     // V2 auto-chunking logic
@@ -76,20 +76,29 @@ export class GroqWhisperService implements TranscriptionService {
     if (audioBuffer.length > this.MAX_FILE_SIZE) {
       throw new Error(
         `Audio file too large (${audioBuffer.length} bytes). ` +
-        `Maximum is ${this.MAX_FILE_SIZE} bytes. Use chunkIfNeeded: true to auto-chunk.`
+          `Maximum is ${this.MAX_FILE_SIZE} bytes. Use chunkIfNeeded: true to auto-chunk.`
       );
     }
 
     // Create File object from Buffer
-    const file = new File([audioBuffer], 'audio.mp3', {
-      type: 'audio/mpeg',
+    const file = new File([audioBuffer], "audio.mp3", {
+      type: "audio/mpeg",
     });
+
+    // Filter response_format to only supported values
+    const supportedFormats = ["json", "text", "verbose_json"] as const;
+    type SupportedFormat = (typeof supportedFormats)[number];
+    const responseFormat: SupportedFormat =
+      options?.responseFormat &&
+      supportedFormats.includes(options.responseFormat as SupportedFormat)
+        ? (options.responseFormat as SupportedFormat)
+        : "verbose_json";
 
     const response = await this.client.audio.transcriptions.create({
       file,
       model: this.model,
       language, // V2: Chinese optimization
-      response_format: options?.responseFormat || 'verbose_json', // V2 default
+      response_format: responseFormat,
       temperature: options?.temperature ?? 0.0, // V2 default: deterministic
     });
 
@@ -138,19 +147,16 @@ export class GroqWhisperService implements TranscriptionService {
     const transcriptResults = await Promise.all(transcriptPromises);
 
     // Step 3: Merge results and adjust timestamps
-    let fullText = '';
+    let fullText = "";
     const allSegments: TranscriptSegment[] = [];
     let cumulativeTime = 0;
 
-    for (let i = 0; i < transcriptResults.length; i++) {
-      const result = transcriptResults[i];
-      const chunk = chunks[i];
-
+    for (const result of transcriptResults) {
       // Append text
-      fullText += (i > 0 ? ' ' : '') + result.fullText;
+      fullText += (fullText.length > 0 ? " " : "") + (result?.fullText ?? "");
 
       // Adjust segment timestamps based on chunk position
-      if (result.segments) {
+      if (result?.segments) {
         for (const segment of result.segments) {
           allSegments.push({
             start: segment.start + cumulativeTime,
@@ -160,7 +166,7 @@ export class GroqWhisperService implements TranscriptionService {
         }
       }
 
-      cumulativeTime += result.duration || 0;
+      cumulativeTime += result?.duration ?? 0;
     }
 
     const processingTime = Date.now() - startTime;
@@ -170,13 +176,16 @@ export class GroqWhisperService implements TranscriptionService {
       segments: allSegments,
       duration: cumulativeTime,
       language,
-      chunks: chunks.map((chunk, i) => ({
-        index: chunk.index,
-        startTime: chunk.startTime,
-        endTime: chunk.endTime,
-        text: transcriptResults[i].fullText,
-        duration: transcriptResults[i].duration || 0,
-      })),
+      chunks: chunks.map((chunkItem, i) => {
+        const transcriptResult = transcriptResults[i];
+        return {
+          index: chunkItem.index,
+          startTime: chunkItem.startTime,
+          endTime: chunkItem.endTime,
+          text: transcriptResult?.fullText ?? "",
+          duration: transcriptResult?.duration ?? 0,
+        };
+      }),
       totalChunks: chunks.length,
       processingTime,
     };
@@ -216,15 +225,6 @@ export class GroqWhisperService implements TranscriptionService {
     }
 
     return chunks;
-  }
-
-  /**
-   * Estimate audio duration from file size
-   * Rough approximation: ~1MB ≈ 1 minute for typical MP3 (128kbps)
-   */
-  private estimateDuration(buffer: Buffer): number {
-    const megabytes = buffer.length / 1_000_000;
-    return megabytes * 60; // seconds
   }
 }
 

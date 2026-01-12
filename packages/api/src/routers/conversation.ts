@@ -3,20 +3,24 @@
  * Handles audio upload, transcription, and MEDDIC analysis
  */
 
-import { db } from "@Sales_ai_automation_v3/db/client";
+import {
+  db,
+  generateCaseNumberFromDate,
+} from "@Sales_ai_automation_v3/db";
 import {
   conversations,
-  leads,
+  opportunities,
   meddicAnalyses,
 } from "@Sales_ai_automation_v3/db/schema";
 import {
   createAllServices,
   generateAudioKey,
+  evaluateAndCreateAlerts,
   type TranscriptSegment as ServiceTranscriptSegment,
 } from "@Sales_ai_automation_v3/services";
+import { randomUUID } from "node:crypto";
 import { ORPCError } from "@orpc/server";
-import { oz } from "@orpc/zod";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { protectedProcedure } from "../index";
@@ -34,66 +38,98 @@ function getServices() {
 // Schemas
 // ============================================================
 
-const uploadConversationSchema = oz.input(
-  z.object({
-    leadId: z.string(),
-    audioBase64: z.string(), // Base64 encoded audio file
-    fileName: z.string().optional(),
-    metadata: z
-      .object({
-        duration: z.number().optional(),
-        format: z.string().optional(),
-        recordedAt: z.string().optional(),
-      })
-      .optional(),
-  })
-);
+const uploadConversationSchema = z.object({
+  opportunityId: z.string(),
+  audioBase64: z.string(),
+  title: z.string().optional(),
+  type: z
+    .enum([
+      "discovery_call",
+      "demo",
+      "follow_up",
+      "negotiation",
+      "closing",
+      "support",
+    ])
+    .default("discovery_call"),
+  metadata: z
+    .object({
+      duration: z.number().optional(),
+      format: z.string().optional(),
+      conversationDate: z.string().optional(),
+    })
+    .optional(),
+});
 
-const analyzeConversationSchema = oz.input(
-  z.object({
-    conversationId: z.string(),
-  })
-);
+const analyzeConversationSchema = z.object({
+  conversationId: z.string(),
+});
 
-const listConversationsSchema = oz.input(
-  z.object({
-    leadId: z.string().optional(),
-    limit: z.number().min(1).max(100).default(20),
-    offset: z.number().min(0).default(0),
-  })
-);
+const listConversationsSchema = z.object({
+  opportunityId: z.string().optional(),
+  limit: z.number().min(1).max(100).default(20),
+  offset: z.number().min(0).default(0),
+});
 
-const getConversationSchema = oz.input(
-  z.object({
-    conversationId: z.string(),
-  })
-);
+const getConversationSchema = z.object({
+  conversationId: z.string(),
+});
+
+// ============================================================
+// Helper: Generate next case number
+// ============================================================
+
+async function getNextCaseNumber(): Promise<string> {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = (now.getMonth() + 1).toString().padStart(2, "0");
+  const yearMonth = `${year}${month}`;
+  const prefix = `${yearMonth}-IC`;
+
+  // Get the highest sequence number for this month
+  const result = await db
+    .select({ caseNumber: conversations.caseNumber })
+    .from(conversations)
+    .where(sql`${conversations.caseNumber} LIKE ${prefix + "%"}`)
+    .orderBy(desc(conversations.caseNumber))
+    .limit(1);
+
+  let nextSequence = 1;
+  const firstResult = result[0];
+  if (result.length > 0 && firstResult?.caseNumber) {
+    const match = firstResult.caseNumber.match(/-IC(\d+)$/);
+    if (match?.[1]) {
+      nextSequence = Number.parseInt(match[1], 10) + 1;
+    }
+  }
+
+  return generateCaseNumberFromDate(nextSequence);
+}
 
 // ============================================================
 // Upload & Transcribe Endpoint
 // ============================================================
 
-/**
- * POST /conversations/upload
- * Upload audio file, store to R2, transcribe with Groq Whisper
- */
 export const uploadConversation = protectedProcedure
   .input(uploadConversationSchema)
   .handler(async ({ input, context }) => {
-    const { leadId, audioBase64, fileName, metadata } = input;
+    const { opportunityId, audioBase64, title, type, metadata } = input;
     const userId = context.session?.user.id;
 
     if (!userId) {
-      throw new ORPCError("UNAUTHORIZED", "User not authenticated");
+      throw new ORPCError("UNAUTHORIZED");
     }
 
-    // Step 1: Verify lead exists and belongs to user
-    const lead = await db.query.leads.findFirst({
-      where: and(eq(leads.id, leadId), eq(leads.userId, userId)),
+    // Step 1: Verify opportunity exists and belongs to user
+    const opportunity = await db.query.opportunities.findFirst({
+      where: and(
+        eq(opportunities.id, opportunityId),
+        eq(opportunities.userId, userId)
+      ),
     });
 
-    if (!lead) {
-      throw new ORPCError("NOT_FOUND", "Lead not found");
+    if (!opportunity) {
+      throw new ORPCError("NOT_FOUND");
     }
 
     // Step 2: Decode audio buffer
@@ -101,22 +137,19 @@ export const uploadConversation = protectedProcedure
 
     // Step 3: Upload to R2
     const { r2, whisper } = getServices();
-    const audioKey = generateAudioKey(leadId, Date.now().toString());
+    const audioKey = generateAudioKey(opportunityId, Date.now().toString());
 
     let audioUrl: string;
     try {
       audioUrl = await r2.uploadAudio(audioKey, audioBuffer, {
         duration: metadata?.duration,
         format: metadata?.format || "mp3",
-        conversationId: "", // Will be set after DB insert
-        leadId,
+        conversationId: "",
+        leadId: opportunityId,
       });
     } catch (error) {
       console.error("R2 upload failed:", error);
-      throw new ORPCError(
-        "INTERNAL_SERVER_ERROR",
-        `Failed to upload audio: ${(error as Error).message}`
-      );
+      throw new ORPCError("INTERNAL_SERVER_ERROR");
     }
 
     // Step 4: Transcribe with Groq Whisper
@@ -129,48 +162,63 @@ export const uploadConversation = protectedProcedure
 
     try {
       transcriptResult = await whisper.transcribe(audioBuffer, {
-        language: "zh", // Chinese default
+        language: "zh",
         chunkIfNeeded: true,
       });
     } catch (error) {
       console.error("Transcription failed:", error);
-      // Clean up uploaded file if transcription fails
       await r2.delete(audioKey).catch(console.error);
-      throw new ORPCError(
-        "INTERNAL_SERVER_ERROR",
-        `Transcription failed: ${(error as Error).message}`
-      );
+      throw new ORPCError("INTERNAL_SERVER_ERROR");
     }
 
-    // Step 5: Store in database
-    const [conversation] = await db
+    // Step 5: Generate case number
+    const caseNumber = await getNextCaseNumber();
+
+    // Step 6: Store in database
+    const conversationResults = await db
       .insert(conversations)
       .values({
-        leadId,
+        id: randomUUID(),
+        opportunityId,
+        caseNumber,
+        title: title || `對話 - ${new Date().toLocaleDateString("zh-TW")}`,
+        type,
+        status: "transcribed",
         audioUrl,
         transcript: {
           fullText: transcriptResult.fullText,
           language: transcriptResult.language || "zh",
-          segments: transcriptResult.segments || [],
+          segments: (transcriptResult.segments || []).map((s) => ({
+            speaker: "unknown",
+            text: s.text,
+            start: s.start,
+            end: s.end,
+          })),
         },
-        recordedAt: metadata?.recordedAt
-          ? new Date(metadata.recordedAt)
-          : new Date(),
         duration: transcriptResult.duration || metadata?.duration,
-        status: "transcribed",
+        conversationDate: metadata?.conversationDate
+          ? new Date(metadata.conversationDate)
+          : new Date(),
+        createdBy: userId,
       })
       .returning();
 
+    const insertedConversation = conversationResults[0];
+    if (!insertedConversation) {
+      throw new ORPCError("INTERNAL_SERVER_ERROR");
+    }
+
     return {
-      conversationId: conversation.id,
+      conversationId: insertedConversation.id,
+      caseNumber: insertedConversation.caseNumber,
       audioUrl,
       transcript: {
         fullText: transcriptResult.fullText,
         segmentCount: transcriptResult.segments?.length || 0,
         language: transcriptResult.language || "zh",
       },
-      status: conversation.status,
-      createdAt: conversation.createdAt,
+      status: insertedConversation.status,
+      createdAt: insertedConversation.createdAt,
     };
   });
 
@@ -178,10 +226,6 @@ export const uploadConversation = protectedProcedure
 // Analyze Endpoint
 // ============================================================
 
-/**
- * POST /conversations/:id/analyze
- * Run MEDDIC analysis on transcribed conversation
- */
 export const analyzeConversation = protectedProcedure
   .input(analyzeConversationSchema)
   .handler(async ({ input, context }) => {
@@ -189,42 +233,44 @@ export const analyzeConversation = protectedProcedure
     const userId = context.session?.user.id;
 
     if (!userId) {
-      throw new ORPCError("UNAUTHORIZED", "User not authenticated");
+      throw new ORPCError("UNAUTHORIZED");
     }
 
     // Step 1: Get conversation and verify ownership
     const conversation = await db.query.conversations.findFirst({
       where: eq(conversations.id, conversationId),
       with: {
-        lead: true,
+        opportunity: true,
       },
     });
 
     if (!conversation) {
-      throw new ORPCError("NOT_FOUND", "Conversation not found");
+      throw new ORPCError("NOT_FOUND");
     }
 
-    if (conversation.lead.userId !== userId) {
-      throw new ORPCError("FORBIDDEN", "Access denied");
+    if (conversation.opportunity.userId !== userId) {
+      throw new ORPCError("FORBIDDEN");
     }
 
     if (conversation.status !== "transcribed") {
-      throw new ORPCError(
-        "BAD_REQUEST",
-        `Conversation must be transcribed first. Current status: ${conversation.status}`
-      );
+      throw new ORPCError("BAD_REQUEST");
     }
 
     // Step 2: Prepare transcript for analysis
     const transcript = conversation.transcript as {
-      segments: Array<{ start: number; end: number; text: string }>;
+      segments: Array<{
+        speaker: string;
+        text: string;
+        start: number;
+        end: number;
+      }>;
       fullText: string;
       language: string;
     };
 
     const transcriptSegments: ServiceTranscriptSegment[] =
       transcript.segments.map((s) => ({
-        speaker: "unknown", // V2 uses speaker diarization
+        speaker: s.speaker || "unknown",
         text: s.text,
         start: s.start,
         end: s.end,
@@ -236,59 +282,112 @@ export const analyzeConversation = protectedProcedure
     let analysisResult;
     try {
       analysisResult = await orchestrator.analyze(transcriptSegments, {
+        leadId: conversation.opportunityId,
         conversationId: conversation.id,
-        leadId: conversation.leadId,
-        recordedAt: conversation.recordedAt || new Date(),
+        salesRep: "unknown",
+        conversationDate: new Date(),
       });
     } catch (error) {
       console.error("MEDDIC analysis failed:", error);
-      throw new ORPCError(
-        "INTERNAL_SERVER_ERROR",
-        `Analysis failed: ${(error as Error).message}`
-      );
+      throw new ORPCError("INTERNAL_SERVER_ERROR");
     }
 
     // Step 4: Store analysis results
-    const [analysis] = await db
+    const analysisResults = await db
       .insert(meddicAnalyses)
       .values({
+        id: randomUUID(),
         conversationId: conversation.id,
-        leadId: conversation.leadId,
-        scores: {
-          metrics: analysisResult.scores.metrics,
-          economicBuyer: analysisResult.scores.economicBuyer,
-          decisionCriteria: analysisResult.scores.decisionCriteria,
-          decisionProcess: analysisResult.scores.decisionProcess,
-          identifyPain: analysisResult.scores.identifyPain,
-          champion: analysisResult.scores.champion,
-        },
+        opportunityId: conversation.opportunityId,
+        metricsScore: analysisResult.meddicScores?.metrics,
+        economicBuyerScore: analysisResult.meddicScores?.economicBuyer,
+        decisionCriteriaScore: analysisResult.meddicScores?.decisionCriteria,
+        decisionProcessScore: analysisResult.meddicScores?.decisionProcess,
+        identifyPainScore: analysisResult.meddicScores?.identifyPain,
+        championScore: analysisResult.meddicScores?.champion,
         overallScore: analysisResult.overallScore,
-        qualificationStatus: analysisResult.qualificationStatus,
-        dimensions: analysisResult.dimensions,
-        summary: analysisResult.summary,
-        contextData: analysisResult.contextData || {},
-        buyerData: analysisResult.buyerData || {},
-        sellerData: analysisResult.sellerData || {},
-        crmRecommendations: analysisResult.crmRecommendations || {},
-        coachingInsights: analysisResult.coachingInsights || {},
-        hasCompetitor: analysisResult.hasCompetitor,
-        competitorKeywords: analysisResult.competitorKeywords || [],
+        status: analysisResult.qualificationStatus,
+        dimensions: analysisResult.dimensions as unknown as Record<
+          string,
+          { evidence: string[]; gaps: string[]; recommendations: string[] }
+        >,
+        keyFindings: analysisResult.keyFindings || [],
+        nextSteps: (analysisResult.nextSteps || []).map((step) => ({
+          action: step.action,
+          priority: "Medium",
+          owner: step.owner,
+        })),
+        risks: analysisResult.risks || [],
+        agentOutputs: analysisResult.agentOutputs as unknown as {
+          agent1?: Record<string, unknown>;
+          agent2?: Record<string, unknown>;
+          agent3?: Record<string, unknown>;
+          agent4?: Record<string, unknown>;
+          agent5?: Record<string, unknown>;
+          agent6?: Record<string, unknown>;
+        },
       })
       .returning();
+
+    const analysis = analysisResults[0];
+    if (!analysis) {
+      throw new ORPCError("INTERNAL_SERVER_ERROR");
+    }
 
     // Step 5: Update conversation status
     await db
       .update(conversations)
-      .set({ status: "analyzed" })
+      .set({
+        status: "completed",
+        meddicAnalysis: {
+          overallScore: analysisResult.overallScore,
+          status: analysisResult.qualificationStatus,
+          dimensions: analysisResult.dimensions as unknown as Record<string, unknown>,
+        },
+        analyzedAt: new Date(),
+      })
       .where(eq(conversations.id, conversationId));
+
+    // Step 6: Evaluate and create alerts based on analysis
+    try {
+      const alerts = await evaluateAndCreateAlerts({
+        opportunityId: conversation.opportunityId,
+        conversationId: conversation.id,
+        userId,
+        meddicScore: analysisResult.overallScore,
+        meddicStatus: analysisResult.qualificationStatus,
+        dimensions: analysisResult.dimensions as {
+          metrics?: { score: number };
+          economicBuyer?: { score: number };
+          decisionCriteria?: { score: number };
+          decisionProcess?: { score: number };
+          identifyPain?: { score: number };
+          champion?: { score: number };
+        },
+      });
+
+      if (alerts.length > 0) {
+        console.log(
+          `Created ${alerts.length} alert(s) for conversation ${conversationId}`
+        );
+      }
+    } catch (alertError) {
+      // Log but don't fail the request if alert creation fails
+      console.error("Alert evaluation failed:", alertError);
+    }
 
     return {
       analysisId: analysis.id,
       overallScore: analysis.overallScore,
-      qualificationStatus: analysis.qualificationStatus,
-      scores: analysis.scores,
-      hasCompetitor: analysis.hasCompetitor,
-      summary: analysis.summary,
+      status: analysis.status,
+      scores: {
+        metrics: analysis.metricsScore,
+        economicBuyer: analysis.economicBuyerScore,
+        decisionCriteria: analysis.decisionCriteriaScore,
+        decisionProcess: analysis.decisionProcessScore,
+        identifyPain: analysis.identifyPainScore,
+        champion: analysis.championScore,
+      },
       createdAt: analysis.createdAt,
     };
   });
@@ -297,58 +396,61 @@ export const analyzeConversation = protectedProcedure
 // List & Detail Endpoints
 // ============================================================
 
-/**
- * GET /conversations
- * List all conversations (optionally filtered by leadId)
- */
 export const listConversations = protectedProcedure
   .input(listConversationsSchema)
   .handler(async ({ input, context }) => {
-    const { leadId, limit, offset } = input;
+    const { opportunityId, limit, offset } = input;
     const userId = context.session?.user.id;
 
     if (!userId) {
-      throw new ORPCError("UNAUTHORIZED", "User not authenticated");
+      throw new ORPCError("UNAUTHORIZED");
     }
 
-    // Build query conditions
-    const conditions = [eq(leads.userId, userId)];
-    if (leadId) {
-      conditions.push(eq(conversations.leadId, leadId));
+    const conditions = [eq(opportunities.userId, userId)];
+    if (opportunityId) {
+      conditions.push(eq(conversations.opportunityId, opportunityId));
     }
 
     const results = await db
       .select({
         id: conversations.id,
-        leadId: conversations.leadId,
-        leadName: leads.name,
-        audioUrl: conversations.audioUrl,
+        opportunityId: conversations.opportunityId,
+        opportunityCompanyName: opportunities.companyName,
+        customerNumber: opportunities.customerNumber,
+        caseNumber: conversations.caseNumber,
+        title: conversations.title,
+        type: conversations.type,
         status: conversations.status,
+        audioUrl: conversations.audioUrl,
         duration: conversations.duration,
-        recordedAt: conversations.recordedAt,
+        conversationDate: conversations.conversationDate,
         createdAt: conversations.createdAt,
         hasAnalysis: meddicAnalyses.id,
       })
       .from(conversations)
-      .innerJoin(leads, eq(conversations.leadId, leads.id))
+      .innerJoin(opportunities, eq(conversations.opportunityId, opportunities.id))
       .leftJoin(
         meddicAnalyses,
         eq(meddicAnalyses.conversationId, conversations.id)
       )
       .where(and(...conditions))
-      .orderBy(desc(conversations.recordedAt))
+      .orderBy(desc(conversations.conversationDate))
       .limit(limit)
       .offset(offset);
 
     return {
       conversations: results.map((r) => ({
         id: r.id,
-        leadId: r.leadId,
-        leadName: r.leadName,
-        audioUrl: r.audioUrl,
+        opportunityId: r.opportunityId,
+        opportunityCompanyName: r.opportunityCompanyName,
+        customerNumber: r.customerNumber,
+        caseNumber: r.caseNumber,
+        title: r.title,
+        type: r.type,
         status: r.status,
+        audioUrl: r.audioUrl,
         duration: r.duration,
-        recordedAt: r.recordedAt,
+        conversationDate: r.conversationDate,
         createdAt: r.createdAt,
         hasAnalysis: !!r.hasAnalysis,
       })),
@@ -358,10 +460,6 @@ export const listConversations = protectedProcedure
     };
   });
 
-/**
- * GET /conversations/:id
- * Get conversation details with transcript and analysis
- */
 export const getConversation = protectedProcedure
   .input(getConversationSchema)
   .handler(async ({ input, context }) => {
@@ -369,13 +467,13 @@ export const getConversation = protectedProcedure
     const userId = context.session?.user.id;
 
     if (!userId) {
-      throw new ORPCError("UNAUTHORIZED", "User not authenticated");
+      throw new ORPCError("UNAUTHORIZED");
     }
 
     const conversation = await db.query.conversations.findFirst({
       where: eq(conversations.id, conversationId),
       with: {
-        lead: true,
+        opportunity: true,
         meddicAnalyses: {
           orderBy: desc(meddicAnalyses.createdAt),
           limit: 1,
@@ -384,23 +482,29 @@ export const getConversation = protectedProcedure
     });
 
     if (!conversation) {
-      throw new ORPCError("NOT_FOUND", "Conversation not found");
+      throw new ORPCError("NOT_FOUND");
     }
 
-    if (conversation.lead.userId !== userId) {
-      throw new ORPCError("FORBIDDEN", "Access denied");
+    if (conversation.opportunity.userId !== userId) {
+      throw new ORPCError("FORBIDDEN");
     }
 
     return {
       id: conversation.id,
-      leadId: conversation.leadId,
-      leadName: conversation.lead.name,
+      opportunityId: conversation.opportunityId,
+      opportunityCompanyName: conversation.opportunity.companyName,
+      customerNumber: conversation.opportunity.customerNumber,
+      caseNumber: conversation.caseNumber,
+      title: conversation.title,
+      type: conversation.type,
+      status: conversation.status,
       audioUrl: conversation.audioUrl,
       transcript: conversation.transcript,
-      status: conversation.status,
+      summary: conversation.summary,
       duration: conversation.duration,
-      recordedAt: conversation.recordedAt,
+      conversationDate: conversation.conversationDate,
       createdAt: conversation.createdAt,
+      analyzedAt: conversation.analyzedAt,
       analysis: conversation.meddicAnalyses[0] || null,
     };
   });

@@ -1,0 +1,14 @@
+# Slack Bot 開發環境變數範例
+# 複製此檔案為 .dev.vars 並填入實際值
+
+# Slack Bot Token (xoxb-...)
+SLACK_BOT_TOKEN=xoxb-your-bot-token
+
+# Slack Signing Secret
+SLACK_SIGNING_SECRET=your-signing-secret
+
+# Internal API URL
+API_BASE_URL=http://localhost:3000
+
+# Internal API Token (optional)
+API_TOKEN=your-api-token

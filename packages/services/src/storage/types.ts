@@ -81,7 +81,7 @@ export interface AudioFileMetadata extends UploadMetadata {
 export function generateAudioKey(
   leadId: string,
   conversationId: string,
-  extension = 'mp3'
+  extension = "mp3"
 ): string {
   const timestamp = Date.now();
   return `audio/${leadId}/${conversationId}/${timestamp}.${extension}`;

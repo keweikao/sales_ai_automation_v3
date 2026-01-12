@@ -21,7 +21,7 @@ export interface TranscriptionOptions {
   language?: string; // Language code (e.g., 'zh', 'en')
   chunkIfNeeded?: boolean; // Auto-chunk files >24MB (V2 logic)
   temperature?: number; // Sampling temperature (0.0 for deterministic)
-  responseFormat?: 'json' | 'text' | 'srt' | 'verbose_json' | 'vtt';
+  responseFormat?: "json" | "text" | "srt" | "verbose_json" | "vtt";
 }
 
 export interface TranscriptionService {

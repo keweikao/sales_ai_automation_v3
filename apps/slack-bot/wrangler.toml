@@ -1,0 +1,27 @@
+name = "sales-ai-slack-bot"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "production"
+
+# 環境變數需要在 Cloudflare Dashboard 設定
+# 或使用 wrangler secret put 命令設定以下變數：
+# - SLACK_BOT_TOKEN
+# - SLACK_SIGNING_SECRET
+# - API_BASE_URL
+# - API_TOKEN
+
+[observability]
+enabled = true
+
+# 開發環境設定
+[env.dev]
+name = "sales-ai-slack-bot-dev"
+vars = { ENVIRONMENT = "development" }
+
+# 預覽環境設定
+[env.preview]
+name = "sales-ai-slack-bot-preview"
+vars = { ENVIRONMENT = "preview" }

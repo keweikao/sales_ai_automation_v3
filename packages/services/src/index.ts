@@ -10,30 +10,35 @@
  */
 
 // ============================================================
+// Internal Imports for Convenience Functions
+// ============================================================
+
+import { createGeminiClient as createGemini } from "./llm/gemini.js";
+import { createOrchestrator as createOrch } from "./llm/orchestrator.js";
+import { validatePrompts as validatePromptsInternal } from "./llm/prompts.js";
+import { createR2Service as createR2 } from "./storage/r2.js";
+import { createGroqWhisperService as createWhisper } from "./transcription/groq-whisper.js";
+
+// ============================================================
 // LLM Services
 // ============================================================
 
-export { GeminiClient, createGeminiClient, extractJSON } from './llm/gemini.js';
-export { MeddicOrchestrator, createOrchestrator } from './llm/orchestrator.js';
+export { createGeminiClient, extractJSON, GeminiClient } from "./llm/gemini.js";
+export { createOrchestrator, MeddicOrchestrator } from "./llm/orchestrator.js";
 export {
-  loadPrompt,
-  GLOBAL_CONTEXT,
   AGENT1_PROMPT,
   AGENT2_PROMPT,
   AGENT3_PROMPT,
   AGENT4_PROMPT,
   AGENT5_PROMPT,
   AGENT6_PROMPT,
+  GLOBAL_CONTEXT,
   getAllPrompts,
+  loadPrompt,
   validatePrompts,
-} from './llm/prompts.js';
+} from "./llm/prompts.js";
 
 export type {
-  TranscriptSegment,
-  Transcript,
-  MeddicScores,
-  DimensionAnalysis,
-  MeddicDimensions,
   Agent1Output,
   Agent2Output,
   Agent3Output,
@@ -41,45 +46,62 @@ export type {
   Agent5Output,
   Agent6Output,
   AnalysisMetadata,
-  AnalysisState,
   AnalysisResult,
-  LLMResponse,
+  AnalysisState,
+  DimensionAnalysis,
   LLMClient,
   LLMOptions,
-} from './llm/types.js';
+  LLMResponse,
+  MeddicDimensions,
+  MeddicScores,
+  Transcript,
+  TranscriptSegment,
+} from "./llm/types.js";
 
 // ============================================================
 // Transcription Services
 // ============================================================
 
 export {
-  GroqWhisperService,
   createGroqWhisperService,
-} from './transcription/groq-whisper.js';
+  GroqWhisperService,
+} from "./transcription/groq-whisper.js";
 
 export type {
-  TranscriptionService,
-  TranscriptionOptions,
-  TranscriptResult,
-  GroqTranscriptionResponse,
   AudioChunk,
   ChunkedTranscriptResult,
-} from './transcription/types.js';
+  GroqTranscriptionResponse,
+  TranscriptionOptions,
+  TranscriptionService,
+  TranscriptResult,
+} from "./transcription/types.js";
 
 // ============================================================
 // Storage Services
 // ============================================================
 
-export { R2StorageService, createR2Service } from './storage/r2.js';
+export { createR2Service, R2StorageService } from "./storage/r2.js";
 
 export type {
+  AudioFileMetadata,
+  StorageConfig,
   StorageService,
   UploadMetadata,
-  StorageConfig,
-  AudioFileMetadata,
-} from './storage/types.js';
+} from "./storage/types.js";
 
-export { generateAudioKey, generateTranscriptKey } from './storage/types.js';
+export { generateAudioKey, generateTranscriptKey } from "./storage/types.js";
+
+// ============================================================
+// Alert Services
+// ============================================================
+
+export * from "./alerts/index.js";
+
+// ============================================================
+// Lead Source Services
+// ============================================================
+
+export * from "./lead-source/index.js";
 
 // ============================================================
 // Convenience Factory Functions
@@ -90,11 +112,12 @@ export { generateAudioKey, generateTranscriptKey } from './storage/types.js';
  * Reads from environment variables
  */
 export function createAllServices() {
+  const geminiClient = createGemini();
   return {
-    gemini: createGeminiClient(),
-    whisper: createGroqWhisperService(),
-    r2: createR2Service(),
-    orchestrator: createOrchestrator(createGeminiClient()),
+    gemini: geminiClient,
+    whisper: createWhisper(),
+    r2: createR2(),
+    orchestrator: createOrch(geminiClient),
   };
 }
 
@@ -106,12 +129,12 @@ export function validateEnvironment(): {
   missing: string[];
 } {
   const required = [
-    'GEMINI_API_KEY',
-    'GROQ_API_KEY',
-    'CLOUDFLARE_R2_ACCESS_KEY',
-    'CLOUDFLARE_R2_SECRET_KEY',
-    'CLOUDFLARE_R2_BUCKET',
-    'CLOUDFLARE_R2_ENDPOINT',
+    "GEMINI_API_KEY",
+    "GROQ_API_KEY",
+    "CLOUDFLARE_R2_ACCESS_KEY",
+    "CLOUDFLARE_R2_SECRET_KEY",
+    "CLOUDFLARE_R2_BUCKET",
+    "CLOUDFLARE_R2_ENDPOINT",
   ];
 
   const missing = required.filter((key) => !process.env[key]);
@@ -136,7 +159,7 @@ export async function testAllConnections(): Promise<{
   const [gemini, r2, prompts] = await Promise.all([
     services.gemini.testConnection(),
     services.r2.testConnection(),
-    Promise.resolve(validatePrompts()),
+    Promise.resolve(validatePromptsInternal()),
   ]);
 
   return {

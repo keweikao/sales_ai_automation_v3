@@ -1,0 +1,1086 @@
+{
+  "lastProcessedIndex": 214,
+  "successCount": 215,
+  "failedCount": 0,
+  "skippedCount": 0,
+  "failedFiles": [],
+  "urlMappings": [
+    {
+      "conversationId": "202510-121846.YumYum韓式料理.Wade",
+      "gcsUri": "gs://sales-ai-audio-bucket/audio/2025-12/202512-IC063/202510-121846.YumYum韓式料理.Wade.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202510-121846.YumYum韓式料理.Wade.mp3"
+    },
+    {
+      "conversationId": "202510-121846.YumYum韓式料理.Wade_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/audio/2025-12/202512-IC063/202510-121846.YumYum韓式料理.Wade_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202510-121846.YumYum韓式料理.Wade_converted.mp3"
+    },
+    {
+      "conversationId": "202512-122947_橘巷咖啡 - Belle Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/audio/2025-12/202512-IC064/202512-122947_橘巷咖啡 - Belle Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122947_橘巷咖啡 - Belle Chen.mp3"
+    },
+    {
+      "conversationId": "202512-122947_橘巷咖啡 - Belle Chen_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/audio/2025-12/202512-IC064/202512-122947_橘巷咖啡 - Belle Chen_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122947_橘巷咖啡 - Belle Chen_converted.mp3"
+    },
+    {
+      "conversationId": "202512-123081_Snows 吳小姐 - Belle Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/audio/2025-12/202512-IC065/202512-123081_Snows 吳小姐 - Belle Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123081_Snows 吳小姐 - Belle Chen.mp3"
+    },
+    {
+      "conversationId": "202512-123081_Snows 吳小姐 - Belle Chen_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/audio/2025-12/202512-IC065/202512-123081_Snows 吳小姐 - Belle Chen_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123081_Snows 吳小姐 - Belle Chen_converted.mp3"
+    },
+    {
+      "conversationId": "202512-123045_南港李先生 - Belle Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/audio/2025-12/202512-IC066/202512-123045_南港李先生 - Belle Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123045_南港李先生 - Belle Chen.mp3"
+    },
+    {
+      "conversationId": "省都",
+      "gcsUri": "gs://sales-ai-audio-bucket/audio/2025-12/202512-IC067/省都.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/省都.mp3"
+    },
+    {
+      "conversationId": "月",
+      "gcsUri": "gs://sales-ai-audio-bucket/audio/2025-12/202512-IC068/月.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/月.mp3"
+    },
+    {
+      "conversationId": "家",
+      "gcsUri": "gs://sales-ai-audio-bucket/audio/2025-12/202512-IC069/家.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/家.mp3"
+    },
+    {
+      "conversationId": "202512-123016_米平方健身房飲料-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/audio/2025-12/202512-IC070/202512-123016_米平方健身房飲料-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123016_米平方健身房飲料-Solo.mp3"
+    },
+    {
+      "conversationId": "印尼 - 陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/audio/2025-12/202512-IC073/印尼 - 陳晉廷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/印尼 - 陳晉廷.mp3"
+    },
+    {
+      "conversationId": "202512-123108-田記",
+      "gcsUri": "gs://sales-ai-audio-bucket/audio/2025-12/202512-IC074/202512-123108-田記.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123108-田記.mp3"
+    },
+    {
+      "conversationId": "202512-122969-思達卜",
+      "gcsUri": "gs://sales-ai-audio-bucket/audio/2025-12/202512-IC075/202512-122969-思達卜.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122969-思達卜.mp3"
+    },
+    {
+      "conversationId": "202512-122860",
+      "gcsUri": "gs://sales-ai-audio-bucket/audio/2025-12/202512-IC076/202512-122860.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122860.mp3"
+    },
+    {
+      "conversationId": "202510-121832_森林_-_陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC001/202510-121832_森林_-_陳晉廷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202510-121832_森林_-_陳晉廷.mp3"
+    },
+    {
+      "conversationId": "202511-122188_冰_-_陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC001/202511-122188_冰_-_陳晉廷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202511-122188_冰_-_陳晉廷.mp3"
+    },
+    {
+      "conversationId": "202510-121832_森林_-_陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC002/202510-121832_森林_-_陳晉廷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202510-121832_森林_-_陳晉廷.mp3"
+    },
+    {
+      "conversationId": "麻辣燙_-_Eileen_Lee",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC002/麻辣燙_-_Eileen_Lee.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/麻辣燙_-_Eileen_Lee.mp3"
+    },
+    {
+      "conversationId": "202510-121832_森林_-_陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC003/202510-121832_森林_-_陳晉廷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202510-121832_森林_-_陳晉廷.mp3"
+    },
+    {
+      "conversationId": "202511-122188_冰_-_陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC003/202511-122188_冰_-_陳晉廷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202511-122188_冰_-_陳晉廷.mp3"
+    },
+    {
+      "conversationId": "202510-121832_森林_-_陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC004/202510-121832_森林_-_陳晉廷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202510-121832_森林_-_陳晉廷.mp3"
+    },
+    {
+      "conversationId": "202511-122188_冰_-_陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC004/202511-122188_冰_-_陳晉廷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202511-122188_冰_-_陳晉廷.mp3"
+    },
+    {
+      "conversationId": "202510-121832_森林_-_陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC005/202510-121832_森林_-_陳晉廷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202510-121832_森林_-_陳晉廷.mp3"
+    },
+    {
+      "conversationId": "麻辣燙_-_Eileen_Lee",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC005/麻辣燙_-_Eileen_Lee.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/麻辣燙_-_Eileen_Lee.mp3"
+    },
+    {
+      "conversationId": "202510-121832_森林_-_陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC006/202510-121832_森林_-_陳晉廷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202510-121832_森林_-_陳晉廷.mp3"
+    },
+    {
+      "conversationId": "test_audio_file",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC006/test_audio_file.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/test_audio_file.mp3"
+    },
+    {
+      "conversationId": "麻辣燙_-_Eileen_Lee",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC006/麻辣燙_-_Eileen_Lee.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/麻辣燙_-_Eileen_Lee.mp3"
+    },
+    {
+      "conversationId": "202510-121832_森林_-_陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC007/202510-121832_森林_-_陳晉廷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202510-121832_森林_-_陳晉廷.mp3"
+    },
+    {
+      "conversationId": "麻辣燙_-_Eileen_Lee",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC007/麻辣燙_-_Eileen_Lee.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/麻辣燙_-_Eileen_Lee.mp3"
+    },
+    {
+      "conversationId": "202510-121832_森林_-_陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC008/202510-121832_森林_-_陳晉廷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202510-121832_森林_-_陳晉廷.mp3"
+    },
+    {
+      "conversationId": "麻辣燙_-_Eileen_Lee",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC008/麻辣燙_-_Eileen_Lee.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/麻辣燙_-_Eileen_Lee.mp3"
+    },
+    {
+      "conversationId": "麻辣燙_-_Eileen_Lee",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC009/麻辣燙_-_Eileen_Lee.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/麻辣燙_-_Eileen_Lee.mp3"
+    },
+    {
+      "conversationId": "202511-122188_冰_-_陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC010/202511-122188_冰_-_陳晉廷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202511-122188_冰_-_陳晉廷.mp3"
+    },
+    {
+      "conversationId": "麻辣燙_-_Eileen_Lee",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC011/麻辣燙_-_Eileen_Lee.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/麻辣燙_-_Eileen_Lee.mp3"
+    },
+    {
+      "conversationId": "麻辣燙_-_Eileen_Lee",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC012/麻辣燙_-_Eileen_Lee.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/麻辣燙_-_Eileen_Lee.mp3"
+    },
+    {
+      "conversationId": "麻辣燙_-_Eileen_Lee",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC013/麻辣燙_-_Eileen_Lee.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/麻辣燙_-_Eileen_Lee.mp3"
+    },
+    {
+      "conversationId": "202411-122257_桔日員林-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC015/202411-122257_桔日員林-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202411-122257_桔日員林-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202411-122257_桔日員林-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC016/202411-122257_桔日員林-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202411-122257_桔日員林-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202411-122257_桔日員林-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC017/202411-122257_桔日員林-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202411-122257_桔日員林-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202411-122257_桔日員林-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC018/202411-122257_桔日員林-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202411-122257_桔日員林-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202411-122257_桔日員林-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC019/202411-122257_桔日員林-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202411-122257_桔日員林-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202411-122257_桔日員林-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC020/202411-122257_桔日員林-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202411-122257_桔日員林-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202411-122257_桔日員林-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC021/202411-122257_桔日員林-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202411-122257_桔日員林-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202511-122521_科博館麵店-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC022/202511-122521_科博館麵店-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/202511-122521_科博館麵店-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "Test",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202511-IC023/Test.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/11/Test.mp3"
+    },
+    {
+      "conversationId": "202411-122257_桔日員林-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC001/202411-122257_桔日員林-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202411-122257_桔日員林-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202511-122428_ZodiacPour-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC002/202511-122428_ZodiacPour-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202511-122428_ZodiacPour-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202511-122428_ZodiacPour-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC002/202511-122428_ZodiacPour-Solo_-_鍾志杰.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202511-122428_ZodiacPour-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "御品_-_陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC004/御品_-_陳晉廷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/御品_-_陳晉廷.mp3"
+    },
+    {
+      "conversationId": "20251112",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC005/20251112.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/20251112.mp3"
+    },
+    {
+      "conversationId": "202512-122807_帢米德烘焙-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC006/202512-122807_帢米德烘焙-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122807_帢米德烘焙-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202510-122008_枝豆_-_Belle_Chen_-_陳可諠",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC007/202510-122008_枝豆_-_Belle_Chen_-_陳可諠.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202510-122008_枝豆_-_Belle_Chen_-_陳可諠.mp3"
+    },
+    {
+      "conversationId": "202512-122752_炭火俱樂部-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC008/202512-122752_炭火俱樂部-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122752_炭火俱樂部-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202512-122738-Mo_cafe_Ariel_-_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC009/202512-122738-Mo_cafe_Ariel_-_Ariel.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122738-Mo_cafe_Ariel_-_Ariel.mp3"
+    },
+    {
+      "conversationId": "202511-122448_和美火鍋-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC010/202511-122448_和美火鍋-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202511-122448_和美火鍋-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202511-122612-嚐百炒_Ariel_-_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC011/202511-122612-嚐百炒_Ariel_-_Ariel.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202511-122612-嚐百炒_Ariel_-_Ariel.mp3"
+    },
+    {
+      "conversationId": "202511-122448_和美火鍋-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC012/202511-122448_和美火鍋-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202511-122448_和美火鍋-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202511-122448_和美火鍋-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC013/202511-122448_和美火鍋-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202511-122448_和美火鍋-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202510-121846.YumYum韓式料理.Wade",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC014/202510-121846.YumYum韓式料理.Wade.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202510-121846.YumYum韓式料理.Wade.mp3"
+    },
+    {
+      "conversationId": "202511-122564-小栗所_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC015/202511-122564-小栗所_Ariel.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202511-122564-小栗所_Ariel.mp3"
+    },
+    {
+      "conversationId": "202512-122874_豆腐鍋彭先生_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC016/202512-122874_豆腐鍋彭先生_-_Belle_Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122874_豆腐鍋彭先生_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "202512-122901_岩藏鍋陳先生_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC017/202512-122901_岩藏鍋陳先生_-_Belle_Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122901_岩藏鍋陳先生_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "202512-122681-甲上飯包_Ariel_-_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC018/202512-122681-甲上飯包_Ariel_-_Ariel.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122681-甲上飯包_Ariel_-_Ariel.mp3"
+    },
+    {
+      "conversationId": "202511-122633_二林火鍋-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC019/202511-122633_二林火鍋-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202511-122633_二林火鍋-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202512-122731_台南家常味自助餐-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC020/202512-122731_台南家常味自助餐-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122731_台南家常味自助餐-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202512-122760_莊家雞肉飯-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC021/202512-122760_莊家雞肉飯-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122760_莊家雞肉飯-Solo.mp3"
+    },
+    {
+      "conversationId": "202512-122840_法貝諾-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC022/202512-122840_法貝諾-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122840_法貝諾-Solo.mp3"
+    },
+    {
+      "conversationId": "202510-122008_枝豆_-_Belle_Chen_-_陳可諠",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC023/202510-122008_枝豆_-_Belle_Chen_-_陳可諠.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202510-122008_枝豆_-_Belle_Chen_-_陳可諠.mp3"
+    },
+    {
+      "conversationId": "202512-122868-傳香飯糰為公店_Ariel_-_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC024/202512-122868-傳香飯糰為公店_Ariel_-_Ariel.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122868-傳香飯糰為公店_Ariel_-_Ariel.mp3"
+    },
+    {
+      "conversationId": "202512-122868-傳香飯糰為公店_Ariel_-_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC025/202512-122868-傳香飯糰為公店_Ariel_-_Ariel.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122868-傳香飯糰為公店_Ariel_-_Ariel.mp3"
+    },
+    {
+      "conversationId": "202512-122752_炭火俱樂部-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC026/202512-122752_炭火俱樂部-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122752_炭火俱樂部-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202512-122868-傳香飯糰為公店_Ariel_-_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC027/202512-122868-傳香飯糰為公店_Ariel_-_Ariel.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122868-傳香飯糰為公店_Ariel_-_Ariel.mp3"
+    },
+    {
+      "conversationId": "202512-122681-甲上飯包_Ariel_-_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC028/202512-122681-甲上飯包_Ariel_-_Ariel.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122681-甲上飯包_Ariel_-_Ariel.mp3"
+    },
+    {
+      "conversationId": "202511-122612-嚐百炒_Ariel_-_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC029/202511-122612-嚐百炒_Ariel_-_Ariel.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202511-122612-嚐百炒_Ariel_-_Ariel.mp3"
+    },
+    {
+      "conversationId": "202512-122738-Mo_cafe_Ariel_-_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC030/202512-122738-Mo_cafe_Ariel_-_Ariel.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122738-Mo_cafe_Ariel_-_Ariel.mp3"
+    },
+    {
+      "conversationId": "202512-122738-Mo_cafe_Ariel_-_Ariel_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC030/202512-122738-Mo_cafe_Ariel_-_Ariel_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122738-Mo_cafe_Ariel_-_Ariel_converted.mp3"
+    },
+    {
+      "conversationId": "202512-122919_逢甲丼飯-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC031/202512-122919_逢甲丼飯-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122919_逢甲丼飯-Solo.mp3"
+    },
+    {
+      "conversationId": "202512-122967_美素館-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC032/202512-122967_美素館-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122967_美素館-Solo.mp3"
+    },
+    {
+      "conversationId": "202512-122736-阿力雞排新竹東門店_Ariel_-_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC033/202512-122736-阿力雞排新竹東門店_Ariel_-_Ariel.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122736-阿力雞排新竹東門店_Ariel_-_Ariel.mp3"
+    },
+    {
+      "conversationId": "202512-123024_Gabi_Coffee_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC034/202512-123024_Gabi_Coffee_-_Belle_Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123024_Gabi_Coffee_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "202512-123024_Gabi_Coffee_-_Belle_Chen_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC034/202512-123024_Gabi_Coffee_-_Belle_Chen_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123024_Gabi_Coffee_-_Belle_Chen_converted.mp3"
+    },
+    {
+      "conversationId": "202512-122778_王先生_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC035/202512-122778_王先生_-_Belle_Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122778_王先生_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "202512-122778_王先生_-_Belle_Chen_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC035/202512-122778_王先生_-_Belle_Chen_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122778_王先生_-_Belle_Chen_converted.mp3"
+    },
+    {
+      "conversationId": "202512-123026_汪宗燁_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC036/202512-123026_汪宗燁_-_Belle_Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123026_汪宗燁_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "202512-123026_汪宗燁_-_Belle_Chen_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC036/202512-123026_汪宗燁_-_Belle_Chen_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123026_汪宗燁_-_Belle_Chen_converted.mp3"
+    },
+    {
+      "conversationId": "202511-122521_科博館麵店-Solo_-_鍾志杰",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC037/202511-122521_科博館麵店-Solo_-_鍾志杰.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202511-122521_科博館麵店-Solo_-_鍾志杰.mp3"
+    },
+    {
+      "conversationId": "202511-122521_科博館麵店-Solo_-_鍾志杰_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC037/202511-122521_科博館麵店-Solo_-_鍾志杰_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202511-122521_科博館麵店-Solo_-_鍾志杰_converted.mp3"
+    },
+    {
+      "conversationId": "202512-122778_王先生_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC038/202512-122778_王先生_-_Belle_Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122778_王先生_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "202512-122778_王先生_-_Belle_Chen_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC038/202512-122778_王先生_-_Belle_Chen_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122778_王先生_-_Belle_Chen_converted.mp3"
+    },
+    {
+      "conversationId": "202512-123024_Gabi_Coffee_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC039/202512-123024_Gabi_Coffee_-_Belle_Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123024_Gabi_Coffee_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "202512-123024_Gabi_Coffee_-_Belle_Chen_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC039/202512-123024_Gabi_Coffee_-_Belle_Chen_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123024_Gabi_Coffee_-_Belle_Chen_converted.mp3"
+    },
+    {
+      "conversationId": "202512-123081_Snows_吳小姐_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC040/202512-123081_Snows_吳小姐_-_Belle_Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123081_Snows_吳小姐_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "202512-123081_Snows_吳小姐_-_Belle_Chen_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC040/202512-123081_Snows_吳小姐_-_Belle_Chen_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123081_Snows_吳小姐_-_Belle_Chen_converted.mp3"
+    },
+    {
+      "conversationId": "202512-122897-三支鳥鳥_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC041/202512-122897-三支鳥鳥_Ariel.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122897-三支鳥鳥_Ariel.mp3"
+    },
+    {
+      "conversationId": "202512-122897-三支鳥鳥_Ariel_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC041/202512-122897-三支鳥鳥_Ariel_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122897-三支鳥鳥_Ariel_converted.mp3"
+    },
+    {
+      "conversationId": "202512-122897-三支鳥鳥_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC042/202512-122897-三支鳥鳥_Ariel.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122897-三支鳥鳥_Ariel.mp3"
+    },
+    {
+      "conversationId": "202512-122897-三支鳥鳥_Ariel_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC042/202512-122897-三支鳥鳥_Ariel_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122897-三支鳥鳥_Ariel_converted.mp3"
+    },
+    {
+      "conversationId": "202512-122947_橘巷咖啡_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC043/202512-122947_橘巷咖啡_-_Belle_Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122947_橘巷咖啡_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "202512-122947_橘巷咖啡_-_Belle_Chen_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC043/202512-122947_橘巷咖啡_-_Belle_Chen_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122947_橘巷咖啡_-_Belle_Chen_converted.mp3"
+    },
+    {
+      "conversationId": "202512-123027_二鍋頭東山鴨頭-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC044/202512-123027_二鍋頭東山鴨頭-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123027_二鍋頭東山鴨頭-Solo.mp3"
+    },
+    {
+      "conversationId": "202512-123027_二鍋頭東山鴨頭-Solo_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC044/202512-123027_二鍋頭東山鴨頭-Solo_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123027_二鍋頭東山鴨頭-Solo_converted.mp3"
+    },
+    {
+      "conversationId": "202512-123075_社頭雞魯飯-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC045/202512-123075_社頭雞魯飯-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123075_社頭雞魯飯-Solo.mp3"
+    },
+    {
+      "conversationId": "202512-123093_板橋重慶路吳先生_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC046/202512-123093_板橋重慶路吳先生_-_Belle_Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123093_板橋重慶路吳先生_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "202512-122909_嶺東居酒屋-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC047/202512-122909_嶺東居酒屋-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122909_嶺東居酒屋-Solo.mp3"
+    },
+    {
+      "conversationId": "202512-123006_大里炒滷味王老闆-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC048/202512-123006_大里炒滷味王老闆-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123006_大里炒滷味王老闆-Solo.mp3"
+    },
+    {
+      "conversationId": "202512-122887_清泉崗豆花-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC049/202512-122887_清泉崗豆花-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122887_清泉崗豆花-Solo.mp3"
+    },
+    {
+      "conversationId": "202512-122681-甲上飯包_Ariel_-_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC050/202512-122681-甲上飯包_Ariel_-_Ariel.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122681-甲上飯包_Ariel_-_Ariel.mp3"
+    },
+    {
+      "conversationId": "202512-122681-甲上飯包_Ariel_-_Ariel_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC050/202512-122681-甲上飯包_Ariel_-_Ariel_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122681-甲上飯包_Ariel_-_Ariel_converted.mp3"
+    },
+    {
+      "conversationId": "202512-123086_法米法式甜點-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC051/202512-123086_法米法式甜點-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123086_法米法式甜點-Solo.mp3"
+    },
+    {
+      "conversationId": "202512-123086_法米法式甜點-Solo_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC051/202512-123086_法米法式甜點-Solo_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123086_法米法式甜點-Solo_converted.mp3"
+    },
+    {
+      "conversationId": "202512-123016_米平方健身房飲料-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC052/202512-123016_米平方健身房飲料-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123016_米平方健身房飲料-Solo.mp3"
+    },
+    {
+      "conversationId": "202512-123016_米平方健身房飲料-Solo_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC052/202512-123016_米平方健身房飲料-Solo_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123016_米平方健身房飲料-Solo_converted.mp3"
+    },
+    {
+      "conversationId": "202512-123107_中和_知識衛星_輕食餐車_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC053/202512-123107_中和_知識衛星_輕食餐車_-_Belle_Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123107_中和_知識衛星_輕食餐車_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "202512-123107_中和_知識衛星_輕食餐車_-_Belle_Chen_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC053/202512-123107_中和_知識衛星_輕食餐車_-_Belle_Chen_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123107_中和_知識衛星_輕食餐車_-_Belle_Chen_converted.mp3"
+    },
+    {
+      "conversationId": "同賀_-_梁明凱",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC054/同賀_-_梁明凱.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/同賀_-_梁明凱.mp3"
+    },
+    {
+      "conversationId": "同賀_-_梁明凱",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC055/同賀_-_梁明凱.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/同賀_-_梁明凱.mp3"
+    },
+    {
+      "conversationId": "202512-122738-Mo_cafe_Ariel_-_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC056/202512-122738-Mo_cafe_Ariel_-_Ariel.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122738-Mo_cafe_Ariel_-_Ariel.mp3"
+    },
+    {
+      "conversationId": "男子咖啡_-_陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC057/男子咖啡_-_陳晉廷.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/男子咖啡_-_陳晉廷.mp3"
+    },
+    {
+      "conversationId": "o_指-基隆_李先生_-_2025_12_26",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC058/o_指-基隆_李先生_-_2025_12_26.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/o_指-基隆_李先生_-_2025_12_26.mp3"
+    },
+    {
+      "conversationId": "202512-123024_Gabi_Coffee_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC059/202512-123024_Gabi_Coffee_-_Belle_Chen.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123024_Gabi_Coffee_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "202512-122897-三支鳥鳥_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC060/202512-122897-三支鳥鳥_Ariel.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122897-三支鳥鳥_Ariel.mp3"
+    },
+    {
+      "conversationId": "河粉",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC061/河粉.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/河粉.mp3"
+    },
+    {
+      "conversationId": "月",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC062/月.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/月.mp3"
+    },
+    {
+      "conversationId": "202510-121846.YumYum韓式料理.Wade",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC063/202510-121846.YumYum韓式料理.Wade.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202510-121846.YumYum韓式料理.Wade.mp3"
+    },
+    {
+      "conversationId": "202512-123081_Snows_吳小姐_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC065/202512-123081_Snows_吳小姐_-_Belle_Chen.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123081_Snows_吳小姐_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "202512-123045_南港李先生_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC066/202512-123045_南港李先生_-_Belle_Chen.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123045_南港李先生_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "省都",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC067/省都.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/省都.mp3"
+    },
+    {
+      "conversationId": "月",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC068/月.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/月.mp3"
+    },
+    {
+      "conversationId": "202512-122749-微光之丘_Ariel",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC071/202512-122749-微光之丘_Ariel.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122749-微光之丘_Ariel.mp3"
+    },
+    {
+      "conversationId": "202512-122887_清泉崗豆花-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC072/202512-122887_清泉崗豆花-Solo.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-122887_清泉崗豆花-Solo.mp3"
+    },
+    {
+      "conversationId": "202512-123016_米平方健身房飲料-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC077/202512-123016_米平方健身房飲料-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123016_米平方健身房飲料-Solo.mp3"
+    },
+    {
+      "conversationId": "202512-123141_hashtag_Coffee_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC078/202512-123141_hashtag_Coffee_-_Belle_Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123141_hashtag_Coffee_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "202512-123168_迪化街飲料店_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC079/202512-123168_迪化街飲料店_-_Belle_Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123168_迪化街飲料店_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "202512-123163_泰爾斯咖啡-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202512-IC080/202512-123163_泰爾斯咖啡-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202512-123163_泰爾斯咖啡-Solo.mp3"
+    },
+    {
+      "conversationId": "知事官邸_-_梁明凱",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC001/知事官邸_-_梁明凱.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/知事官邸_-_梁明凱.mp3"
+    },
+    {
+      "conversationId": "麵屋",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC002/麵屋.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/麵屋.mp3"
+    },
+    {
+      "conversationId": "戀愛巷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC003/戀愛巷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/戀愛巷.mp3"
+    },
+    {
+      "conversationId": "縣民大道二段",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC004/縣民大道二段.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/縣民大道二段.mp3"
+    },
+    {
+      "conversationId": "縣民大道二段",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC005/縣民大道二段.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/縣民大道二段.mp3"
+    },
+    {
+      "conversationId": "202512-123132_泰頂_‐_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC006/202512-123132_泰頂_‐_Belle_Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/202512-123132_泰頂_‐_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "202512-123236_56鐵板燒_-_Belle_Chen",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC007/202512-123236_56鐵板燒_-_Belle_Chen.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/202512-123236_56鐵板燒_-_Belle_Chen.mp3"
+    },
+    {
+      "conversationId": "烤雞",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC008/烤雞.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/烤雞.mp3"
+    },
+    {
+      "conversationId": "澎湖桌菜",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC009/澎湖桌菜.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/澎湖桌菜.mp3"
+    },
+    {
+      "conversationId": "七早",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC010/七早.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/七早.mp3"
+    },
+    {
+      "conversationId": "桂",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC011/桂.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/桂.mp3"
+    },
+    {
+      "conversationId": "202601-123261酒足飯飽_Hank",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC012/202601-123261酒足飯飽_Hank.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/202601-123261酒足飯飽_Hank.mp3"
+    },
+    {
+      "conversationId": "202512-123128",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC013/202512-123128.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/202512-123128.mp3"
+    },
+    {
+      "conversationId": "202512-12381_宜日麵包-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC014/202512-12381_宜日麵包-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/202512-12381_宜日麵包-Solo.mp3"
+    },
+    {
+      "conversationId": "正宗",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC015/正宗.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/正宗.mp3"
+    },
+    {
+      "conversationId": "奇早",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC016/奇早.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/奇早.mp3"
+    },
+    {
+      "conversationId": "新錄音",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC017/新錄音.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/新錄音.mp3"
+    },
+    {
+      "conversationId": "新錄音_2",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC018/新錄音_2.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/新錄音_2.mp3"
+    },
+    {
+      "conversationId": "Ellson202601-123327鐵板燒",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC019/Ellson202601-123327鐵板燒.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/Ellson202601-123327鐵板燒.mp3"
+    },
+    {
+      "conversationId": "202601-123304_中清早午餐陳r-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC020/202601-123304_中清早午餐陳r-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/202601-123304_中清早午餐陳r-Solo.mp3"
+    },
+    {
+      "conversationId": "202601-123278_十三妹螺獅粉-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC021/202601-123278_十三妹螺獅粉-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/202601-123278_十三妹螺獅粉-Solo.mp3"
+    },
+    {
+      "conversationId": "一人_-_陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC022/一人_-_陳晉廷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/一人_-_陳晉廷.mp3"
+    },
+    {
+      "conversationId": "新錄音",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC023/新錄音.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/新錄音.mp3"
+    },
+    {
+      "conversationId": "中山北路二段10–42號",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC024/中山北路二段10–42號.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/中山北路二段10–42號.mp3"
+    },
+    {
+      "conversationId": "雞肉飯",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC025/雞肉飯.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/雞肉飯.mp3"
+    },
+    {
+      "conversationId": "咖啡",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC026/咖啡.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/咖啡.mp3"
+    },
+    {
+      "conversationId": "陳玟蒨",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC027/陳玟蒨.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/陳玟蒨.mp3"
+    },
+    {
+      "conversationId": "202601-123326_野人食記-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC028/202601-123326_野人食記-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/202601-123326_野人食記-Solo.mp3"
+    },
+    {
+      "conversationId": "202512-123183_綠昇貿易-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC029/202512-123183_綠昇貿易-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/202512-123183_綠昇貿易-Solo.mp3"
+    },
+    {
+      "conversationId": "羅斯福路三段12–42號",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC030/羅斯福路三段12–42號.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/羅斯福路三段12–42號.mp3"
+    },
+    {
+      "conversationId": "米澤製麵",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC031/米澤製麵.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/米澤製麵.mp3"
+    },
+    {
+      "conversationId": "UBike_2.0",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC032/UBike_2.0.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/UBike_2.0.mp3"
+    },
+    {
+      "conversationId": "知事官邸_-_梁明凱",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC033/知事官邸_-_梁明凱.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/知事官邸_-_梁明凱.mp3"
+    },
+    {
+      "conversationId": "薛先生_（居酒屋）",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC034/薛先生_（居酒屋）.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/薛先生_（居酒屋）.mp3"
+    },
+    {
+      "conversationId": "新錄音",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC035/新錄音.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/新錄音.mp3"
+    },
+    {
+      "conversationId": "新錄音_2",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC036/新錄音_2.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/新錄音_2.mp3"
+    },
+    {
+      "conversationId": "新錄音_3",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC037/新錄音_3.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/新錄音_3.mp3"
+    },
+    {
+      "conversationId": "機會名稱_202512-123083_客戶電話_0975063887_韓棧",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC038/機會名稱_202512-123083_客戶電話_0975063887_韓棧.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/機會名稱_202512-123083_客戶電話_0975063887_韓棧.mp3"
+    },
+    {
+      "conversationId": "機會名稱_202512-123225_客戶電話_0986502975_米撰雞腿壩王寶山店",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC039/機會名稱_202512-123225_客戶電話_0986502975_米撰雞腿壩王寶山店.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/機會名稱_202512-123225_客戶電話_0986502975_米撰雞腿壩王寶山店.mp3"
+    },
+    {
+      "conversationId": "機會名稱_202512-123203_客戶電話_0910238226_柚日",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC040/機會名稱_202512-123203_客戶電話_0910238226_柚日.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/機會名稱_202512-123203_客戶電話_0910238226_柚日.mp3"
+    },
+    {
+      "conversationId": "男子咖啡_-_陳晉廷",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC041/男子咖啡_-_陳晉廷.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/男子咖啡_-_陳晉廷.mp3"
+    },
+    {
+      "conversationId": "聚眾",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC042/聚眾.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/聚眾.mp3"
+    },
+    {
+      "conversationId": "快炒",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC043/快炒.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/快炒.mp3"
+    },
+    {
+      "conversationId": "202601-123252_貓吃魚-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC044/202601-123252_貓吃魚-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/202601-123252_貓吃魚-Solo.mp3"
+    },
+    {
+      "conversationId": "202601-123302_一井水產-Solo",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC045/202601-123302_一井水產-Solo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/202601-123302_一井水產-Solo.mp3"
+    },
+    {
+      "conversationId": "知事官邸_-_梁明凱",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC046/知事官邸_-_梁明凱.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/知事官邸_-_梁明凱.mp3"
+    },
+    {
+      "conversationId": "中正路637巷2弄_2",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC047/中正路637巷2弄_2.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/中正路637巷2弄_2.mp3"
+    },
+    {
+      "conversationId": "英專路65巷3號",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC048/英專路65巷3號.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/英專路65巷3號.mp3"
+    },
+    {
+      "conversationId": "士東路29號",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC049/士東路29號.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/士東路29號.mp3"
+    },
+    {
+      "conversationId": "新錄音_4",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC050/新錄音_4.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/新錄音_4.mp3"
+    },
+    {
+      "conversationId": "越南河粉",
+      "gcsUri": "gs://sales-ai-audio-bucket/slack/202601-IC051/越南河粉.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/越南河粉.mp3"
+    },
+    {
+      "conversationId": "202510-121846.YumYum韓式料理.Wade_converted_chunk_000",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_chunks/202510-121846.YumYum韓式料理.Wade_converted_chunk_000.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202510-121846.YumYum韓式料理.Wade_converted_chunk_000.mp3"
+    },
+    {
+      "conversationId": "202510-121846.YumYum韓式料理.Wade_converted_chunk_001",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_chunks/202510-121846.YumYum韓式料理.Wade_converted_chunk_001.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202510-121846.YumYum韓式料理.Wade_converted_chunk_001.mp3"
+    },
+    {
+      "conversationId": "202510-121846.YumYum韓式料理.Wade_converted_chunk_002",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_chunks/202510-121846.YumYum韓式料理.Wade_converted_chunk_002.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/202510-121846.YumYum韓式料理.Wade_converted_chunk_002.mp3"
+    },
+    {
+      "conversationId": "tmpbzf7y43t",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/0a560b9f-7ac0-4f5e-b986-573562a35297/tmpbzf7y43t.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpbzf7y43t.mp3"
+    },
+    {
+      "conversationId": "tmpbzf7y43t_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/0a560b9f-7ac0-4f5e-b986-573562a35297/tmpbzf7y43t_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpbzf7y43t_converted.mp3"
+    },
+    {
+      "conversationId": "tmpt359hkcx",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/0e389f89-4d7f-4e15-8ab0-703bfa5354c2/tmpt359hkcx.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpt359hkcx.mp3"
+    },
+    {
+      "conversationId": "tmpt359hkcx_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/0e389f89-4d7f-4e15-8ab0-703bfa5354c2/tmpt359hkcx_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpt359hkcx_converted.mp3"
+    },
+    {
+      "conversationId": "tmpmobbn2ji_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/0e68acb9-4a14-4d5b-9571-2073a742a35b/tmpmobbn2ji_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpmobbn2ji_converted.mp3"
+    },
+    {
+      "conversationId": "tmpkcicfuwr_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/10f0d910-965c-4807-abe7-e45e2d4fe34c/tmpkcicfuwr_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpkcicfuwr_converted.mp3"
+    },
+    {
+      "conversationId": "tmpjtt_ilra",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/1cde1d9a-c6e9-49d5-9e2b-b92b129bc8f3/tmpjtt_ilra.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/tmpjtt_ilra.mp3"
+    },
+    {
+      "conversationId": "tmp7esz46me",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/2d3d18af-595a-4643-b7d6-bc0bae47f7db/tmp7esz46me.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmp7esz46me.mp3"
+    },
+    {
+      "conversationId": "tmp7esz46me_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/2d3d18af-595a-4643-b7d6-bc0bae47f7db/tmp7esz46me_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmp7esz46me_converted.mp3"
+    },
+    {
+      "conversationId": "tmpp1856x5p",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/3ea82ced-719b-4222-aad0-61bf8a046742/tmpp1856x5p.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpp1856x5p.mp3"
+    },
+    {
+      "conversationId": "tmpp1856x5p_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/3ea82ced-719b-4222-aad0-61bf8a046742/tmpp1856x5p_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpp1856x5p_converted.mp3"
+    },
+    {
+      "conversationId": "tmplf9pdo7s_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/4172e3e0-008f-4b10-862d-3a7d0949d99b/tmplf9pdo7s_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmplf9pdo7s_converted.mp3"
+    },
+    {
+      "conversationId": "tmpvqal22lg",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/5ab660b2-dcfa-46c2-a1bb-0a5e1f87b68f/tmpvqal22lg.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpvqal22lg.mp3"
+    },
+    {
+      "conversationId": "tmpvqal22lg_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/5ab660b2-dcfa-46c2-a1bb-0a5e1f87b68f/tmpvqal22lg_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpvqal22lg_converted.mp3"
+    },
+    {
+      "conversationId": "tmpvxfcosj7",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/6c48c9b5-a544-4bb4-9415-351018610eed/tmpvxfcosj7.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpvxfcosj7.mp3"
+    },
+    {
+      "conversationId": "tmpvxfcosj7_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/6c48c9b5-a544-4bb4-9415-351018610eed/tmpvxfcosj7_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpvxfcosj7_converted.mp3"
+    },
+    {
+      "conversationId": "tmpr4relb5n_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/882ae9bf-07f6-44f2-b61b-43362d517d8b/tmpr4relb5n_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpr4relb5n_converted.mp3"
+    },
+    {
+      "conversationId": "tmp444mmhzx_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/9c1bca4c-c8c5-4e58-b8c4-b918a2caf9bb/tmp444mmhzx_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmp444mmhzx_converted.mp3"
+    },
+    {
+      "conversationId": "tmppfjifxzo",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/a1e08b13-1469-426c-82bb-0f3fc22427c7/tmppfjifxzo.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmppfjifxzo.mp3"
+    },
+    {
+      "conversationId": "tmppfjifxzo_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/a1e08b13-1469-426c-82bb-0f3fc22427c7/tmppfjifxzo_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmppfjifxzo_converted.mp3"
+    },
+    {
+      "conversationId": "tmpgplhi0g3",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/a73d0a31-cac8-4c7a-a043-ff654ffb058c/tmpgplhi0g3.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpgplhi0g3.mp3"
+    },
+    {
+      "conversationId": "tmpgplhi0g3_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/a73d0a31-cac8-4c7a-a043-ff654ffb058c/tmpgplhi0g3_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpgplhi0g3_converted.mp3"
+    },
+    {
+      "conversationId": "tmpf1d9ztl_",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/b5cc291d-7e40-4acf-8a63-b74095e56fd7/tmpf1d9ztl_.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2026/01/tmpf1d9ztl_.mp3"
+    },
+    {
+      "conversationId": "tmpgp0ba3th",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/d788870a-08fa-4ea8-9c26-03a185c78d13/tmpgp0ba3th.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpgp0ba3th.mp3"
+    },
+    {
+      "conversationId": "tmpgp0ba3th_converted",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/d788870a-08fa-4ea8-9c26-03a185c78d13/tmpgp0ba3th_converted.mp3",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpgp0ba3th_converted.mp3"
+    },
+    {
+      "conversationId": "tmpwk35onh7",
+      "gcsUri": "gs://sales-ai-audio-bucket/temp_uploads/f72cd57c-7de9-4c66-85d9-09d1ddaae818/tmpwk35onh7.m4a",
+      "r2Url": "https://pub-2b14cb05a60d60ad55427f4dd7570b90.r2.dev/audio/2025/12/tmpwk35onh7.mp3"
+    }
+  ],
+  "startedAt": "2026-01-12T04:23:25.841Z",
+  "updatedAt": "2026-01-12T04:23:47.704Z"
+}

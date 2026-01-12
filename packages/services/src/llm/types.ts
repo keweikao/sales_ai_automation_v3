@@ -85,11 +85,11 @@ export interface Agent2Output {
   meddicScores: MeddicScores;
   dimensions: MeddicDimensions;
   overallScore: number; // 1-100
-  qualificationStatus: 'Strong' | 'Medium' | 'Weak' | 'At Risk';
+  qualificationStatus: "Strong" | "Medium" | "Weak" | "At Risk";
   needsIdentified: boolean;
   painPoints: string[];
   trustAssessment: {
-    level: 'High' | 'Medium' | 'Low';
+    level: "High" | "Medium" | "Low";
     indicators: string[];
   };
 }
@@ -106,7 +106,7 @@ export interface Agent3Output {
   };
   recommendedActions: Array<{
     action: string;
-    priority: 'High' | 'Medium' | 'Low';
+    priority: "High" | "Medium" | "Low";
     rationale: string;
   }>;
   competitivePositioning?: {
@@ -159,8 +159,12 @@ export interface Agent5Output {
 export interface Agent6Output {
   coachingNotes: string;
   alerts: Array<{
-    type: 'Close Now' | 'Missing Decision Maker' | 'Excellent Performance' | 'Risk';
-    severity: 'Critical' | 'High' | 'Medium' | 'Low';
+    type:
+      | "Close Now"
+      | "Missing Decision Maker"
+      | "Excellent Performance"
+      | "Risk";
+    severity: "Critical" | "High" | "Medium" | "Low";
     message: string;
   }>;
   suggestedTalkTracks: string[];
@@ -213,7 +217,7 @@ export interface AnalysisResult {
   // Summary
   executiveSummary: string;
   keyFindings: string[];
-  nextSteps: Agent4Output['nextSteps'];
+  nextSteps: Agent4Output["nextSteps"];
 
   // Risk assessment
   risks: Array<{
@@ -224,7 +228,7 @@ export interface AnalysisResult {
 
   // Coaching
   coachingNotes: string;
-  alerts: Agent6Output['alerts'];
+  alerts: Agent6Output["alerts"];
 
   // CRM data
   crmData: Agent5Output;
