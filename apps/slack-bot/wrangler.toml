@@ -12,6 +12,11 @@ ENVIRONMENT = "production"
 # - SLACK_SIGNING_SECRET
 # - API_BASE_URL
 # - API_TOKEN
+#
+# EVERY8D SMS 簡訊服務 (可選):
+# - EVERY8D_UID      # EVERY8D 帳號 (例: ichef_sales)
+# - EVERY8D_PWD      # EVERY8D 密碼
+# - EVERY8D_API_URL  # API URL (預設: https://api.e8d.tw/API21/HTTP/sendSMS.ashx)
 
 [observability]
 enabled = true

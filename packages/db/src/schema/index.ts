@@ -7,6 +7,7 @@ export * from "./lead-source";
 export * from "./meddic";
 export * from "./opportunity";
 export * from "./rep-skills";
+export * from "./sms-log";
 export * from "./talk-tracks";
 export * from "./team";
 export * from "./user-extension";

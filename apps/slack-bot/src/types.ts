@@ -6,6 +6,11 @@ export interface Env {
   API_BASE_URL: string;
   API_TOKEN?: string;
   ENVIRONMENT: string;
+  // EVERY8D SMS 簡訊服務
+  EVERY8D_UID?: string; // EVERY8D 帳號
+  EVERY8D_PWD?: string; // EVERY8D 密碼
+  EVERY8D_API_URL?: string; // EVERY8D API URL (預設: https://api.e8d.tw/API21/HTTP/sendSMS.ashx)
+  EVERY8D_SITE_URL?: string; // EVERY8D API URL (舊版命名，向下相容)
 }
 
 // Slack 請求類型

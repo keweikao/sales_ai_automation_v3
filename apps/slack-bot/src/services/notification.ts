@@ -1,160 +1,221 @@
 /**
- * 通知服務抽象層
+ * Notification Service - SMS 和 Email 發送服務
  *
- * 提供 SMS 和 Email 發送功能
- * TODO: 選擇供應商後實作具體服務
- * - SMS: Twilio 或其他
- * - Email: SendGrid、Resend 或其他
+ * 使用 EVERY8D API 發送簡訊
  */
 
 import type { Env } from "../types";
 
-export interface NotificationResult {
+interface SendResult {
   success: boolean;
-  messageId?: string;
   error?: string;
+  messageId?: string;
+  credit?: number;
 }
 
-export interface NotificationService {
-  sendSMS(phone: string, message: string): Promise<NotificationResult>;
-  sendEmail(
-    email: string,
-    subject: string,
-    body: string
-  ): Promise<NotificationResult>;
+interface NotificationService {
+  sendSMS(phone: string, message: string): Promise<SendResult>;
+  sendEmail(email: string, subject: string, body: string): Promise<SendResult>;
 }
 
 /**
  * 建立通知服務實例
  */
-export function createNotificationService(_env: Env): NotificationService {
-  // TODO: 根據環境變數選擇實際服務
-  // 目前使用 Mock 實作
-  return new MockNotificationService();
+export function createNotificationService(env: Env): NotificationService {
+  return {
+    /**
+     * 透過 EVERY8D API 發送簡訊
+     *
+     * API 文件：https://api.e8d.tw
+     * 回傳格式：Credit,SendMessage,Cost,Unsend,SendTime
+     * 成功範例：79.0,1,1.0,0,20170601165133
+     * 失敗範例：-300 (帳號密碼錯誤)
+     */
+    async sendSMS(phone: string, message: string): Promise<SendResult> {
+      const uid = env.EVERY8D_UID;
+      const pwd = env.EVERY8D_PWD;
+      // 支援 EVERY8D_API_URL 或 EVERY8D_SITE_URL (舊版命名)
+      const apiUrl = env.EVERY8D_API_URL || env.EVERY8D_SITE_URL || "https://api.e8d.tw/API21/HTTP/sendSMS.ashx";
+
+      if (!uid || !pwd) {
+        return {
+          success: false,
+          error: "SMS 服務未設定 (缺少 EVERY8D_UID 或 EVERY8D_PWD)",
+        };
+      }
+
+      // 格式化電話號碼 (移除空格和特殊字元，確保台灣手機格式)
+      const formattedPhone = formatPhoneNumber(phone);
+      if (!formattedPhone) {
+        return {
+          success: false,
+          error: `無效的電話號碼格式: ${phone}`,
+        };
+      }
+
+      // 簡訊內容截斷 (單則簡訊最多 70 個中文字或 160 個英文字)
+      const truncatedMessage = truncateMessage(message, 140);
+
+      try {
+        // 建立 EVERY8D API 請求
+        const params = new URLSearchParams({
+          UID: uid,
+          PWD: pwd,
+          SB: "", // 簡訊主旨 (可選)
+          MSG: truncatedMessage,
+          DEST: formattedPhone,
+          ST: "", // 預約發送時間 (空白表示立即發送)
+        });
+
+        const response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: params.toString(),
+        });
+
+        const responseText = await response.text();
+
+        // 解析 EVERY8D 回應
+        // 成功格式: Credit,SendMessage,Cost,Unsend,SendTime
+        // 失敗格式: 負數錯誤碼
+        const result = parseEvery8DResponse(responseText);
+
+        if (result.success) {
+          return {
+            success: true,
+            messageId: result.sendTime,
+            credit: result.credit,
+          };
+        }
+        return {
+          success: false,
+          error: result.errorMessage || `API 錯誤: ${responseText}`,
+        };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "未知錯誤";
+        return {
+          success: false,
+          error: `發送失敗: ${errorMessage}`,
+        };
+      }
+    },
+
+    /**
+     * 發送 Email (目前未實作，返回待實作訊息)
+     */
+    async sendEmail(
+      email: string,
+      subject: string,
+      _body: string
+    ): Promise<SendResult> {
+      // TODO: 整合 Email 服務 (如 Resend, SendGrid, Mailgun 等)
+      return {
+        success: false,
+        error: `Email 服務尚未設定。無法發送至 ${email} (主旨: ${subject})`,
+      };
+    },
+  };
 }
 
 /**
- * Mock 通知服務（開發/測試用）
- * 實際發送前會替換為真實服務
+ * 格式化台灣手機號碼
+ * 支援格式: 0912345678, 09-1234-5678, +886912345678
  */
-class MockNotificationService implements NotificationService {
-  async sendSMS(phone: string, message: string): Promise<NotificationResult> {
-    console.log(`[Mock SMS] To: ${phone}`);
-    console.log(`[Mock SMS] Message: ${message}`);
+function formatPhoneNumber(phone: string): string | null {
+  // 移除所有非數字字元
+  const digits = phone.replace(/\D/g, "");
 
-    // 模擬發送
-    return {
-      success: true,
-      messageId: `mock-sms-${Date.now()}`,
-    };
+  // 處理 +886 開頭的國際格式
+  if (digits.startsWith("886") && digits.length === 12) {
+    return `0${digits.slice(3)}`;
   }
 
-  async sendEmail(
-    email: string,
-    subject: string,
-    body: string
-  ): Promise<NotificationResult> {
-    console.log(`[Mock Email] To: ${email}`);
-    console.log(`[Mock Email] Subject: ${subject}`);
-    console.log(`[Mock Email] Body: ${body}`);
-
-    // 模擬發送
-    return {
-      success: true,
-      messageId: `mock-email-${Date.now()}`,
-    };
+  // 標準台灣手機格式 09XXXXXXXX
+  if (digits.startsWith("09") && digits.length === 10) {
+    return digits;
   }
+
+  // 無法識別的格式
+  return null;
 }
 
-// ============================================================
-// TODO: 以下為未來實作的服務類別範本
-// ============================================================
+/**
+ * 截斷簡訊內容
+ * 中文簡訊每則最多 70 字，超過會分則計費
+ */
+function truncateMessage(message: string, maxLength: number): string {
+  if (message.length <= maxLength) {
+    return message;
+  }
+  return `${message.slice(0, maxLength - 3)}...`;
+}
+
+interface Every8DResult {
+  success: boolean;
+  credit?: number;
+  sendCount?: number;
+  cost?: number;
+  sendTime?: string;
+  errorMessage?: string;
+}
 
 /**
- * Twilio SMS 服務
- * 需要環境變數: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER
+ * 解析 EVERY8D API 回應
+ *
+ * 成功回應格式: Credit,SendMessage,Cost,Unsend,SendTime
+ * 範例: 79.0,1,1.0,0,20170601165133
+ *
+ * 錯誤代碼:
+ * -300: 帳號密碼錯誤
+ * -301: 發送額度不足
+ * -302: 無效的接收者
+ * -303: 訊息內容為空
  */
-// class TwilioSMSService implements NotificationService {
-//   private accountSid: string;
-//   private authToken: string;
-//   private fromNumber: string;
-//
-//   constructor(accountSid: string, authToken: string, fromNumber: string) {
-//     this.accountSid = accountSid;
-//     this.authToken = authToken;
-//     this.fromNumber = fromNumber;
-//   }
-//
-//   async sendSMS(phone: string, message: string): Promise<NotificationResult> {
-//     const url = `https://api.twilio.com/2010-04-01/Accounts/${this.accountSid}/Messages.json`;
-//
-//     const response = await fetch(url, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/x-www-form-urlencoded",
-//         Authorization: `Basic ${btoa(`${this.accountSid}:${this.authToken}`)}`,
-//       },
-//       body: new URLSearchParams({
-//         To: phone,
-//         From: this.fromNumber,
-//         Body: message,
-//       }),
-//     });
-//
-//     const result = await response.json();
-//
-//     if (response.ok) {
-//       return { success: true, messageId: result.sid };
-//     }
-//     return { success: false, error: result.message };
-//   }
-//
-//   async sendEmail(): Promise<NotificationResult> {
-//     return { success: false, error: "Twilio service does not support email" };
-//   }
-// }
+function parseEvery8DResponse(response: string): Every8DResult {
+  const trimmed = response.trim();
 
-/**
- * Resend Email 服務
- * 需要環境變數: RESEND_API_KEY
- */
-// class ResendEmailService implements NotificationService {
-//   private apiKey: string;
-//   private fromEmail: string;
-//
-//   constructor(apiKey: string, fromEmail: string) {
-//     this.apiKey = apiKey;
-//     this.fromEmail = fromEmail;
-//   }
-//
-//   async sendSMS(): Promise<NotificationResult> {
-//     return { success: false, error: "Resend service does not support SMS" };
-//   }
-//
-//   async sendEmail(
-//     email: string,
-//     subject: string,
-//     body: string
-//   ): Promise<NotificationResult> {
-//     const response = await fetch("https://api.resend.com/emails", {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${this.apiKey}`,
-//       },
-//       body: JSON.stringify({
-//         from: this.fromEmail,
-//         to: email,
-//         subject,
-//         text: body,
-//       }),
-//     });
-//
-//     const result = await response.json();
-//
-//     if (response.ok) {
-//       return { success: true, messageId: result.id };
-//     }
-//     return { success: false, error: result.message };
-//   }
-// }
+  // 檢查是否為錯誤代碼 (負數)
+  if (trimmed.startsWith("-")) {
+    const errorCode = Number.parseInt(trimmed, 10);
+    const errorMessages: Record<number, string> = {
+      "-300": "帳號密碼錯誤",
+      "-301": "發送額度不足",
+      "-302": "無效的接收者電話號碼",
+      "-303": "訊息內容為空",
+      "-304": "預約發送時間錯誤",
+      "-305": "發送者識別碼錯誤",
+      "-306": "帳號已停用",
+      "-307": "簡訊內容含有違規字元",
+      "-399": "系統錯誤，請稍後再試",
+    };
+
+    return {
+      success: false,
+      errorMessage: errorMessages[errorCode] || `未知錯誤 (${errorCode})`,
+    };
+  }
+
+  // 解析成功回應
+  const parts = trimmed.split(",");
+  if (parts.length >= 5) {
+    const credit = Number.parseFloat(parts[0] ?? "0");
+    const sendCount = Number.parseInt(parts[1] ?? "0", 10);
+    const cost = Number.parseFloat(parts[2] ?? "0");
+    const sendTime = parts[4] ?? "";
+
+    return {
+      success: sendCount > 0,
+      credit,
+      sendCount,
+      cost,
+      sendTime,
+    };
+  }
+
+  return {
+    success: false,
+    errorMessage: `無法解析 API 回應: ${trimmed}`,
+  };
+}
