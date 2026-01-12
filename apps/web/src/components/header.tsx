@@ -1,5 +1,5 @@
 import { Link, useMatchRoute } from "@tanstack/react-router";
-import { BarChart3, Building2, Home, MessageSquare } from "lucide-react";
+import { BarChart3, Building2, FileText, Home, MessageSquare } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "./mode-toggle";
@@ -12,6 +12,7 @@ export default function Header() {
     { to: "/", label: "首頁", icon: Home },
     { to: "/opportunities", label: "商機", icon: Building2 },
     { to: "/conversations", label: "對話", icon: MessageSquare },
+    { to: "/reports", label: "報告", icon: FileText },
   ] as const;
 
   return (
