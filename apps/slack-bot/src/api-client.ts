@@ -8,6 +8,7 @@ import type {
   MeddicTrendsResponse,
   OpportunityResponse,
   OpportunityStatsResponse,
+  TalkTrackResponse,
   UploadConversationResponse,
 } from "./types";
 
@@ -164,6 +165,16 @@ export class ApiClient {
     });
   }
 
+  async updateConversationSummary(
+    conversationId: string,
+    summary: string
+  ): Promise<void> {
+    await this.request("/api/conversations.updateSummary", {
+      method: "POST",
+      body: JSON.stringify({ conversationId, summary }),
+    });
+  }
+
   // Analytics 相關 API
   async getDashboard(): Promise<DashboardStatsResponse> {
     return this.request<DashboardStatsResponse>("/api/analytics.dashboard");
@@ -222,5 +233,39 @@ export class ApiClient {
 
   async getAlertStats(): Promise<AlertStatsResponse> {
     return this.request<AlertStatsResponse>("/api/alert.stats");
+  }
+
+  // Talk Track 相關 API
+  async getTalkTracksBySituation(
+    situation: string,
+    customerType?: string
+  ): Promise<TalkTrackResponse[]> {
+    const searchParams = new URLSearchParams();
+    searchParams.set("situation", situation);
+    if (customerType) {
+      searchParams.set("customerType", customerType);
+    }
+    return this.request<TalkTrackResponse[]>(
+      `/api/talkTracks.getBySituation?${searchParams.toString()}`
+    );
+  }
+
+  async searchTalkTracks(
+    keyword: string,
+    limit = 5
+  ): Promise<TalkTrackResponse[]> {
+    const searchParams = new URLSearchParams();
+    searchParams.set("keyword", keyword);
+    searchParams.set("limit", String(limit));
+    return this.request<TalkTrackResponse[]>(
+      `/api/talkTracks.search?${searchParams.toString()}`
+    );
+  }
+
+  async recordTalkTrackUsage(talkTrackId: string): Promise<void> {
+    await this.request("/api/talkTracks.recordUsage", {
+      method: "POST",
+      body: JSON.stringify({ talkTrackId }),
+    });
   }
 }

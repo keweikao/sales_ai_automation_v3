@@ -254,3 +254,97 @@ export interface AlertStatsResponse {
     manager_escalation: number;
   };
 }
+
+// 音檔上傳業務資訊表單類型
+export type StoreType =
+  | "cafe"
+  | "beverage"
+  | "hotpot"
+  | "bbq"
+  | "snack"
+  | "restaurant"
+  | "bar"
+  | "fastfood"
+  | "other";
+
+export type ServiceType =
+  | "dine_in_only"
+  | "takeout_only"
+  | "dine_in_main"
+  | "takeout_main";
+
+export type CurrentPosSystem =
+  | "none"
+  | "ichef_old"
+  | "dudu"
+  | "eztable"
+  | "other_pos"
+  | "traditional"
+  | "manual";
+
+export interface AudioUploadMetadata {
+  customerNumber: string;
+  customerName: string;
+  storeType: StoreType;
+  serviceType: ServiceType;
+  currentPos: CurrentPosSystem;
+  decisionMakerOnsite: boolean;
+}
+
+// Slack Modal 相關類型
+export interface SlackViewSubmission {
+  type: "view_submission";
+  user: {
+    id: string;
+    name: string;
+  };
+  view: {
+    id: string;
+    callback_id: string;
+    private_metadata: string;
+    state: {
+      values: Record<string, Record<string, SlackInputValue>>;
+    };
+  };
+}
+
+export interface SlackInputValue {
+  type: string;
+  value?: string;
+  selected_option?: {
+    value: string;
+  };
+  selected_options?: Array<{
+    value: string;
+  }>;
+}
+
+// 暫存的檔案資訊（用於 Modal 提交後處理）
+export interface PendingAudioFile {
+  fileId: string;
+  fileName: string;
+  channelId: string;
+  userId: string;
+  threadTs?: string;
+  downloadUrl: string;
+}
+
+// Talk Track 相關類型
+export interface TalkTrackResponse {
+  id: string;
+  situation: string;
+  customerType: string | null;
+  storeType: string | null;
+  talkTrack: string;
+  context: string | null;
+  expectedOutcome: string | null;
+  sourceType: string | null;
+  sourceConversationId: string | null;
+  successRate: number | null;
+  usageCount: number | null;
+  version: number | null;
+  isActive: boolean | null;
+  tags: string[] | null;
+  createdAt: string;
+  updatedAt: string;
+}

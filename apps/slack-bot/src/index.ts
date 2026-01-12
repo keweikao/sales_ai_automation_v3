@@ -7,9 +7,21 @@
 
 import { Hono } from "hono";
 import { handleAcknowledgeAlert, handleDismissAlert } from "./alerts";
+import { ApiClient } from "./api-client";
+import {
+  buildEditSummaryModal,
+  parseEditSummaryValues,
+} from "./blocks/edit-summary-modal";
 import { handleSlackCommand } from "./commands";
 import { handleSlackEvent } from "./events";
-import type { Env, SlackRequestBody } from "./types";
+import {
+  buildAudioUploadModal,
+  parseAudioUploadFormValues,
+  processAudioWithMetadata,
+} from "./events/file";
+import { createNotificationService } from "./services/notification";
+import type { Env, PendingAudioFile, SlackRequestBody } from "./types";
+import { SlackClient } from "./utils/slack-client";
 import { verifySlackRequest } from "./utils/verify";
 
 const app = new Hono<{ Bindings: Env }>();
@@ -32,7 +44,7 @@ app.post("/slack/events", async (c) => {
   const timestamp = c.req.header("x-slack-request-timestamp");
   const signature = c.req.header("x-slack-signature");
 
-  if (!timestamp || !signature) {
+  if (!(timestamp && signature)) {
     return c.json({ error: "Missing headers" }, 401);
   }
 
@@ -73,7 +85,7 @@ app.post("/slack/commands", async (c) => {
   const timestamp = c.req.header("x-slack-request-timestamp");
   const signature = c.req.header("x-slack-signature");
 
-  if (!timestamp || !signature) {
+  if (!(timestamp && signature)) {
     return c.json({ error: "Missing headers" }, 401);
   }
 
@@ -128,7 +140,7 @@ app.post("/slack/interactions", async (c) => {
   const timestamp = c.req.header("x-slack-request-timestamp");
   const signature = c.req.header("x-slack-signature");
 
-  if (!timestamp || !signature) {
+  if (!(timestamp && signature)) {
     return c.json({ error: "Missing headers" }, 401);
   }
 
@@ -163,7 +175,7 @@ app.post("/slack/interactions", async (c) => {
 
       console.log(`Button action: ${actionId}`, value);
 
-      // Process alert actions asynchronously
+      // Process actions asynchronously
       c.executionCtx.waitUntil(
         (async () => {
           switch (actionId) {
@@ -201,11 +213,287 @@ app.post("/slack/interactions", async (c) => {
               break;
             }
 
+            case "open_audio_upload_modal": {
+              // 開啟音檔上傳資訊填寫 Modal
+              try {
+                const pendingFile: PendingAudioFile = JSON.parse(value);
+                const slackClient = new SlackClient(env.SLACK_BOT_TOKEN);
+                const modal = buildAudioUploadModal(pendingFile);
+
+                const result = await slackClient.openView(
+                  payload.trigger_id,
+                  modal
+                );
+
+                if (!result.ok) {
+                  console.error("Failed to open modal:", result.error);
+                  // 發送錯誤訊息
+                  if (payload.response_url) {
+                    await fetch(payload.response_url, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        text: `:x: 無法開啟表單: ${result.error}`,
+                        replace_original: false,
+                      }),
+                    });
+                  }
+                }
+              } catch (error) {
+                console.error("Error opening audio upload modal:", error);
+              }
+              break;
+            }
+
+            case "skip_audio_upload": {
+              // 用戶選擇略過此檔案
+              if (payload.response_url) {
+                await fetch(payload.response_url, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    text: ":wastebasket: 已略過此音檔",
+                    replace_original: true,
+                  }),
+                });
+              }
+              break;
+            }
+
+            case "edit_summary": {
+              // 開啟編輯 Summary Modal
+              try {
+                const data = JSON.parse(value);
+                const slackClient = new SlackClient(env.SLACK_BOT_TOKEN);
+                const modal = buildEditSummaryModal({
+                  conversationId: data.conversationId,
+                  currentSummary: data.summary,
+                  contactPhone: data.contactPhone,
+                  contactEmail: data.contactEmail,
+                });
+
+                const result = await slackClient.openView(
+                  payload.trigger_id,
+                  modal
+                );
+
+                if (!result.ok) {
+                  console.error(
+                    "Failed to open edit summary modal:",
+                    result.error
+                  );
+                }
+              } catch (error) {
+                console.error("Error opening edit summary modal:", error);
+              }
+              break;
+            }
+
+            case "send_sms": {
+              // 發送簡訊給客戶
+              try {
+                const data = JSON.parse(value);
+                const notificationService = createNotificationService(env);
+
+                if (!data.contactPhone) {
+                  if (payload.response_url) {
+                    await fetch(payload.response_url, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        text: ":x: 無法發送簡訊：客戶電話資訊不存在",
+                        replace_original: false,
+                      }),
+                    });
+                  }
+                  break;
+                }
+
+                const result = await notificationService.sendSMS(
+                  data.contactPhone,
+                  data.summary
+                );
+
+                if (payload.response_url) {
+                  await fetch(payload.response_url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      text: result.success
+                        ? `:white_check_mark: 簡訊已發送至 ${data.contactPhone}`
+                        : `:x: 簡訊發送失敗: ${result.error}`,
+                      replace_original: false,
+                    }),
+                  });
+                }
+              } catch (error) {
+                console.error("Error sending SMS:", error);
+              }
+              break;
+            }
+
+            case "send_email": {
+              // 發送 Email 給客戶
+              try {
+                const data = JSON.parse(value);
+                const notificationService = createNotificationService(env);
+
+                if (!data.contactEmail) {
+                  if (payload.response_url) {
+                    await fetch(payload.response_url, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        text: ":x: 無法發送 Email：客戶 Email 資訊不存在",
+                        replace_original: false,
+                      }),
+                    });
+                  }
+                  break;
+                }
+
+                const result = await notificationService.sendEmail(
+                  data.contactEmail,
+                  "會議摘要",
+                  data.summary
+                );
+
+                if (payload.response_url) {
+                  await fetch(payload.response_url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      text: result.success
+                        ? `:white_check_mark: Email 已發送至 ${data.contactEmail}`
+                        : `:x: Email 發送失敗: ${result.error}`,
+                      replace_original: false,
+                    }),
+                  });
+                }
+              } catch (error) {
+                console.error("Error sending email:", error);
+              }
+              break;
+            }
+
             default:
               console.log(`Unhandled action: ${actionId}`);
           }
         })()
       );
+    }
+  }
+
+  // Handle Modal submission
+  if (payload.type === "view_submission") {
+    const callbackId = payload.view?.callback_id;
+
+    if (callbackId === "audio_upload_form") {
+      // 處理音檔上傳表單提交
+      try {
+        const privateMetadata = payload.view?.private_metadata;
+        const pendingFile: PendingAudioFile = JSON.parse(privateMetadata);
+        const values = payload.view?.state?.values;
+
+        // 解析表單值
+        const metadata = parseAudioUploadFormValues(values);
+
+        // 驗證所有必填欄位
+        const errors: Record<string, string> = {};
+
+        if (!metadata.customerNumber.trim()) {
+          errors.customer_number_block = "請輸入客戶編號";
+        }
+        if (!metadata.customerName.trim()) {
+          errors.customer_name_block = "請輸入客戶名稱";
+        }
+        if (!metadata.storeType) {
+          errors.store_type_block = "請選擇店型";
+        }
+        if (!metadata.serviceType) {
+          errors.service_type_block = "請選擇營運型態";
+        }
+        if (!metadata.currentPos) {
+          errors.current_pos_block = "請選擇現有 POS 系統";
+        }
+        // decisionMakerOnsite 透過下拉選單必定有值，不需額外驗證
+
+        if (Object.keys(errors).length > 0) {
+          return c.json({
+            response_action: "errors",
+            errors,
+          });
+        }
+
+        // 非同步處理音檔
+        c.executionCtx.waitUntil(
+          processAudioWithMetadata(pendingFile, metadata, env)
+        );
+
+        // 返回空回應關閉 Modal
+        return c.json({});
+      } catch (error) {
+        console.error("Error processing audio upload form:", error);
+        return c.json({
+          response_action: "errors",
+          errors: {
+            customer_name_block:
+              error instanceof Error ? error.message : "處理表單時發生錯誤",
+          },
+        });
+      }
+    }
+
+    if (callbackId === "edit_summary_modal") {
+      // 處理 Summary 編輯表單提交
+      try {
+        const privateMetadata = payload.view?.private_metadata;
+        const modalData = JSON.parse(privateMetadata);
+        const values = payload.view?.state?.values;
+
+        // 解析表單值
+        const { summary } = parseEditSummaryValues(values);
+
+        // 驗證
+        if (!summary.trim()) {
+          return c.json({
+            response_action: "errors",
+            errors: {
+              summary_block: "請輸入會議摘要",
+            },
+          });
+        }
+
+        // 非同步儲存 Summary
+        c.executionCtx.waitUntil(
+          (async () => {
+            try {
+              const apiClient = new ApiClient(env.API_BASE_URL, env.API_TOKEN);
+              await apiClient.updateConversationSummary(
+                modalData.conversationId,
+                summary
+              );
+              console.log(
+                `Summary updated for conversation: ${modalData.conversationId}`
+              );
+            } catch (error) {
+              console.error("Failed to update summary:", error);
+            }
+          })()
+        );
+
+        // 返回空回應關閉 Modal
+        return c.json({});
+      } catch (error) {
+        console.error("Error processing edit summary form:", error);
+        return c.json({
+          response_action: "errors",
+          errors: {
+            summary_block:
+              error instanceof Error ? error.message : "處理表單時發生錯誤",
+          },
+        });
+      }
     }
   }
 

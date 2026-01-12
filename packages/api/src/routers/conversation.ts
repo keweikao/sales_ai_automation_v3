@@ -3,19 +3,16 @@
  * Handles audio upload, transcription, and MEDDIC analysis
  */
 
-import {
-  db,
-  generateCaseNumberFromDate,
-} from "@Sales_ai_automation_v3/db";
+import { db, generateCaseNumberFromDate } from "@Sales_ai_automation_v3/db";
 import {
   conversations,
-  opportunities,
   meddicAnalyses,
+  opportunities,
 } from "@Sales_ai_automation_v3/db/schema";
 import {
   createAllServices,
-  generateAudioKey,
   evaluateAndCreateAlerts,
+  generateAudioKey,
   type TranscriptSegment as ServiceTranscriptSegment,
 } from "@Sales_ai_automation_v3/services";
 import { randomUUID } from "node:crypto";
@@ -73,6 +70,11 @@ const listConversationsSchema = z.object({
 
 const getConversationSchema = z.object({
   conversationId: z.string(),
+});
+
+const updateSummarySchema = z.object({
+  conversationId: z.string(),
+  summary: z.string().min(1, "Summary cannot be empty"),
 });
 
 // ============================================================
@@ -342,7 +344,10 @@ export const analyzeConversation = protectedProcedure
         meddicAnalysis: {
           overallScore: analysisResult.overallScore,
           status: analysisResult.qualificationStatus,
-          dimensions: analysisResult.dimensions as unknown as Record<string, unknown>,
+          dimensions: analysisResult.dimensions as unknown as Record<
+            string,
+            unknown
+          >,
         },
         analyzedAt: new Date(),
       })
@@ -418,7 +423,10 @@ export const listConversations = protectedProcedure
         hasAnalysis: meddicAnalyses.id,
       })
       .from(conversations)
-      .innerJoin(opportunities, eq(conversations.opportunityId, opportunities.id))
+      .innerJoin(
+        opportunities,
+        eq(conversations.opportunityId, opportunities.id)
+      )
       .leftJoin(
         meddicAnalyses,
         eq(meddicAnalyses.conversationId, conversations.id)
@@ -500,6 +508,51 @@ export const getConversation = protectedProcedure
   });
 
 // ============================================================
+// Update Summary Endpoint
+// ============================================================
+
+export const updateSummary = protectedProcedure
+  .input(updateSummarySchema)
+  .handler(async ({ input, context }) => {
+    const { conversationId, summary } = input;
+    const userId = context.session?.user.id;
+
+    if (!userId) {
+      throw new ORPCError("UNAUTHORIZED");
+    }
+
+    // Verify conversation exists and user has access
+    const conversation = await db.query.conversations.findFirst({
+      where: eq(conversations.id, conversationId),
+      with: {
+        opportunity: true,
+      },
+    });
+
+    if (!conversation) {
+      throw new ORPCError("NOT_FOUND");
+    }
+
+    if (conversation.opportunity.userId !== userId) {
+      throw new ORPCError("FORBIDDEN");
+    }
+
+    // Update summary
+    await db
+      .update(conversations)
+      .set({
+        summary,
+        updatedAt: new Date(),
+      })
+      .where(eq(conversations.id, conversationId));
+
+    return {
+      success: true,
+      conversationId,
+    };
+  });
+
+// ============================================================
 // Router Export
 // ============================================================
 
@@ -508,4 +561,5 @@ export const conversationRouter = {
   analyze: analyzeConversation,
   list: listConversations,
   get: getConversation,
+  updateSummary,
 };
