@@ -49,6 +49,8 @@ export const conversations = pgTable("conversations", {
   // Slack integration
   slackChannelId: text("slack_channel_id"),
   slackThreadTs: text("slack_thread_ts"),
+  slackUserId: text("slack_user_id"), // 業務的 Slack User ID
+  slackUsername: text("slack_username"), // 業務的 Slack Username
 
   // Time
   duration: integer("duration"), // seconds

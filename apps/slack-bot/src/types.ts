@@ -324,7 +324,8 @@ export interface PendingAudioFile {
   fileId: string;
   fileName: string;
   channelId: string;
-  userId: string;
+  userId: string; // Slack User ID
+  userName?: string; // Slack Username
   threadTs?: string;
   downloadUrl: string;
 }

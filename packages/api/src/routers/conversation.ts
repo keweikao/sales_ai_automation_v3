@@ -56,6 +56,13 @@ const uploadConversationSchema = z.object({
       conversationDate: z.string().optional(),
     })
     .optional(),
+  // Slack 業務資訊（可選，從 Slack Bot 傳入）
+  slackUser: z
+    .object({
+      id: z.string(),
+      username: z.string(),
+    })
+    .optional(),
 });
 
 const analyzeConversationSchema = z.object({
@@ -115,7 +122,8 @@ async function getNextCaseNumber(): Promise<string> {
 export const uploadConversation = protectedProcedure
   .input(uploadConversationSchema)
   .handler(async ({ input, context }) => {
-    const { opportunityId, audioBase64, title, type, metadata } = input;
+    const { opportunityId, audioBase64, title, type, metadata, slackUser } =
+      input;
     const userId = context.session?.user.id;
 
     if (!userId) {
@@ -202,6 +210,9 @@ export const uploadConversation = protectedProcedure
           ? new Date(metadata.conversationDate)
           : new Date(),
         createdBy: userId,
+        // Slack 業務資訊
+        slackUserId: slackUser?.id,
+        slackUsername: slackUser?.username,
       })
       .returning();
 

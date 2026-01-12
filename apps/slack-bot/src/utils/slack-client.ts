@@ -159,4 +159,26 @@ export class SlackClient {
 
     return response.json();
   }
+
+  /**
+   * 取得使用者資訊
+   */
+  async getUserInfo(
+    userId: string
+  ): Promise<{
+    ok: boolean;
+    user?: { id: string; name: string; real_name?: string };
+    error?: string;
+  }> {
+    const response = await fetch(
+      `https://slack.com/api/users.info?user=${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+        },
+      }
+    );
+
+    return response.json();
+  }
 }

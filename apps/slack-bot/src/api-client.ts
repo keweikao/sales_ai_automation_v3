@@ -148,6 +148,10 @@ export class ApiClient {
       format?: string;
       conversationDate?: string;
     };
+    slackUser?: {
+      id: string;
+      username: string;
+    };
   }): Promise<UploadConversationResponse> {
     return this.request<UploadConversationResponse>(
       "/api/conversations.upload",

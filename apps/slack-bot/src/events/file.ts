@@ -88,12 +88,26 @@ export async function handleFileSharedEvent(
     return;
   }
 
+  // 取得上傳者的使用者名稱
+  let userName = "";
+  if (event.user) {
+    try {
+      const userInfo = await slackClient.getUserInfo(event.user);
+      if (userInfo.ok && userInfo.user) {
+        userName = userInfo.user.name;
+      }
+    } catch (err) {
+      console.error("Failed to get user info:", err);
+    }
+  }
+
   // 準備暫存的檔案資訊（將透過按鈕 value 傳遞）
   const pendingFile: PendingAudioFile = {
     fileId: file.id,
     fileName: file.name,
     channelId: event.channel,
     userId: event.user ?? "",
+    userName,
     threadTs: event.event_ts ?? event.ts,
     downloadUrl,
   };
@@ -417,7 +431,11 @@ export async function processAudioWithMetadata(
       apiClient,
       pendingFile.fileName,
       audioData,
-      metadata
+      metadata,
+      // 傳遞 Slack 業務資訊
+      pendingFile.userId
+        ? { id: pendingFile.userId, username: pendingFile.userName ?? "" }
+        : undefined
     );
 
     // 更新處理中訊息為簡短確認
@@ -535,7 +553,8 @@ async function processAudioFile(
   apiClient: ApiClient,
   fileName: string,
   audioData: ArrayBuffer,
-  metadata?: AudioUploadMetadata
+  metadata?: AudioUploadMetadata,
+  slackUser?: { id: string; username: string }
 ): Promise<ProcessingResult> {
   console.log(
     `Processing audio file: ${fileName}, size: ${audioData.byteLength}`
@@ -613,6 +632,8 @@ async function processAudioFile(
         decisionMakerOnsite: metadata.decisionMakerOnsite,
       }),
     },
+    // 傳遞 Slack 業務資訊
+    slackUser,
   });
 
   // 取得轉錄預覽
