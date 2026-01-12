@@ -3,12 +3,13 @@
  * 潛客來源管理與 Webhook 處理
  */
 
-import { db } from "@sales_ai_automation_v3/db";
+import { db } from "@Sales_ai_automation_v3/db";
 import {
   leadSources,
   utmCampaigns,
   formSubmissions,
-} from "@sales_ai_automation_v3/db/schema";
+} from "@Sales_ai_automation_v3/db/schema";
+import type { LeadSource, UTMCampaign, FormSubmission } from "@Sales_ai_automation_v3/db/schema";
 import { randomUUID } from "node:crypto";
 import { ORPCError } from "@orpc/server";
 import { and, desc, eq, sql } from "drizzle-orm";
@@ -17,10 +18,9 @@ import { z } from "zod";
 import { protectedProcedure, publicProcedure } from "../index";
 import {
   handleSquarespaceWebhook,
-  verifySquarespaceSignature,
   getCampaignStats,
   getSourceAttribution,
-} from "@sales_ai_automation_v3/services";
+} from "@Sales_ai_automation_v3/services";
 
 // ============================================================
 // Schemas
@@ -205,7 +205,7 @@ export const listLeadSources = protectedProcedure.handler(
       .orderBy(desc(leadSources.createdAt));
 
     return {
-      sources: sources.map((s) => ({
+      sources: sources.map((s: LeadSource) => ({
         id: s.id,
         name: s.name,
         type: s.type,
@@ -230,7 +230,7 @@ export const listLeadSources = protectedProcedure.handler(
 
 export const getSourceStats = protectedProcedure
   .input(getStatsSchema)
-  .handler(async ({ input, context }) => {
+  .handler(async ({ context }) => {
     const userId = context.session?.user.id;
 
     if (!userId) {
@@ -247,7 +247,7 @@ export const getSourceStats = protectedProcedure
       .where(eq(leadSources.userId, userId));
 
     // 計算統計
-    const totalLeads = sources.reduce((sum, s) => sum + (s.totalLeads || 0), 0);
+    const totalLeads = sources.reduce((sum: number, s: LeadSource) => sum + (s.totalLeads || 0), 0);
 
     return {
       totalLeads,
@@ -255,7 +255,7 @@ export const getSourceStats = protectedProcedure
       bySource: attribution.bySource,
       byMedium: attribution.byMedium,
       topCampaigns: attribution.topCampaigns,
-      sources: sources.map((s) => ({
+      sources: sources.map((s: LeadSource) => ({
         id: s.id,
         name: s.name,
         type: s.type,
@@ -306,7 +306,7 @@ export const listUTMCampaigns = protectedProcedure.handler(
       .orderBy(desc(utmCampaigns.lastSeenAt));
 
     return {
-      campaigns: campaigns.map((c) => ({
+      campaigns: campaigns.map((c: UTMCampaign) => ({
         id: c.id,
         name: c.name,
         utmSource: c.utmSource,
@@ -328,7 +328,7 @@ export const listUTMCampaigns = protectedProcedure.handler(
 
 export const handleSquarespaceWebhookRoute = publicProcedure
   .input(squarespaceWebhookSchema)
-  .handler(async ({ input, context }) => {
+  .handler(async ({ input }) => {
     const { sourceId, payload, signature } = input;
 
     // 取得來源設定
@@ -401,14 +401,14 @@ export const listFormSubmissions = protectedProcedure
       .from(leadSources)
       .where(eq(leadSources.userId, userId));
 
-    const sourceIds = userSources.map((s) => s.id);
+    const sourceIds = userSources.map((s: { id: string }) => s.id);
 
     if (sourceIds.length === 0) {
       return { submissions: [], total: 0 };
     }
 
     // 構建查詢條件
-    const conditions = [sql`${formSubmissions.sourceId} IN (${sql.join(sourceIds.map(id => sql`${id}`), sql`, `)})`];
+    const conditions = [sql`${formSubmissions.sourceId} IN (${sql.join(sourceIds.map((id: string) => sql`${id}`), sql`, `)})`];
 
     if (input.sourceId) {
       conditions.push(eq(formSubmissions.sourceId, input.sourceId));
@@ -427,7 +427,7 @@ export const listFormSubmissions = protectedProcedure
       .offset(input.offset);
 
     return {
-      submissions: submissions.map((s) => ({
+      submissions: submissions.map((s: FormSubmission) => ({
         id: s.id,
         sourceId: s.sourceId,
         sourceType: s.sourceType,

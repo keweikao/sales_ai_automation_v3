@@ -1,7 +1,7 @@
 import { createContext } from "@Sales_ai_automation_v3/api/context";
 import { appRouter } from "@Sales_ai_automation_v3/api/routers/index";
 import { auth } from "@Sales_ai_automation_v3/auth";
-import { db } from "@sales_ai_automation_v3/db";
+import { db } from "@Sales_ai_automation_v3/db";
 import { env } from "@Sales_ai_automation_v3/env/server";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";

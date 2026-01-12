@@ -3,13 +3,13 @@
  * Handles alert listing, acknowledgment, resolution, and dismissal
  */
 
-import { db } from "@sales_ai_automation_v3/db";
-import { alerts, opportunities } from "@sales_ai_automation_v3/db/schema";
+import { db } from "@Sales_ai_automation_v3/db";
+import { alerts, opportunities } from "@Sales_ai_automation_v3/db/schema";
 import {
 	acknowledgeAlert,
 	dismissAlert,
 	resolveAlert,
-} from "@sales_ai_automation_v3/services";
+} from "@Sales_ai_automation_v3/services";
 import { ORPCError } from "@orpc/server";
 import { and, count, desc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
@@ -71,7 +71,7 @@ export const listAlerts = protectedProcedure
 			.from(opportunities)
 			.where(eq(opportunities.userId, userId));
 
-		const opportunityIds = userOpportunities.map((o) => o.id);
+		const opportunityIds = userOpportunities.map((o: { id: string }) => o.id);
 
 		if (opportunityIds.length === 0) {
 			return { alerts: [], total: 0 };
@@ -262,7 +262,7 @@ export const getAlertStats = protectedProcedure.handler(async ({ context }) => {
 		.from(opportunities)
 		.where(eq(opportunities.userId, userId));
 
-	const opportunityIds = userOpportunities.map((o) => o.id);
+	const opportunityIds = userOpportunities.map((o: { id: string }) => o.id);
 
 	if (opportunityIds.length === 0) {
 		return {

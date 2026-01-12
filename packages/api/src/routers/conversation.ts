@@ -350,21 +350,11 @@ export const analyzeConversation = protectedProcedure
 
     // Step 6: Evaluate and create alerts based on analysis
     try {
-      const alerts = await evaluateAndCreateAlerts({
-        opportunityId: conversation.opportunityId,
-        conversationId: conversation.id,
-        userId,
-        meddicScore: analysisResult.overallScore,
-        meddicStatus: analysisResult.qualificationStatus,
-        dimensions: analysisResult.dimensions as {
-          metrics?: { score: number };
-          economicBuyer?: { score: number };
-          decisionCriteria?: { score: number };
-          decisionProcess?: { score: number };
-          identifyPain?: { score: number };
-          champion?: { score: number };
-        },
-      });
+      const alerts = await evaluateAndCreateAlerts(
+        conversation.opportunityId,
+        conversation.id,
+        userId
+      );
 
       if (alerts.length > 0) {
         console.log(

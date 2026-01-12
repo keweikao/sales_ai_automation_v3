@@ -1,0 +1,10 @@
+pre-commit:
+  parallel: true
+  commands:
+    ultracite:
+      glob: "*.{js,jsx,ts,tsx,json,css,md}"
+      run: bun x ultracite check
+      stage_fixed: true
+    typecheck:
+      glob: "*.{ts,tsx}"
+      run: bun run typecheck
