@@ -165,7 +165,7 @@ export class ResultParser {
     }
 
     return {
-      id: `rec-${nanoid(8)}`,
+      id: `rec-${randomUUID().slice(0, 8)}`,
       type: this.normalizeRecommendationType(raw.type),
       priority: this.normalizePriority(raw.priority),
       title: raw.title,
@@ -185,7 +185,7 @@ export class ResultParser {
 
     while ((match = listPattern.exec(text)) !== null) {
       recommendations.push({
-        id: `rec-${nanoid(8)}`,
+        id: `rec-${randomUUID().slice(0, 8)}`,
         type: this.normalizeRecommendationType(match[1] ?? "follow_up"),
         priority: this.options.defaultPriority,
         title: match[2]?.trim() ?? "",
@@ -270,7 +270,7 @@ export class ResultParser {
     }
 
     return {
-      id: raw.id ?? `tt-${nanoid(8)}`,
+      id: raw.id ?? `tt-${randomUUID().slice(0, 8)}`,
       situation: this.normalizeTalkTrackSituation(raw.situation),
       content: raw.content,
       context: raw.context ?? "",
@@ -289,7 +289,7 @@ export class ResultParser {
 
     while ((match = quotePattern.exec(text)) !== null && index < 5) {
       talkTracks.push({
-        id: `tt-${nanoid(8)}`,
+        id: `tt-${randomUUID().slice(0, 8)}`,
         situation: "要再考慮",
         content: match[1] ?? "",
         context: "",
@@ -377,7 +377,7 @@ export class ResultParser {
     }
 
     return {
-      id: `alert-${nanoid(8)}`,
+      id: `alert-${randomUUID().slice(0, 8)}`,
       type: this.normalizeAlertType(raw.type),
       severity: this.normalizeAlertSeverity(raw.severity),
       message: raw.message,
@@ -406,7 +406,7 @@ export class ResultParser {
 
         if (relevantSentence) {
           alerts.push({
-            id: `alert-${nanoid(8)}`,
+            id: `alert-${randomUUID().slice(0, 8)}`,
             type,
             severity: type === "close_now" ? "critical" : "high",
             message: relevantSentence.trim(),
@@ -502,7 +502,7 @@ export class ResultParser {
     }
 
     return {
-      id: `fu-${nanoid(8)}`,
+      id: `fu-${randomUUID().slice(0, 8)}`,
       action: raw.action,
       owner: this.normalizeOwner(raw.owner),
       deadline: raw.deadline ? new Date(raw.deadline) : undefined,
@@ -523,7 +523,7 @@ export class ResultParser {
       const action = match[1]?.trim();
       if (action && action.length > 5) {
         followUps.push({
-          id: `fu-${nanoid(8)}`,
+          id: `fu-${randomUUID().slice(0, 8)}`,
           action,
           owner: "rep",
           priority: "medium",
