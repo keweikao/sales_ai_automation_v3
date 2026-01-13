@@ -77,7 +77,7 @@ export class ApiClient {
   async getOpportunityById(id: string): Promise<OpportunityResponse | null> {
     try {
       const result = await this.request<{ opportunity: OpportunityResponse }>(
-        `/api/opportunities.get?opportunityId=${encodeURIComponent(id)}`
+        `/rpc/opportunities.get?opportunityId=${encodeURIComponent(id)}`
       );
       return result.opportunity;
     } catch {
@@ -125,13 +125,13 @@ export class ApiClient {
     }
 
     const query = searchParams.toString();
-    return this.request(`/api/conversations.list${query ? `?${query}` : ""}`);
+    return this.request(`/rpc/conversations.list${query ? `?${query}` : ""}`);
   }
 
   async getConversationById(id: string): Promise<ConversationResponse | null> {
     try {
       const result = await this.request<{ conversation: ConversationResponse }>(
-        `/api/conversations.get?conversationId=${encodeURIComponent(id)}`
+        `/rpc/conversations.get?conversationId=${encodeURIComponent(id)}`
       );
       return result.conversation;
     } catch {
