@@ -165,6 +165,9 @@ app.post("/slack/interactions", async (c) => {
 
   const payload = JSON.parse(payloadStr);
 
+  console.log(`[Interaction] Received interaction type: ${payload.type}`);
+  console.log(`[Interaction] Payload:`, JSON.stringify(payload, null, 2));
+
   // Handle different interaction types
   if (payload.type === "block_actions") {
     // Handle button clicks
@@ -173,7 +176,8 @@ app.post("/slack/interactions", async (c) => {
       const actionId = action.action_id;
       const value = action.value;
 
-      console.log(`Button action: ${actionId}`, value);
+      console.log(`[Interaction] Button action: ${actionId}`);
+      console.log(`[Interaction] Action value:`, value);
 
       // Process actions asynchronously
       c.executionCtx.waitUntil(
@@ -215,18 +219,25 @@ app.post("/slack/interactions", async (c) => {
 
             case "open_audio_upload_modal": {
               // 開啟音檔上傳資訊填寫 Modal
+              console.log(`[Modal] Opening audio upload modal`);
               try {
                 const pendingFile: PendingAudioFile = JSON.parse(value);
+                console.log(`[Modal] Pending file:`, JSON.stringify(pendingFile, null, 2));
+
                 const slackClient = new SlackClient(env.SLACK_BOT_TOKEN);
                 const modal = buildAudioUploadModal(pendingFile);
+                console.log(`[Modal] Modal built successfully`);
+                console.log(`[Modal] Trigger ID: ${payload.trigger_id}`);
 
                 const result = await slackClient.openView(
                   payload.trigger_id,
                   modal
                 );
 
+                console.log(`[Modal] Open view result:`, JSON.stringify(result, null, 2));
+
                 if (!result.ok) {
-                  console.error("Failed to open modal:", result.error);
+                  console.error(`[Modal] Failed to open modal: ${result.error}`);
                   // 發送錯誤訊息
                   if (payload.response_url) {
                     await fetch(payload.response_url, {
@@ -499,5 +510,28 @@ app.post("/slack/interactions", async (c) => {
 
   return c.json({ ok: true });
 });
+
+// ============================================================
+// Cloudflare Workers Scheduled Event Handler
+// Routine Ops Agent - Slack Bot 專屬檢查
+// ============================================================
+
+export async function scheduled(
+  event: ScheduledEvent,
+  env: Env,
+  ctx: ExecutionContext
+): Promise<void> {
+  console.log("[Slack Bot Ops] Scheduled event triggered:", event.cron);
+
+  try {
+    // Slack Bot 可以執行特定的 Slack 相關檢查
+    // 例如：檢查待處理警示、檢查訊息佇列等
+
+    // TODO: 實作 Slack 專屬的健康檢查
+    console.log("[Slack Bot Ops] Health check completed");
+  } catch (error) {
+    console.error("[Slack Bot Ops] Scheduled event failed:", error);
+  }
+}
 
 export default app;
