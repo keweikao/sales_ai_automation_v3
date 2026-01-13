@@ -34,8 +34,6 @@ export {
   AGENT6_PROMPT,
   GLOBAL_CONTEXT,
   getAllPrompts,
-  loadPrompt,
-  validatePrompts,
 } from "./llm/prompts.js";
 
 export type {

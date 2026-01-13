@@ -43,8 +43,8 @@ export const server = await Worker("server", {
     CLOUDFLARE_R2_ENDPOINT: alchemy.env.CLOUDFLARE_R2_ENDPOINT!,
 
     // Google OAuth (optional)
-    GOOGLE_CLIENT_ID: alchemy.env.GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: alchemy.secret.env.GOOGLE_CLIENT_SECRET,
+    GOOGLE_CLIENT_ID: alchemy.env.GOOGLE_CLIENT_ID || "",
+    GOOGLE_CLIENT_SECRET: alchemy.secret.env.GOOGLE_CLIENT_SECRET || alchemy.secret(""),
 
     // Environment
     ENVIRONMENT: alchemy.env.ENVIRONMENT!,
