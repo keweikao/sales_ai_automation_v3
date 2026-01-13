@@ -518,8 +518,8 @@ app.post("/slack/interactions", async (c) => {
 
 export async function scheduled(
   event: ScheduledEvent,
-  env: Env,
-  ctx: ExecutionContext
+  _env: Env,
+  _ctx: ExecutionContext
 ): Promise<void> {
   console.log("[Slack Bot Ops] Scheduled event triggered:", event.cron);
 
