@@ -13,13 +13,12 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "downlevelIteration": true
   },
   "include": ["src/**/*"],
   "exclude": [
     "node_modules",
-    "dist",
-    "src/agent/**/*",
-    "src/mcp/**/*"
+    "dist"
   ]
 }

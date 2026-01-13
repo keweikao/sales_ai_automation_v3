@@ -81,7 +81,9 @@ export class GroqWhisperService implements TranscriptionService {
     }
 
     // Create File object from Buffer
-    const file = new File([audioBuffer], "audio.mp3", {
+    // Convert Buffer to Uint8Array for proper type compatibility
+    const uint8Array = new Uint8Array(audioBuffer);
+    const file = new File([uint8Array], "audio.mp3", {
       type: "audio/mpeg",
     });
 
@@ -94,36 +96,40 @@ export class GroqWhisperService implements TranscriptionService {
         ? (options.responseFormat as SupportedFormat)
         : "verbose_json";
 
-    const response = await this.client.audio.transcriptions.create({
-      file,
-      model: this.model,
-      language, // V2: Chinese optimization
-      response_format: responseFormat,
-      temperature: options?.temperature ?? 0.0, // V2 default: deterministic
-    });
+    try {
+      const response = await this.client.audio.transcriptions.create({
+        file,
+        model: this.model,
+        language, // V2: Chinese optimization
+        response_format: responseFormat,
+        temperature: options?.temperature ?? 0.0, // V2 default: deterministic
+      });
 
-    // Type assertion for verbose_json response
-    const verboseResponse = response as unknown as {
-      text: string;
-      segments?: Array<{
-        start: number;
-        end: number;
+      // Type assertion for verbose_json response
+      const verboseResponse = response as unknown as {
         text: string;
-      }>;
-      language?: string;
-      duration?: number;
-    };
+        segments?: Array<{
+          start: number;
+          end: number;
+          text: string;
+        }>;
+        language?: string;
+        duration?: number;
+      };
 
-    return {
-      fullText: verboseResponse.text,
-      segments: verboseResponse.segments?.map((s) => ({
-        start: s.start,
-        end: s.end,
-        text: s.text,
-      })),
-      duration: verboseResponse.duration,
-      language: verboseResponse.language || language,
-    };
+      return {
+        fullText: verboseResponse.text,
+        segments: verboseResponse.segments?.map((s) => ({
+          start: s.start,
+          end: s.end,
+          text: s.text,
+        })),
+        duration: verboseResponse.duration,
+        language: verboseResponse.language || language,
+      };
+    } catch (error) {
+      throw this.enhanceGroqError(error);
+    }
   }
 
   /**
@@ -225,6 +231,119 @@ export class GroqWhisperService implements TranscriptionService {
     }
 
     return chunks;
+  }
+
+  /**
+   * Enhanced error handling for Groq API errors
+   * Provides clear Chinese error messages similar to Gemini client
+   */
+  private enhanceGroqError(error: unknown): Error {
+    const message = this.formatGroqErrorMessage(error);
+
+    // Create new error with enhanced message
+    const enhancedError = new Error(message);
+
+    // Preserve original error properties
+    if (error && typeof error === "object") {
+      Object.assign(enhancedError, error);
+    }
+
+    return enhancedError;
+  }
+
+  /**
+   * Format Groq API error message with Chinese localization
+   */
+  private formatGroqErrorMessage(error: unknown): string {
+    if (!error) {
+      return "Unknown error";
+    }
+
+    if (typeof error === "string") {
+      return error;
+    }
+
+    const err = error as {
+      message?: string;
+      status?: number;
+      statusText?: string;
+      code?: string;
+      type?: string;
+      error?: {
+        message?: string;
+        type?: string;
+        code?: string;
+      };
+    };
+
+    // Handle Groq SDK specific error structure
+    if (err.error) {
+      const errorType = err.error.type || err.error.code;
+      const errorMessage = err.error.message || "";
+
+      switch (errorType) {
+        case "invalid_api_key":
+        case "authentication_error":
+          return "❌ API Key 無效 - 請檢查 GROQ_API_KEY 環境變數是否正確設定";
+        case "insufficient_quota":
+        case "quota_exceeded":
+          return "⚠️ 配額已用盡 - 請稍後再試或升級您的 Groq API 方案";
+        case "rate_limit_exceeded":
+          return "⚠️ 請求頻率過高 - 請降低請求速度";
+        case "invalid_request_error":
+          return `❌ 請求參數錯誤 - ${errorMessage || "請檢查音檔格式和參數"}`;
+        case "model_not_found":
+          return `❌ 找不到模型 - 請確認模型名稱: ${this.model}`;
+        case "file_too_large":
+          return `❌ 音檔過大 - 最大限制 ${this.MAX_FILE_SIZE / 1_000_000}MB,請使用 chunkIfNeeded: true`;
+        default:
+          if (errorMessage) {
+            return errorMessage;
+          }
+      }
+    }
+
+    // Handle HTTP status codes
+    if (err.status) {
+      const statusMessages: Record<number, string> = {
+        400: "請求格式錯誤 - 請檢查音檔格式和參數",
+        401: "認證失敗 - API Key 無效或缺失",
+        403: "存取被拒絕 - 沒有權限使用此服務",
+        404: "找不到資源 - 請確認 API 端點正確",
+        413: "音檔過大 - 請使用較小的檔案或啟用分塊處理",
+        429: "請求過於頻繁 - 已達速率限制",
+        500: "Groq 伺服器內部錯誤",
+        502: "Groq 伺服器無回應",
+        503: "Groq 服務暫時無法使用",
+      };
+
+      const statusMsg = statusMessages[err.status] || err.statusText || "";
+      const baseMsg = err.message || "";
+
+      return `[${err.status}] ${statusMsg}${baseMsg ? `: ${baseMsg}` : ""}`;
+    }
+
+    // Fallback to standard error message
+    if (err.message) {
+      // Check for common error patterns in message
+      const message = err.message.toLowerCase();
+
+      if (message.includes("api key") || message.includes("unauthorized")) {
+        return "❌ API Key 無效 - 請檢查 GROQ_API_KEY 環境變數是否正確設定";
+      }
+
+      if (message.includes("quota") || message.includes("limit")) {
+        return "⚠️ 配額或限流錯誤 - 請稍後再試";
+      }
+
+      if (message.includes("file") && message.includes("large")) {
+        return `❌ 音檔過大 - 最大限制 ${this.MAX_FILE_SIZE / 1_000_000}MB,請使用 chunkIfNeeded: true`;
+      }
+
+      return err.message;
+    }
+
+    return String(error);
   }
 }
 

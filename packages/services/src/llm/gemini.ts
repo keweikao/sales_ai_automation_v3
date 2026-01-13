@@ -120,6 +120,16 @@ export class GeminiClient implements LLMClient {
       } catch (error) {
         lastError = error as Error;
 
+        // Check if this is a non-retryable error
+        const shouldNotRetry = this.isNonRetryableError(error);
+
+        if (shouldNotRetry) {
+          console.error(
+            `❌ Non-retryable error detected: ${this.formatErrorMessage(error)}`
+          );
+          throw this.enhanceError(error);
+        }
+
         // Don't retry on last attempt
         if (attempt === maxRetries) {
           break;
@@ -139,9 +149,155 @@ export class GeminiClient implements LLMClient {
       }
     }
 
+    const enhancedError = this.enhanceError(lastError);
     throw new Error(
-      `LLM request failed after ${maxRetries + 1} attempts: ${lastError?.message}`
+      `LLM request failed after ${maxRetries + 1} attempts: ${enhancedError.message}`
     );
+  }
+
+  /**
+   * Check if error should not be retried
+   */
+  private isNonRetryableError(error: unknown): boolean {
+    if (!error || typeof error !== "object") {
+      return false;
+    }
+
+    const err = error as {
+      status?: number;
+      errorDetails?: Array<{ reason?: string }>;
+    };
+
+    // Don't retry on client errors (4xx)
+    if (err.status && err.status >= 400 && err.status < 500) {
+      // Except 429 (rate limit) which should be retried
+      if (err.status === 429) {
+        return false;
+      }
+      return true;
+    }
+
+    // Don't retry on specific error reasons
+    if (err.errorDetails) {
+      const nonRetryableReasons = [
+        "API_KEY_INVALID",
+        "PERMISSION_DENIED",
+        "INVALID_ARGUMENT",
+        "NOT_FOUND",
+      ];
+
+      const hasNonRetryable = err.errorDetails.some((detail) =>
+        nonRetryableReasons.includes(detail.reason || "")
+      );
+
+      if (hasNonRetryable) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Extract detailed error message from Google API error
+   */
+  private formatErrorMessage(error: unknown): string {
+    if (!error) {
+      return "Unknown error";
+    }
+
+    if (typeof error === "string") {
+      return error;
+    }
+
+    const err = error as {
+      message?: string;
+      status?: number;
+      statusText?: string;
+      errorDetails?: Array<{
+        "@type"?: string;
+        reason?: string;
+        message?: string;
+      }>;
+    };
+
+    // Extract error details from Google API response
+    if (err.errorDetails && err.errorDetails.length > 0) {
+      const details = err.errorDetails
+        .map((detail) => {
+          // Provide localized error messages for common issues
+          switch (detail.reason) {
+            case "API_KEY_INVALID":
+              return "❌ API Key 無效 - 請檢查 GEMINI_API_KEY 環境變數是否正確設定";
+            case "PERMISSION_DENIED":
+              return "❌ 權限不足 - API Key 沒有存取此資源的權限";
+            case "RESOURCE_EXHAUSTED":
+              return "⚠️ 配額已用盡 - 請稍後再試或升級您的 API 方案";
+            case "INVALID_ARGUMENT":
+              return "❌ 請求參數錯誤 - 請檢查請求格式";
+            case "NOT_FOUND":
+              return "❌ 找不到資源 - 請檢查模型名稱是否正確";
+            case "RATE_LIMIT_EXCEEDED":
+              return "⚠️ 請求頻率過高 - 請降低請求速度";
+            default:
+              if (detail.message) {
+                return detail.message;
+              }
+              return detail.reason || "";
+          }
+        })
+        .filter(Boolean)
+        .join("; ");
+
+      if (details) {
+        const statusCode = err.status ? `[${err.status}]` : "";
+        const statusText = err.statusText || "";
+        return `${statusCode} ${statusText}: ${details}`.trim();
+      }
+    }
+
+    // Handle common HTTP status codes
+    if (err.status) {
+      const statusMessages: Record<number, string> = {
+        400: "請求格式錯誤",
+        401: "認證失敗 - API Key 無效或缺失",
+        403: "存取被拒絕 - 沒有權限",
+        404: "找不到資源",
+        429: "請求過於頻繁 - 已達速率限制",
+        500: "伺服器內部錯誤",
+        502: "伺服器無回應",
+        503: "服務暫時無法使用",
+      };
+
+      const statusMsg = statusMessages[err.status] || err.statusText || "";
+      const baseMsg = err.message || "";
+
+      return `[${err.status}] ${statusMsg}${baseMsg ? `: ${baseMsg}` : ""}`;
+    }
+
+    // Fallback to standard error message
+    if (err.message) {
+      return err.message;
+    }
+
+    return String(error);
+  }
+
+  /**
+   * Enhance error with more context
+   */
+  private enhanceError(error: unknown): Error {
+    const message = this.formatErrorMessage(error);
+
+    // Create new error with enhanced message
+    const enhancedError = new Error(message);
+
+    // Preserve original error properties
+    if (error && typeof error === "object") {
+      Object.assign(enhancedError, error);
+    }
+
+    return enhancedError;
   }
 
   /**
@@ -164,8 +320,14 @@ export class GeminiClient implements LLMClient {
 /**
  * Factory function for creating GeminiClient
  */
-export function createGeminiClient(apiKey?: string): GeminiClient {
-  return new GeminiClient(apiKey);
+export function createGeminiClient(
+  options?: string | { apiKey?: string; model?: string }
+): GeminiClient {
+  // Support both string (legacy) and object syntax
+  if (typeof options === "string") {
+    return new GeminiClient(options);
+  }
+  return new GeminiClient(options?.apiKey);
 }
 
 /**
