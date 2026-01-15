@@ -150,47 +150,50 @@ export default {
   async scheduled(
     event: ScheduledEvent,
     env: Env,
-    ctx: ExecutionContext
+    _ctx: ExecutionContext
   ): Promise<void> {
     console.log("[Ops] Scheduled event triggered:", event.cron);
 
     try {
-      const { createOpsOrchestrator, sendOpsAlert } = await import(
-        "@Sales_ai_automation_v3/services/ops"
-      );
+      // TODO: Ops orchestrator 功能暫時停用，等待 services/ops 模組完成
+      // const { createOpsOrchestrator, sendOpsAlert } = await import(
+      //   "@Sales_ai_automation_v3/services/ops"
+      // );
 
-      const orchestrator = createOpsOrchestrator({
-        enableParallelChecks: true,
-        enableAutoRepair: true,
-        checkTimeoutMs: 30_000,
-        repairTimeoutMs: 30_000,
-      });
+      // const orchestrator = createOpsOrchestrator({
+      //   enableParallelChecks: true,
+      //   enableAutoRepair: true,
+      //   checkTimeoutMs: 30_000,
+      //   repairTimeoutMs: 30_000,
+      // });
 
-      // 執行健康檢查與自動修復
-      const summary = await orchestrator.execute();
+      // // 執行健康檢查與自動修復
+      // const summary = await orchestrator.execute();
 
-      // 產生報告
-      const report = orchestrator.generateReport(summary);
-      console.log("[Ops] Execution completed:");
-      console.log(report);
+      // // 產生報告
+      // const report = orchestrator.generateReport(summary);
+      // console.log("[Ops] Execution completed:");
+      // console.log(report);
 
-      // 如果有 critical 問題，發送警示到 Slack
-      const criticalFailures = summary.checkResults.filter(
-        (r) => r.status === "critical"
-      );
+      // // 如果有 critical 問題，發送警示到 Slack
+      // const criticalFailures = summary.checkResults.filter(
+      //   (r: { status: string }) => r.status === "critical"
+      // );
 
-      if (criticalFailures.length > 0) {
-        console.warn("[Ops] Critical failures detected:", criticalFailures);
+      // if (criticalFailures.length > 0) {
+      //   console.warn("[Ops] Critical failures detected:", criticalFailures);
 
-        // 發送 Slack 警示
-        if (env.SLACK_BOT_TOKEN) {
-          await sendOpsAlert(summary, env.SLACK_BOT_TOKEN);
-        } else {
-          console.warn("[Ops] SLACK_BOT_TOKEN not configured, skipping alert");
-        }
-      }
+      //   // 發送 Slack 警示
+      //   if (env.SLACK_BOT_TOKEN) {
+      //     await sendOpsAlert(summary, env.SLACK_BOT_TOKEN);
+      //   } else {
+      //     console.warn("[Ops] SLACK_BOT_TOKEN not configured, skipping alert");
+      //   }
+      // }
 
+      // TODO: Ops orchestrator 功能等待實作
       // TODO: 將結果記錄到資料庫
+      console.log("[Ops] Health check placeholder - ops module pending");
     } catch (error) {
       console.error("[Ops] Scheduled event failed:", error);
     }
