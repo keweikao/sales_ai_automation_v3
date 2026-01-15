@@ -1,0 +1,10 @@
+{
+  "name": "lambda-audio-compressor",
+  "version": "1.0.0",
+  "description": "AWS Lambda function for audio compression",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "zip -r function.zip src/",
+    "deploy": "aws lambda update-function-code --function-name sales-ai-audio-compressor --zip-file fileb://function.zip"
+  }
+}

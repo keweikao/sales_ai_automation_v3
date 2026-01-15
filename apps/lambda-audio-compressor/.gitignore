@@ -1,0 +1,26 @@
+# FFmpeg binaries
+src/ffmpeg
+src/ffprobe
+
+# Build artifacts
+*.zip
+function.zip
+function-v*.zip
+ffmpeg-layer.zip
+
+# Layer files
+layer/
+
+# Node modules
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.*
+
+# AWS
+.aws/

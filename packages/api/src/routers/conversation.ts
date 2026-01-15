@@ -9,9 +9,9 @@ import {
   meddicAnalyses,
   opportunities,
 } from "@Sales_ai_automation_v3/db/schema";
-import { env } from "@Sales_ai_automation_v3/env/server";
 import {
   createAllServices,
+  createLambdaCompressor,
   createR2Service,
   evaluateAndCreateAlerts,
   generateAudioKey,
@@ -110,7 +110,7 @@ async function getNextCaseNumber(): Promise<string> {
   const result = await db
     .select({ caseNumber: conversations.caseNumber })
     .from(conversations)
-    .where(sql`${conversations.caseNumber} LIKE ${prefix + "%"}`)
+    .where(sql`${conversations.caseNumber} LIKE ${`${prefix}%`}`)
     .orderBy(desc(conversations.caseNumber))
     .limit(1);
 
@@ -187,6 +187,9 @@ export const uploadConversation = protectedProcedure
         `[${requestId}] ✓ Opportunity verified: ${opportunity.companyName}`
       );
 
+      // 初始化環境變數
+      const envRecord = process.env as Record<string, unknown>;
+
       // Step 2: Get audio buffer (從 base64 或從 Slack 下載)
       let audioBuffer: Buffer;
 
@@ -236,9 +239,61 @@ export const uploadConversation = protectedProcedure
         throw new ORPCError("BAD_REQUEST");
       }
 
+      // Step 2.5: Compress audio if enabled and file is large
+      if (
+        envRecord.ENABLE_AUDIO_COMPRESSION === "true" &&
+        envRecord.LAMBDA_COMPRESSOR_URL
+      ) {
+        const fileSizeMB = audioBuffer.length / 1024 / 1024;
+        const threshold = Number(envRecord.COMPRESSION_THRESHOLD_MB) || 10;
+
+        if (fileSizeMB > threshold) {
+          console.log(
+            `[${requestId}] 🗜️  Audio file is ${fileSizeMB.toFixed(2)} MB, compressing...`
+          );
+
+          const compressor = createLambdaCompressor(
+            envRecord.LAMBDA_COMPRESSOR_URL as string,
+            {
+              timeout: 60_000, // 60 秒
+            }
+          );
+
+          const compressionStartTime = Date.now();
+          try {
+            const result = await compressor.compressFromBuffer(audioBuffer);
+
+            if (result.success && result.compressedAudioBase64) {
+              const compressedBuffer = Buffer.from(
+                result.compressedAudioBase64,
+                "base64"
+              );
+              const compressionTime = Date.now() - compressionStartTime;
+
+              console.log(
+                `[${requestId}] ✓ Compressed in ${compressionTime}ms: ${(result.originalSize! / 1024 / 1024).toFixed(2)} MB → ${(result.compressedSize! / 1024 / 1024).toFixed(2)} MB (${result.compressionRatio}% reduction)`
+              );
+
+              audioBuffer = compressedBuffer;
+            } else {
+              console.warn(
+                `[${requestId}] ⚠️  Compression failed: ${result.error}, using original audio`
+              );
+              // 繼續使用原始音檔
+            }
+          } catch (error) {
+            console.error(`[${requestId}] ❌ Compression error:`, error);
+            console.warn(`[${requestId}] ⚠️  Continuing with original audio`);
+            // 繼續使用原始音檔,不中斷流程
+          }
+        } else {
+          console.log(
+            `[${requestId}] ℹ️  Audio file is ${fileSizeMB.toFixed(2)} MB (< ${threshold} MB), skipping compression`
+          );
+        }
+      }
+
       // Step 3: Upload to R2
-      // 只初始化需要的服務,並傳入 Cloudflare Workers 的 env
-      const envRecord = env as Record<string, unknown>;
       const r2 = createR2Service({
         accessKeyId: envRecord.CLOUDFLARE_R2_ACCESS_KEY as string,
         secretAccessKey: envRecord.CLOUDFLARE_R2_SECRET_KEY as string,
