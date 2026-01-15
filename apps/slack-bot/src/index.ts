@@ -531,8 +531,8 @@ export default {
   // Cron Trigger 處理 - Slack Bot 專屬檢查
   async scheduled(
     event: ScheduledEvent,
-    env: Env,
-    ctx: ExecutionContext
+    _env: Env,
+    _ctx: ExecutionContext
   ): Promise<void> {
     console.log("[Slack Bot Ops] Scheduled event triggered:", event.cron);
 

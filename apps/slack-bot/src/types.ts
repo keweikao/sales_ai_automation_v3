@@ -222,6 +222,7 @@ export interface UploadConversationResponse {
   caseNumber: string;
   status: ConversationStatus;
   audioUrl: string;
+  message?: string; // 處理狀態訊息
   transcript: {
     fullText: string;
     segmentCount: number;
