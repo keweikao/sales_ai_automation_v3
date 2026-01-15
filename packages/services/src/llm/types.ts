@@ -9,8 +9,8 @@ export type TranscriptSegment = {
   speaker: string;
   text: string;
   timestamp?: number;
-  start?: number;  // Start time in seconds
-  end?: number;    // End time in seconds
+  start: number;  // Start time in seconds
+  end: number;    // End time in seconds
 };
 
 export type Transcript = {
