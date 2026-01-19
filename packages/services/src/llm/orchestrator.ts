@@ -329,19 +329,89 @@ export class MeddicOrchestrator {
     const overallScore = this.calculateOverallScoreFromBuyerData(state.buyerData);
     const qualificationStatus = this.deriveQualificationStatus(state.buyerData);
 
+    // 計算各維度分數
+    const meddicScores = {
+      metrics: 0, // 新 Agent2Output 不包含,設為 0
+      economicBuyer: state.contextData?.decision_maker === "老闆本人" ? 100 : 50,
+      decisionCriteria: 0,
+      decisionProcess: 0,
+      identifyPain: state.buyerData.not_closed_detail.length > 0 ? 80 : 20,
+      champion: 0,
+    };
+
+    // 將 meddicScores 轉換為 dimensions 物件格式 (用於 Slack 通知顯示)
+    const dimensionsObject: Record<
+      string,
+      {
+        name: string;
+        score: number;
+        evidence?: string[];
+        gaps?: string[];
+        recommendations?: string[];
+      }
+    > = {
+      metrics: {
+        name: "Metrics (業務指標)",
+        score: meddicScores.metrics,
+        evidence: [],
+        gaps: ["尚未充分討論量化指標"],
+        recommendations: ["下次會議深入了解客戶的業務數據需求"],
+      },
+      economicBuyer: {
+        name: "Economic Buyer (經濟決策者)",
+        score: meddicScores.economicBuyer,
+        evidence: state.contextData?.decision_maker === "老闆本人"
+          ? ["決策者在場參與會議"]
+          : [],
+        gaps: state.contextData?.decision_maker !== "老闆本人"
+          ? ["決策者未在場"]
+          : [],
+        recommendations: state.contextData?.decision_maker !== "老闆本人"
+          ? ["安排與老闆的正式會議"]
+          : [],
+      },
+      decisionCriteria: {
+        name: "Decision Criteria (決策標準)",
+        score: meddicScores.decisionCriteria,
+        evidence: [],
+        gaps: ["尚未明確了解決策標準"],
+        recommendations: ["釐清客戶選擇 POS 系統的關鍵條件"],
+      },
+      decisionProcess: {
+        name: "Decision Process (決策流程)",
+        score: meddicScores.decisionProcess,
+        evidence: [],
+        gaps: ["尚未明確決策流程"],
+        recommendations: ["了解客戶的決策時間表和審批流程"],
+      },
+      identifyPain: {
+        name: "Identify Pain (痛點識別)",
+        score: meddicScores.identifyPain,
+        evidence: state.buyerData.not_closed_detail.length > 0
+          ? [`客戶痛點: ${state.buyerData.not_closed_detail}`]
+          : [],
+        gaps: state.buyerData.not_closed_detail.length === 0
+          ? ["尚未充分識別客戶痛點"]
+          : [],
+        recommendations: state.buyerData.not_closed_detail.length === 0
+          ? ["深入挖掘客戶的核心業務挑戰"]
+          : [],
+      },
+      champion: {
+        name: "Champion (內部推手)",
+        score: meddicScores.champion,
+        evidence: [],
+        gaps: ["尚未識別內部推手"],
+        recommendations: ["尋找組織內支持此專案的關鍵人物"],
+      },
+    };
+
     return {
       // Core MEDDIC data - 從新欄位推導
-      meddicScores: {
-        metrics: 0, // 新 Agent2Output 不包含,設為 0
-        economicBuyer: state.contextData?.decision_maker === "老闆本人" ? 100 : 50,
-        decisionCriteria: 0,
-        decisionProcess: 0,
-        identifyPain: state.buyerData.not_closed_detail.length > 0 ? 80 : 20,
-        champion: 0,
-      },
+      meddicScores,
       overallScore,
       qualificationStatus,
-      dimensions: "identifyPain" as import("./types.js").MeddicDimensions,
+      dimensions: dimensionsObject as unknown as import("./types.js").MeddicDimensions,
 
       // Summary - 從新的 Agent4Output 映射
       executiveSummary: state.summaryData.sms_text,
