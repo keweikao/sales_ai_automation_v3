@@ -10,6 +10,7 @@
  * - 發送 Slack 通知
  */
 
+import * as schema from "@Sales_ai_automation_v3/db/schema";
 import {
   conversations,
   meddicAnalyses,
@@ -23,7 +24,10 @@ import {
 } from "@Sales_ai_automation_v3/services";
 import { randomUUID } from "node:crypto";
 import type { MessageBatch } from "@cloudflare/workers-types";
-import { neon } from "@neondatabase/serverless";
+import { neon, neonConfig } from "@neondatabase/serverless";
+
+// 配置 Neon 使用 Cloudflare Workers 的 fetch
+neonConfig.fetchFunction = fetch;
 import {
   type AppError,
   errors,
@@ -82,9 +86,9 @@ export default {
       `[Queue] Processing batch of ${batch.messages.length} messages`
     );
 
-    // 初始化資料庫連接
+    // 初始化資料庫連接 (HTTP 模式,Cloudflare Workers 相容)
     const sql = neon(env.DATABASE_URL);
-    const db = drizzle(sql);
+    const db = drizzle(sql, { schema });
 
     // 初始化 Slack 通知服務
     const slackService = createSlackNotificationService({
@@ -102,6 +106,9 @@ export default {
         slackUser,
       } = message.body;
 
+      // threadTs 需要在 try block 之前宣告,以便在 catch block 中使用
+      let threadTs: string | undefined;
+
       try {
         console.log(`[Queue] 🎬 Processing conversation ${conversationId}`);
         console.log(
@@ -113,7 +120,7 @@ export default {
         // ========================================
         if (slackUser?.id) {
           try {
-            await slackService.notifyProcessingStarted({
+            threadTs = await slackService.notifyProcessingStarted({
               userId: slackUser.id,
               fileName: metadata.fileName,
               fileSize: metadata.fileSize,
@@ -121,7 +128,7 @@ export default {
               caseNumber,
             });
             console.log(
-              `[Queue] ✓ Sent processing started notification to ${slackUser.id}`
+              `[Queue] ✓ Sent processing started notification to ${slackUser.id} (thread_ts: ${threadTs})`
             );
           } catch (notifyError) {
             console.error(
@@ -164,30 +171,52 @@ export default {
         // Step 3: 更新資料庫 (transcribed 狀態)
         // ========================================
         console.log("[Queue] 💾 Updating database (transcribed)...");
-        await db
-          .update(conversations)
-          .set({
-            status: "transcribed",
-            transcript: {
-              fullText: transcriptResult.fullText,
-              language: transcriptResult.language || "unknown",
-              segments:
-                transcriptResult.segments?.map((seg) => ({
-                  speaker: seg.speaker || "Unknown",
-                  text: seg.text,
-                  start: seg.start,
-                  end: seg.end,
-                })) || [],
-            },
-            duration:
-              transcriptResult.segments?.reduce(
-                (max, seg) => Math.max(max, seg.end),
-                0
-              ) || 0,
-            updatedAt: new Date(),
-          })
-          .where(eq(conversations.id, conversationId));
-        console.log("[Queue] ✓ Database updated (transcribed)");
+        console.log("[Queue] DEBUG: conversationId =", conversationId);
+        console.log("[Queue] DEBUG: DATABASE_URL exists?", !!env.DATABASE_URL);
+
+        try {
+          // 嘗試使用原生 SQL 代替 Drizzle
+          const transcriptData = {
+            fullText: transcriptResult.fullText,
+            language: transcriptResult.language || "unknown",
+            segments:
+              transcriptResult.segments?.map((seg) => ({
+                speaker: seg.speaker || "Unknown",
+                text: seg.text,
+                start: seg.start,
+                end: seg.end,
+              })) || [],
+          };
+
+          const duration = Math.round(
+            transcriptResult.segments?.reduce(
+              (max, seg) => Math.max(max, seg.end),
+              0
+            ) || 0
+          );
+
+          console.log("[Queue] DEBUG: Using raw SQL query...");
+          console.log("[Queue] DEBUG: duration =", duration, "type =", typeof duration);
+          const result = await sql`
+            UPDATE conversations
+            SET
+              status = 'transcribed',
+              transcript = ${JSON.stringify(transcriptData)}::jsonb,
+              duration = ${duration},
+              updated_at = NOW()
+            WHERE id = ${conversationId}
+            RETURNING *
+          `;
+
+          console.log("[Queue] DEBUG: Update result rows =", result.length);
+          console.log("[Queue] ✓ Database updated (transcribed)");
+        } catch (dbError) {
+          console.error("[Queue] ❌ Database update error:", dbError);
+          console.error("[Queue] Error name:", (dbError as Error).name);
+          console.error("[Queue] Error message:", (dbError as Error).message);
+          console.error("[Queue] Error stack:", (dbError as Error).stack);
+          throw dbError;
+        }
 
         // ========================================
         // Step 4: MEDDIC 分析
@@ -297,18 +326,21 @@ export default {
               }
             > = {};
 
-            for (const [key, value] of Object.entries(
-              analysisResult.dimensions
-            )) {
-              convertedDimensions[key] = {
-                name: key,
-                ...(value as unknown as {
-                  score: number;
-                  evidence?: string[];
-                  gaps?: string[];
-                  recommendations?: string[];
-                }),
-              };
+            // 安全處理 dimensions (可能為 undefined 如果某些 agents 失敗)
+            if (analysisResult.dimensions) {
+              for (const [key, value] of Object.entries(
+                analysisResult.dimensions
+              )) {
+                convertedDimensions[key] = {
+                  name: key,
+                  ...(value as unknown as {
+                    score: number;
+                    evidence?: string[];
+                    gaps?: string[];
+                    recommendations?: string[];
+                  }),
+                };
+              }
             }
 
             await slackService.notifyProcessingCompleted({
@@ -316,20 +348,21 @@ export default {
               conversationId,
               caseNumber,
               analysisResult: {
-                overallScore: analysisResult.overallScore,
-                qualificationStatus: analysisResult.qualificationStatus,
+                overallScore: analysisResult.overallScore ?? 0,
+                qualificationStatus: analysisResult.qualificationStatus ?? "unknown",
                 dimensions: convertedDimensions,
-                keyFindings: analysisResult.keyFindings,
+                keyFindings: analysisResult.keyFindings ?? [],
                 // 轉換 nextSteps 格式: {action, owner?, deadline?} -> {action, priority, owner}
-                nextSteps: analysisResult.nextSteps.map((step) => ({
+                nextSteps: (analysisResult.nextSteps ?? []).map((step) => ({
                   action: step.action,
                   priority: "Medium", // 預設優先級
                   owner: step.owner || "Unassigned",
                 })),
                 // 轉換 risks 格式: {risk, severity, mitigation?}[] -> string[]
-                risks: analysisResult.risks.map((r) => r.risk),
+                risks: (analysisResult.risks ?? []).map((r) => r.risk),
               },
               processingTimeMs,
+              threadTs, // 傳遞 thread_ts 以在同一個 thread 內回覆
             });
             console.log(
               `[Queue] ✓ Sent completion notification to ${slackUser.id}`
@@ -402,6 +435,7 @@ export default {
               errorMessage,
               conversationId,
               caseNumber,
+              threadTs, // 傳遞 thread_ts 以在同一個 thread 內回覆
             });
             console.log(
               `[Queue] ✓ Sent failure notification to ${slackUser.id}`

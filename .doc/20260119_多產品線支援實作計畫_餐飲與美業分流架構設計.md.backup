@@ -1,0 +1,351 @@
+# 多產品線支援實作計畫：餐飲 (iCHEF) + 美業
+
+## 執行摘要
+
+將現有的 iCHEF 餐飲 POS 銷售分析系統擴展為支援多產品線架構，首先支援美業產品線。採用配置驅動、向後相容的設計，確保未來可輕鬆擴展到更多產品線。
+
+### 核心設計原則
+
+1. **配置驅動**：所有產品線特定邏輯從中央配置讀取，避免硬編碼
+2. **向後相容**：確保不破壞現有 iCHEF 功能，所有新欄位使用預設值
+3. **可擴展**：未來新增第三個產品線僅需 3-4 小時
+4. **關注點分離**：通用邏輯與產品特定邏輯清晰分離
+
+### 使用者需求確認
+
+- ✅ **Channel 策略**：美業使用獨立 Slack Channel（自動識別產品線）
+- ✅ **表單欄位**：美業需要店鋪類型、員工數量、現有系統
+- ✅ **資料庫設計**：共用表格 + `product_line` 欄位區分
+- ✅ **報表策略**：統一儀表板 + 產品線篩選
+
+## 架構設計概覽
+
+### 資料流程（多產品線支援）
+
+```
+Slack Bot (獨立 Channel: iCHEF / Beauty)
+    ↓
+Channel → Product Line 解析器 (環境變數配置)
+    ↓
+動態表單生成器 (根據 productLine 載入配置)
+    ↓
+Server API (create conversation + R2 upload + productLine)
+    ↓
+CloudFlare Queue (包含 productLine metadata)
+    ↓
+Queue Worker (根據 productLine 載入提示詞)
+    ↓
+MEDDIC Orchestrator (產品特定 Prompt Loader)
+    ↓
+Database (product_line 欄位索引) + Slack 通知
+```
+
+### 關鍵架構組件
+
+#### 1. Product Config Registry（產品配置註冊表）
+- **位置**：`/packages/shared/src/product-configs/`
+- **職責**：集中管理所有產品線的配置（表單、提示詞、話術）
+- **文件**：
+  - `registry.ts` - 配置註冊與查詢
+  - `ichef.ts` - iCHEF 配置（遷移現有硬編碼）
+  - `beauty.ts` - 美業配置（新增）
+  - `types.ts` - `ProductLineConfig` 介面定義
+
+#### 2. Channel → Product Line Resolver
+- **位置**：`/apps/slack-bot/src/utils/product-line-resolver.ts`
+- **職責**：從 Slack Channel ID 解析產品線
+- **配置方式**：環境變數 `PRODUCT_LINE_CHANNELS='{"C12345":"ichef","C67890":"beauty"}'`
+- **Fallback**：未配置 channel 預設使用 `ichef`
+
+#### 3. Dynamic Form Builder
+- **位置**：`/apps/slack-bot/src/utils/form-builder.ts`
+- **職責**：根據產品線動態生成 Slack Modal 表單
+- **重構**：`buildAudioUploadModal()`, `parseAudioUploadFormValues()`
+
+#### 4. Prompt Loader（提示詞載入器）
+- **位置**：`/packages/services/src/llm/prompt-loader.ts`
+- **職責**：動態載入產品特定提示詞並組合完整 Agent 提示
+- **目錄結構**：
+  ```
+  prompts/meddic/
+    shared/        # 通用 Agent 模板
+    ichef/         # iCHEF 特定提示詞
+    beauty/        # 美業特定提示詞
+  ```
+
+#### 5. Database Schema 擴展
+- **新增欄位**：`product_line TEXT DEFAULT 'ichef' NOT NULL`
+- **影響表格**：`opportunities`, `conversations`, `talk_tracks`, `meddic_analyses`
+- **索引**：為所有 `product_line` 欄位建立索引優化查詢
+
+## 關鍵文件清單
+
+### 需要創建的文件（新增）
+
+| 文件路徑 | 用途 |
+|---------|------|
+| `/packages/shared/src/product-configs/registry.ts` | 產品配置註冊表 |
+| `/packages/shared/src/product-configs/ichef.ts` | iCHEF 配置（遷移） |
+| `/packages/shared/src/product-configs/beauty.ts` | 美業配置 |
+| `/packages/shared/src/product-configs/types.ts` | 配置介面定義 |
+| `/apps/slack-bot/src/utils/product-line-resolver.ts` | Channel 解析器 |
+| `/apps/slack-bot/src/utils/form-builder.ts` | 動態表單生成器 |
+| `/packages/services/src/llm/prompt-loader.ts` | 提示詞載入器 |
+| `/packages/services/prompts/meddic/beauty/global-context.md` | 美業全局上下文 |
+| `/packages/services/prompts/meddic/beauty/commitment-events.md` | 美業承諾事件 |
+| `/packages/db/migrations/20260116_add_product_line_support.sql` | 資料庫 Migration |
+
+### 需要修改的文件（重構）
+
+| 文件路徑 | 修改內容 |
+|---------|---------|
+| `/apps/slack-bot/src/events/file.ts` | 整合 Channel 解析器、動態表單生成 |
+| `/apps/slack-bot/src/types.ts` | 擴展 `AudioUploadMetadata` 支援美業欄位 |
+| `/packages/services/src/llm/orchestrator.ts` | 整合 PromptLoader，接受 `productLine` 參數 |
+| `/packages/db/src/schema/opportunity.ts` | 新增 `productLine` 欄位 |
+| `/packages/db/src/schema/conversation.ts` | 新增 `productLine` 欄位、擴展 metadata 類型 |
+| `/packages/db/src/schema/talk-tracks.ts` | 新增 `productLine` 欄位 |
+| `/packages/api/src/routers/talk-track.ts` | 新增 `productLine` 過濾參數 |
+| `/packages/api/src/routers/analytics.ts` | 新增 `productLine` 過濾參數 |
+| `/apps/queue-worker/src/index.ts` | 從 metadata 讀取 `productLine` 並傳遞 |
+
+## 美業產品線特定設計
+
+### 美業表單欄位（對比 iCHEF）
+
+| 欄位 | iCHEF | 美業 |
+|-----|-------|------|
+| **店鋪類型** | 咖啡廳/飲料店/火鍋店... (8 種餐飲) | 美髮沙龍/美甲店/美容 SPA/刺青/按摩/其他 |
+| **營運模式** | 內用/外帶/外送 | ❌ 無（美業不需要） |
+| **員工數量** | ❌ 無 | 1-3 人 / 4-10 人 / 11-20 人 / 20+ |
+| **現有系統** | 無/iCHEF舊版/DUDU/EZTABLE... | 無/Excel/LINE預約/其他美業系統/手寫本 |
+| **決策者在場** | ✅ 通用 | ✅ 通用 |
+
+### 美業承諾事件（CE）重新定義
+
+| CE | iCHEF（餐飲） | 美業 |
+|----|------------|------|
+| **CE1 - Time** | 預約安裝/培訓會議 | 預約系統示範/員工培訓 |
+| **CE2 - Data** | 提交菜單/餐桌/庫存資料 | 提交客戶名單/服務項目/定價 |
+| **CE3 - Money** | 簽約/付訂金 | 簽約/付首月費用 |
+
+### 美業痛點與話術分類
+
+**美業特定痛點**：
+- 預約衝突（雙重預訂）
+- 員工佣金計算複雜
+- 會員資料散落多平台
+- 線上支付與核銷困難
+- 服務評價無法集中管理
+
+**美業特定話術情境**（新增）：
+- 「員工不會用」
+- 「客戶資料轉移」
+- 「預約管理需求」
+
+## 實作步驟（優先級排序）
+
+### Phase 1: 基礎架構（高優先級，8-10 小時）
+
+**目標**：建立產品配置系統和資料庫支援
+
+1. ✅ 創建 `/packages/shared/src/product-configs/` 目錄
+2. ✅ 實作 `ProductLineConfig` 介面（`types.ts`）
+3. ✅ 遷移 iCHEF 配置到 `ichef.ts`（從現有硬編碼）
+4. ✅ 創建美業配置 `beauty.ts`
+5. ✅ 實作配置註冊器 `registry.ts`
+6. ✅ 創建資料庫 Migration：添加 `product_line` 欄位到所有相關表
+7. ✅ 更新 Drizzle Schema 定義
+8. ✅ 建立索引優化查詢
+9. ✅ 創建 Channel → Product Line 解析器
+10. ✅ 單元測試：Config Registry、Product Line Resolver
+
+### Phase 2: Slack Bot 表單系統（高優先級，8-10 小時）
+
+**目標**：實現動態表單生成和產品線識別
+
+1. ✅ 創建 `/apps/slack-bot/src/utils/form-builder.ts`
+2. ✅ 實作 `buildAudioUploadModal()` 使用配置驅動
+3. ✅ 實作 `buildTextInput()`, `buildSelectInput()` 輔助函數
+4. ✅ 更新 `parseAudioUploadFormValues()` 支援多產品線
+5. ✅ 在 `handleFileSharedEvent()` 中解析 `productLine`
+6. ✅ 傳遞 `productLine` 到 Modal 的 `private_metadata`
+7. ✅ 更新 API 調用（`uploadConversation`）包含 `productLine`
+8. ✅ 測試：iCHEF Channel 上傳、Beauty Channel 上傳
+
+### Phase 3: MEDDIC 提示詞系統（中優先級，10-12 小時）
+
+**目標**：重組提示詞並實現動態載入
+
+1. ✅ 創建 `prompts/meddic/shared/` 目錄
+2. ✅ 遷移通用 Agent 模板到 `shared/`
+3. ✅ 創建 `prompts/meddic/beauty/` 目錄
+4. ✅ 撰寫美業提示詞：
+   - `global-context.md`
+   - `commitment-events.md`
+   - Agent 1-6 特定調整
+5. ✅ 創建 `PromptLoader` 類別
+6. ✅ 實作 `loadProductPrompt()` 方法
+7. ✅ 實作 `buildAgentPrompt()` 方法（組合完整提示）
+8. ✅ 在 `MeddicOrchestrator` 中整合 `PromptLoader`
+9. ✅ 更新 `analyze()` 方法使用動態提示詞
+10. ✅ 測試：iCHEF 分析（確保向後相容）、Beauty 分析
+
+### Phase 4: Queue Worker 整合（中優先級，4-6 小時）
+
+**目標**：完整端到端流程打通
+
+1. ✅ 從 conversation metadata 讀取 `productLine`
+2. ✅ 傳遞 `productLine` 到 `MeddicOrchestrator`
+3. ✅ 更新 Slack 通知包含產品線資訊
+4. ✅ 端到端測試：iCHEF 流程、Beauty 流程
+
+### Phase 5: 話術系統（低優先級，4-6 小時）
+
+**目標**：話術查詢支援產品線過濾
+
+1. ✅ 更新 `/packages/api/src/routers/talk-track.ts`
+2. ✅ 新增 `productLine` 參數到所有查詢方法
+3. ✅ 更新 Slack `/talktrack` 指令解析 `productLine`
+4. ✅ 創建美業初始話術資料（8 種情境）
+5. ✅ 測試：話術查詢過濾、跨產品線隔離
+
+### Phase 6: 儀表板與報表（低優先級，4-6 小時）
+
+**目標**：前端支援產品線篩選
+
+1. ✅ 更新 Analytics Router 添加 `productLine` 參數
+2. ✅ 更新所有統計查詢支援產品線過濾
+3. ✅ 創建 `ProductLineSwitcher` 組件
+4. ✅ 整合到 Dashboard 頁面
+5. ✅ 測試：篩選功能、跨產品線資料隔離
+
+### Phase 7: 測試與文檔（持續，2-4 小時）
+
+1. ✅ 整合測試：端到端流程
+2. ✅ 回歸測試：確保 iCHEF 功能完全正常
+3. ✅ 性能測試：查詢效能、表單生成速度
+4. ✅ 更新 README 說明多產品線功能
+5. ✅ 創建 Channel 配置文檔
+6. ✅ 更新 API 文檔
+
+## 向後相容性保證
+
+### 資料庫層
+- ✅ 所有新欄位使用 `DEFAULT 'ichef'` 確保現有資料正常
+- ✅ 未指定 `productLine` 的查詢預設查詢所有或 iCHEF（可配置）
+- ✅ Migration 腳本包含 rollback 邏輯
+
+### API 層
+- ✅ 所有新參數設為 `optional`
+- ✅ 未指定 `productLine` 時預設使用 `'ichef'`
+- ✅ 回應格式保持不變
+
+### Slack Bot 層
+- ✅ 未配置的 Channel 預設使用 iCHEF
+- ✅ 現有表單欄位保持不變
+- ✅ 解析邏輯向下相容舊格式
+
+### 提示詞層
+- ✅ `shared/` 目錄保留通用邏輯
+- ✅ iCHEF 提示詞內容不變
+- ✅ Orchestrator 在無 `productLine` 時預設使用 iCHEF
+
+## 驗證方式
+
+### 端到端測試場景
+
+#### 場景 1：iCHEF 流程（向後相容驗證）
+1. 在 iCHEF Channel 上傳音檔
+2. 填寫表單（咖啡廳、內用為主、iCHEF舊版）
+3. 驗證 conversation 建立時 `productLine='ichef'`
+4. 驗證 MEDDIC 分析使用 iCHEF 提示詞
+5. 驗證 Slack 通知正常
+6. 驗證儀表板顯示正確
+
+#### 場景 2：美業流程（新功能驗證）
+1. 在 Beauty Channel 上傳音檔
+2. 填寫表單（美髮沙龍、4-10人、Excel管理）
+3. 驗證 conversation 建立時 `productLine='beauty'`
+4. 驗證 MEDDIC 分析使用美業提示詞
+5. 驗證分析結果包含美業特定洞察
+6. 驗證 Slack 通知標註美業產品線
+
+#### 場景 3：資料隔離驗證
+1. 創建 iCHEF 和 Beauty 各 5 筆 opportunities
+2. 查詢 `productLine='ichef'` 應只返回 iCHEF 資料
+3. 查詢 `productLine='beauty'` 應只返回美業資料
+4. 儀表板切換產品線篩選，數據應正確切換
+
+### 成功標準
+
+#### 功能完整性
+- ✅ 美業 Channel 可上傳音檔並填寫專屬表單
+- ✅ 美業對話使用專屬 MEDDIC 提示詞分析
+- ✅ 話術系統正確過濾產品線
+- ✅ 儀表板可按產品線篩選
+- ✅ 現有 iCHEF 功能完全不受影響
+
+#### 性能要求
+- ✅ 表單生成時間 < 100ms
+- ✅ 產品線解析時間 < 10ms
+- ✅ 提示詞載入時間 < 50ms（含快取）
+- ✅ 資料庫查詢時間增幅 < 10%
+
+#### 可維護性
+- ✅ 新增第三個產品線只需 < 4 小時
+- ✅ 配置文件清晰，非技術人員可理解
+- ✅ 完整 TypeScript 類型覆蓋
+- ✅ 文檔完整，新成員可快速上手
+
+## 風險評估與緩解
+
+### 風險 1：向後相容性破壞
+- **影響**：高
+- **概率**：中
+- **緩解**：
+  - 所有新欄位使用 DEFAULT 值
+  - 漸進式遷移，保留舊邏輯作為 fallback
+  - 完整回歸測試套件
+
+### 風險 2：提示詞品質下降
+- **影響**：高
+- **概率**：中
+- **緩解**：
+  - 重組前備份原始提示詞
+  - A/B 測試比較分析品質
+  - 逐步遷移，每次驗證一個 Agent
+
+### 風險 3：Channel 配置錯誤
+- **影響**：中
+- **概率**：低
+- **緩解**：
+  - 環境變數驗證邏輯
+  - Fallback 到預設產品線
+  - 詳細錯誤日誌
+
+## 時程規劃
+
+**總預估時間**：40-50 小時
+
+- **Week 1**：Phase 1-2（基礎架構 + Slack Bot）
+- **Week 2**：Phase 3-4（提示詞系統 + Queue Worker）
+- **Week 3**：Phase 5-6（話術系統 + 儀表板）
+- **Week 4**：Phase 7 + Buffer（測試與文檔）
+
+## 後續擴展計畫
+
+### 第三個產品線準備
+- 配置框架已就緒
+- 只需添加新配置文件和提示詞
+- **預估工時**：3-4 小時
+
+### 動態配置管理（未來）
+- 實作資料庫配置表
+- 開發配置管理 UI
+- 支援線上調整 Channel 映射
+
+### 跨產品線分析（未來）
+- 產品線比較報表
+- 識別最佳實踐話術
+- 跨產品線 MEDDIC 趨勢分析

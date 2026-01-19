@@ -33,7 +33,7 @@ export class SlackNotificationServiceImpl implements SlackNotificationService {
    */
   async notifyProcessingStarted(
     params: ProcessingStartedParams
-  ): Promise<void> {
+  ): Promise<string> {
     const blocks = buildProcessingStartedBlocks(
       params.fileName,
       params.fileSize,
@@ -48,7 +48,8 @@ export class SlackNotificationServiceImpl implements SlackNotificationService {
       (params.fileSize / 1024 / 1024).toFixed(2) +
       " MB)";
 
-    await this.sendCustomMessage(params.userId, blocks, fallbackText);
+    // 返回訊息的 thread_ts (用於後續回覆)
+    return await this.sendCustomMessage(params.userId, blocks, fallbackText);
   }
 
   /**
@@ -71,7 +72,8 @@ export class SlackNotificationServiceImpl implements SlackNotificationService {
       params.analysisResult.overallScore +
       "/100)";
 
-    await this.sendCustomMessage(params.userId, blocks, fallbackText);
+    // 如果有 threadTs 就在同一個 thread 內回覆
+    await this.sendCustomMessage(params.userId, blocks, fallbackText, params.threadTs);
   }
 
   /**
@@ -87,7 +89,8 @@ export class SlackNotificationServiceImpl implements SlackNotificationService {
 
     const fallbackText = "❌ 音檔處理失敗: " + params.fileName;
 
-    await this.sendCustomMessage(params.userId, blocks, fallbackText);
+    // 如果有 threadTs 就在同一個 thread 內回覆
+    await this.sendCustomMessage(params.userId, blocks, fallbackText, params.threadTs);
   }
 
   /**
@@ -96,14 +99,19 @@ export class SlackNotificationServiceImpl implements SlackNotificationService {
   async sendCustomMessage(
     channel: string,
     blocks: KnownBlock[],
-    fallbackText: string
-  ): Promise<void> {
+    fallbackText: string,
+    threadTs?: string
+  ): Promise<string> {
     try {
-      await this.client.chat.postMessage({
+      const result = await this.client.chat.postMessage({
         channel,
         blocks,
         text: fallbackText,
+        thread_ts: threadTs, // 如果有 threadTs 就在該 thread 內回覆
       });
+
+      // 返回訊息的 timestamp (用於建立 thread)
+      return result.ts || "";
     } catch (error) {
       console.error("[SlackNotification] Failed to send message:", error);
       throw error;

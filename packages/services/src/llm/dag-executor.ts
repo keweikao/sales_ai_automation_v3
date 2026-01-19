@@ -80,12 +80,16 @@ export class DAGExecutor {
 
       results.push(...groupResults);
 
-      // 更新 state 為成功執行的最後一個 Agent 的 state
+      // 合併所有成功執行的 Agent 的 state (修復並行執行時 state 覆蓋問題)
       for (const result of groupResults) {
         executionOrder.push(result.agentId);
 
         if (result.success && result.state) {
-          currentState = result.state;
+          // 合併 state 而不是覆蓋,保留所有 agent 的輸出
+          currentState = {
+            ...currentState,
+            ...result.state,
+          };
         }
       }
     }

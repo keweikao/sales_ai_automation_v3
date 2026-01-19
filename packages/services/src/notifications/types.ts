@@ -57,6 +57,7 @@ export interface ProcessingCompletedParams {
   caseNumber: string;
   analysisResult: MEDDICAnalysisResult;
   processingTimeMs: number;
+  threadTs?: string; // Slack thread timestamp (用於回覆在同一個 thread 內)
 }
 
 /**
@@ -69,6 +70,7 @@ export interface ProcessingFailedParams {
   conversationId?: string;
   caseNumber?: string;
   retryCount?: number;
+  threadTs?: string; // Slack thread timestamp (用於回覆在同一個 thread 內)
 }
 
 /**
@@ -77,8 +79,9 @@ export interface ProcessingFailedParams {
 export interface SlackNotificationService {
   /**
    * 發送處理開始通知
+   * @returns 訊息的 thread_ts (用於後續回覆)
    */
-  notifyProcessingStarted(params: ProcessingStartedParams): Promise<void>;
+  notifyProcessingStarted(params: ProcessingStartedParams): Promise<string>;
 
   /**
    * 發送處理完成通知
@@ -96,6 +99,7 @@ export interface SlackNotificationService {
   sendCustomMessage(
     channel: string,
     blocks: KnownBlock[],
-    fallbackText: string
-  ): Promise<void>;
+    fallbackText: string,
+    threadTs?: string
+  ): Promise<string>;
 }

@@ -8,7 +8,7 @@ import type { LLMClient, LLMOptions, LLMResponse } from "./types.js";
 
 export class GeminiClient implements LLMClient {
   private readonly genAI: GoogleGenerativeAI;
-  private readonly defaultModel = "gemini-2.0-flash-exp"; // V2 uses Gemini 2.0 Flash
+  private readonly defaultModel = "gemini-2.5-flash"; // Use Gemini 2.5 Flash for higher quota
 
   constructor(apiKey?: string) {
     const key = apiKey || process.env.GEMINI_API_KEY;
@@ -28,6 +28,7 @@ export class GeminiClient implements LLMClient {
    */
   async generate(prompt: string, options?: LLMOptions): Promise<LLMResponse> {
     const modelName = options?.model || this.defaultModel;
+    console.log(`[Gemini] Using model: ${modelName} (default: ${this.defaultModel}, options.model: ${options?.model})`);
     const model = this.genAI.getGenerativeModel({ model: modelName });
 
     const generationConfig = {
@@ -65,7 +66,13 @@ export class GeminiClient implements LLMClient {
     prompt: string,
     options?: LLMOptions
   ): Promise<T> {
-    const jsonPrompt = `${prompt}\n\nIMPORTANT: Respond with valid JSON only. No markdown formatting, no explanations.`;
+    const jsonPrompt = `${prompt}\n\nIMPORTANT: Respond with ONLY a valid JSON object. Do NOT include:
+- Markdown formatting (**, *, ~~, etc.)
+- Code blocks (\`\`\`)
+- Explanatory text before or after the JSON
+- Any text that is not part of the JSON structure
+
+Start your response with { and end with }`;
 
     const response = await this.generate(jsonPrompt, {
       ...options,
@@ -75,16 +82,29 @@ export class GeminiClient implements LLMClient {
     try {
       // Remove markdown code blocks if present
       let cleanText = response.text.trim();
-      if (cleanText.startsWith("```json")) {
-        cleanText = cleanText.replace(/^```json\n/, "").replace(/\n```$/, "");
-      } else if (cleanText.startsWith("```")) {
-        cleanText = cleanText.replace(/^```\n/, "").replace(/\n```$/, "");
+
+      // Remove ```json and ``` blocks (handle both single and multi-line)
+      // First, remove code fence markers
+      cleanText = cleanText.replace(/^```json\s*/i, ""); // Remove opening ```json
+      cleanText = cleanText.replace(/^```\s*/, ""); // Remove opening ```
+      cleanText = cleanText.replace(/\s*```\s*$/g, ""); // Remove closing ```
+      cleanText = cleanText.trim();
+
+      // Try to find JSON object boundaries
+      const jsonStart = cleanText.indexOf("{");
+      const jsonEnd = cleanText.lastIndexOf("}");
+
+      if (jsonStart === -1 || jsonEnd === -1 || jsonStart > jsonEnd) {
+        throw new Error("No valid JSON object found in response");
       }
+
+      // Extract only the JSON portion
+      cleanText = cleanText.substring(jsonStart, jsonEnd + 1);
 
       return JSON.parse(cleanText) as T;
     } catch (error) {
       console.error("Failed to parse JSON from LLM response:", error);
-      console.error("Raw response:", response.text);
+      console.error("Raw response:", response.text.substring(0, 500)); // Only log first 500 chars
       throw new Error(`Invalid JSON response from LLM: ${error}`);
     }
   }

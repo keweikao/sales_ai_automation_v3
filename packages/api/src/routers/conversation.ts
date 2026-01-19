@@ -187,8 +187,9 @@ export const uploadConversation = protectedProcedure
         `[${requestId}] ✓ Opportunity verified: ${opportunity.companyName}`
       );
 
-      // 初始化環境變數
-      const envRecord = process.env as Record<string, unknown>;
+      // 初始化環境變數 (從 Hono context.env 取得,不是 process.env)
+      const honoEnv = context.honoContext?.env || {};
+      const envRecord = honoEnv as Record<string, unknown>;
 
       // Step 2: Get audio buffer (從 base64 或從 Slack 下載)
       let audioBuffer: Buffer;

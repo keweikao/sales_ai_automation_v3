@@ -249,7 +249,11 @@ export const listOpportunities = protectedProcedure
       throw new ORPCError("UNAUTHORIZED");
     }
 
-    const conditions = [eq(opportunities.userId, userId)];
+    // Service account can query all opportunities, regular users only their own
+    const isServiceAccount = context.isServiceAccount === true;
+    const conditions = isServiceAccount
+      ? []
+      : [eq(opportunities.userId, userId)];
 
     if (status) {
       conditions.push(eq(opportunities.status, status));
