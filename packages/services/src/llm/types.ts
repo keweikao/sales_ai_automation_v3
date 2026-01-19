@@ -47,60 +47,54 @@ export type MeddicDimensions = "metrics" | "economicBuyer" | "decisionCriteria" 
  * Analyzes meeting background and constraints
  */
 export interface Agent1Output {
-  meetingType: string;
-  decisionMakers: Array<{
-    name: string;
-    role: string;
-    present: boolean;
-  }>;
-  constraints: {
-    budget?: string;
-    timeline?: string;
-    technicalRequirements?: string[];
-  };
-  storeInfo?: {
-    name: string;
-    type: string;
-    size?: string;
-  };
-  competitorMentions: string[];
+  decision_maker: "老闆本人" | "員工代表" | "只有員工";
+  decision_maker_confirmed: boolean;
+  urgency_level: "高" | "中" | "低";
+  deadline_date: string | null; // YYYY-MM-DD
+  customer_motivation: "開新店" | "系統故障" | "合約到期" | "想省錢" | "其他";
+  barriers: string[];
+  meta_consistent: boolean;
 }
 
 /**
  * Agent 2: Buyer Agent
- * Core MEDDIC analysis - most important agent
+ * Customer insight analysis - why not closed, switching concerns, customer type
  */
 export interface Agent2Output {
-  meddicScores: MeddicScores;
-  dimensions: MeddicDimensions;
-  overallScore: number; // 1-100
-  qualificationStatus: "Strong" | "Medium" | "Weak" | "At Risk";
-  needsIdentified: boolean;
-  painPoints: string[];
-  trustAssessment: {
-    level: "High" | "Medium" | "Low";
-    indicators: string[];
+  not_closed_reason: "價格太高" | "需老闆決定" | "功能不符" | "轉換顧慮" | "習慣現狀";
+  not_closed_detail: string;
+  switch_concerns: {
+    detected: boolean;
+    worry_about: "菜單設定" | "員工訓練" | "資料遷移" | "無";
+    complexity: "複雜" | "一般" | "簡單";
   };
+  customer_type: {
+    type: "衝動型" | "精算型" | "保守觀望型";
+    evidence: string[];
+  };
+  missed_opportunities: string[];
+  current_system: "無" | "其他品牌" | "iCHEF舊用戶";
 }
 
 /**
  * Agent 3: Seller Agent
- * Sales strategy and performance assessment
+ * Sales performance and strategy recommendations
  */
 export interface Agent3Output {
-  salesPerformance: {
+  progress_score: number; // 0-100
+  has_clear_ask: boolean;
+  recommended_strategy: "立即成交" | "小步前進" | "維持關係";
+  strategy_reason: string;
+  safety_alert: boolean;
+  skills_diagnosis: {
+    pain_addressed: boolean;
     strengths: string[];
-    weaknesses: string[];
-    missedOpportunities: string[];
+    improvements: string[];
   };
-  recommendedActions: Array<{
+  next_action: {
     action: string;
-    priority: "High" | "Medium" | "Low";
-    rationale: string;
-  }>;
-  competitivePositioning?: {
-    advantages: string[];
-    vulnerabilities: string[];
+    suggested_script: string;
+    deadline: string;
   };
 }
 
@@ -131,21 +125,26 @@ export interface Agent4Output {
  * Structured data for CRM/Salesforce integration
  */
 export interface Agent5Output {
-  leadData: {
-    companyName?: string;
-    contactName?: string;
-    contactEmail?: string;
-    contactPhone?: string;
-    industry?: string;
-    companySize?: string;
+  stage_name: string;
+  stage_confidence: "high" | "medium" | "low";
+  stage_reasoning: string;
+  budget: {
+    range: string;
+    mentioned: boolean;
+    decision_maker: string;
   };
-  opportunityData: {
-    dealValue?: number;
-    expectedCloseDate?: string;
-    probability?: number;
-    stage: string;
+  decision_makers: Array<{
+    name: string;
+    role: string;
+    influence: "high" | "medium" | "low";
+  }>;
+  pain_points: string[];
+  timeline: {
+    decision_date: string | null; // YYYY-MM
+    urgency: "high" | "medium" | "low";
+    notes: string;
   };
-  customFields: Record<string, unknown>;
+  next_steps: string[];
 }
 
 /**
@@ -153,18 +152,35 @@ export interface Agent5Output {
  * Real-time coaching and alerts
  */
 export interface Agent6Output {
-  coachingNotes: string;
-  alerts: Array<{
-    type:
-      | "Close Now"
-      | "Missing Decision Maker"
-      | "Excellent Performance"
-      | "Risk";
-    severity: "Critical" | "High" | "Medium" | "Low";
-    message: string;
+  alert_triggered: boolean;
+  alert_type: "close_now" | "missed_dm" | "excellent" | "low_progress" | "none";
+  alert_severity: "Critical" | "High" | "Medium" | "Low";
+  alert_message: string;
+  coaching_notes: string;
+  strengths: string[];
+  improvements: Array<{
+    area: string;
+    suggestion: string;
   }>;
-  suggestedTalkTracks: string[];
-  managerAlert?: boolean; // True if 3+ consecutive low scores
+  detected_objections: Array<{
+    type: string;
+    customer_quote: string;
+    timestamp_hint: string;
+  }>;
+  objection_handling: Array<{
+    objection_type: string;
+    handled: boolean;
+    effectiveness: "full" | "partial" | "none";
+    suggestion: string;
+  }>;
+  suggested_talk_tracks: string[];
+  follow_up: {
+    timing: string;
+    method: string;
+    notes: string;
+  };
+  manager_alert: boolean;
+  manager_alert_reason: string | null;
 }
 
 // ============================================================
@@ -228,7 +244,15 @@ export interface AnalysisResult {
 
   // Coaching
   coachingNotes: string;
-  alerts: Agent6Output["alerts"];
+  alerts: Array<{
+    type:
+      | "Close Now"
+      | "Missing Decision Maker"
+      | "Excellent Performance"
+      | "Risk";
+    severity: "Critical" | "High" | "Medium" | "Low";
+    message: string;
+  }>;
 
   // CRM data
   crmData: Agent5Output;

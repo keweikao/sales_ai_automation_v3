@@ -270,8 +270,8 @@ export class MeddicOrchestrator {
   // ============================================================
 
   /**
-   * V2 Quality Check Logic (DO NOT MODIFY)
-   * Checks if buyer analysis meets minimum quality standards
+   * V3 Quality Check Logic
+   * Checks if buyer analysis meets minimum quality standards (updated for new Agent2Output)
    */
   private isQualityPassed(
     buyerData: import("./types.js").Agent2Output | undefined
@@ -280,12 +280,12 @@ export class MeddicOrchestrator {
       return false;
     }
 
+    // 新邏輯: 檢查是否有明確的未成交原因和客戶類型
     return (
-      buyerData.needsIdentified &&
-      buyerData.painPoints &&
-      buyerData.painPoints.length > 0 &&
-      buyerData.meddicScores !== undefined &&
-      buyerData.trustAssessment !== undefined
+      buyerData.not_closed_reason !== undefined &&
+      buyerData.not_closed_detail.trim().length > 10 && // 至少有詳細說明
+      buyerData.customer_type.type !== undefined &&
+      buyerData.customer_type.evidence.length > 0
     );
   }
 
@@ -311,7 +311,7 @@ export class MeddicOrchestrator {
   }
 
   /**
-   * Build final analysis result
+   * Build final analysis result (V3 - updated for new Agent outputs)
    */
   private buildResult(state: AnalysisState): AnalysisResult {
     if (
@@ -325,27 +325,55 @@ export class MeddicOrchestrator {
       throw new Error("Incomplete analysis state. All agents must complete.");
     }
 
+    // 從新的 Agent2Output 推導 MEDDIC 等價資訊
+    const overallScore = this.calculateOverallScoreFromBuyerData(state.buyerData);
+    const qualificationStatus = this.deriveQualificationStatus(state.buyerData);
+
     return {
-      // Core MEDDIC data
-      meddicScores: state.buyerData.meddicScores,
-      overallScore: state.buyerData.overallScore,
-      qualificationStatus: state.buyerData.qualificationStatus,
-      dimensions: state.buyerData.dimensions,
+      // Core MEDDIC data - 從新欄位推導
+      meddicScores: {
+        metrics: 0, // 新 Agent2Output 不包含,設為 0
+        economicBuyer: state.contextData?.decision_maker === "老闆本人" ? 100 : 50,
+        decisionCriteria: 0,
+        decisionProcess: 0,
+        identifyPain: state.buyerData.not_closed_detail.length > 0 ? 80 : 20,
+        champion: 0,
+      },
+      overallScore,
+      qualificationStatus,
+      dimensions: "identifyPain" as import("./types.js").MeddicDimensions,
 
-      // Summary - 使用新的 Agent4Output 欄位
-      executiveSummary: `SMS: ${state.summaryData.sms_text}`, // 暫時映射
-      keyFindings: state.summaryData.pain_points, // 使用 pain_points 代替
-      nextSteps: state.summaryData.action_items.ichef.map((action) => ({
-        action,
-        owner: "iCHEF",
-      })), // 轉換格式
+      // Summary - 從新的 Agent4Output 映射
+      executiveSummary: state.summaryData.sms_text,
+      keyFindings: [
+        ...state.summaryData.pain_points,
+        ...state.summaryData.solutions,
+      ],
+      nextSteps: [
+        ...state.summaryData.action_items.ichef.map((action) => ({
+          action,
+          owner: "iCHEF",
+        })),
+        ...state.summaryData.action_items.customer.map((action) => ({
+          action,
+          owner: "Customer",
+        })),
+      ],
 
-      // Risk assessment
-      risks: this.extractRisks(state),
+      // Risk assessment - 使用新邏輯
+      risks: this.extractRisksV3(state),
 
-      // Coaching
-      coachingNotes: state.coachData.coachingNotes,
-      alerts: state.coachData.alerts,
+      // Coaching - 從新的 Agent6Output
+      coachingNotes: state.coachData.coaching_notes,
+      alerts: state.coachData.alert_triggered
+        ? [
+            {
+              type: this.mapAlertType(state.coachData.alert_type),
+              severity: state.coachData.alert_severity,
+              message: state.coachData.alert_message,
+            },
+          ]
+        : [],
 
       // CRM data
       crmData: state.crmData,
@@ -355,7 +383,7 @@ export class MeddicOrchestrator {
         agent1: state.contextData,
         agent2: state.buyerData,
         agent3: state.sellerData,
-        agent4: state.summaryData, // 保留完整的新格式
+        agent4: state.summaryData,
         agent5: state.crmData,
         agent6: state.coachData,
       },
@@ -367,44 +395,184 @@ export class MeddicOrchestrator {
   }
 
   /**
-   * Extract risks from various agent outputs
+   * 輔助方法: 從新的 buyerData 計算 overall score
    */
-  private extractRisks(state: AnalysisState) {
+  private calculateOverallScoreFromBuyerData(
+    buyerData: import("./types.js").Agent2Output
+  ): number {
+    let score = 50; // 基準分數
+
+    // 根據未成交原因調整
+    switch (buyerData.not_closed_reason) {
+      case "價格太高":
+        score -= 20;
+        break;
+      case "需老闆決定":
+        score -= 10;
+        break;
+      case "功能不符":
+        score -= 30;
+        break;
+      case "習慣現狀":
+        score -= 15;
+        break;
+    }
+
+    // 根據客戶類型調整
+    switch (buyerData.customer_type.type) {
+      case "衝動型":
+        score += 20;
+        break;
+      case "精算型":
+        score += 0;
+        break;
+      case "保守觀望型":
+        score -= 20;
+        break;
+    }
+
+    // 根據轉換顧慮調整
+    if (buyerData.switch_concerns.detected) {
+      switch (buyerData.switch_concerns.complexity) {
+        case "複雜":
+          score -= 15;
+          break;
+        case "一般":
+          score -= 5;
+          break;
+      }
+    }
+
+    return Math.max(0, Math.min(100, score)); // 限制在 0-100
+  }
+
+  /**
+   * 輔助方法: 推導資格狀態
+   */
+  private deriveQualificationStatus(
+    buyerData: import("./types.js").Agent2Output
+  ): string {
+    const score = this.calculateOverallScoreFromBuyerData(buyerData);
+
+    if (score >= 70) return "Strong";
+    if (score >= 50) return "Medium";
+    if (score >= 30) return "Weak";
+    return "At Risk";
+  }
+
+  /**
+   * 輔助方法: 映射 alert type
+   */
+  private mapAlertType(
+    type: "close_now" | "missed_dm" | "excellent" | "low_progress" | "none"
+  ): "Close Now" | "Missing Decision Maker" | "Excellent Performance" | "Risk" {
+    switch (type) {
+      case "close_now":
+        return "Close Now";
+      case "missed_dm":
+        return "Missing Decision Maker";
+      case "excellent":
+        return "Excellent Performance";
+      case "low_progress":
+      case "none":
+      default:
+        return "Risk";
+    }
+  }
+
+  /**
+   * Extract risks from various agent outputs (V3 - updated for new Agent outputs)
+   */
+  private extractRisksV3(state: AnalysisState) {
     const risks: Array<{
       risk: string;
       severity: string;
       mitigation?: string;
     }> = [];
 
-    // From buyer analysis
+    // 從新的 buyerData 提取風險
     if (state.buyerData) {
-      if (state.buyerData.overallScore < 40) {
+      // 未成交原因風險
+      if (state.buyerData.not_closed_reason === "功能不符") {
         risks.push({
-          risk: "Low MEDDIC score indicates weak qualification",
+          risk: "產品功能不符合客戶需求",
           severity: "High",
-          mitigation: "Focus on identifying economic buyer and pain points",
+          mitigation: "釐清具體功能需求,評估是否可透過客製化或未來開發滿足",
         });
       }
 
-      if (
-        !state.buyerData.trustAssessment ||
-        state.buyerData.trustAssessment.level === "Low"
-      ) {
+      // 轉換顧慮風險
+      if (state.buyerData.switch_concerns.detected) {
         risks.push({
-          risk: "Low trust level with prospect",
-          severity: "High",
-          mitigation: "Build rapport and provide social proof",
+          risk: `客戶對轉換有顧慮: ${state.buyerData.switch_concerns.worry_about}`,
+          severity: state.buyerData.switch_concerns.complexity === "複雜" ? "High" : "Medium",
+          mitigation: "提供詳細的轉換計劃和支援服務,降低轉換成本",
+        });
+      }
+
+      // 客戶類型風險
+      if (state.buyerData.customer_type.type === "保守觀望型") {
+        risks.push({
+          risk: "客戶屬於保守觀望型,決策週期可能較長",
+          severity: "Medium",
+          mitigation: "提供試用期或成功案例,建立信任感",
+        });
+      }
+
+      // 錯失機會風險
+      if (state.buyerData.missed_opportunities.length > 0) {
+        risks.push({
+          risk: `業務錯失關鍵機會: ${state.buyerData.missed_opportunities.join(", ")}`,
+          severity: "Medium",
+          mitigation: "後續跟進時補救這些機會點",
         });
       }
     }
 
-    // From competitor detection
+    // 從 contextData 提取風險
+    if (state.contextData) {
+      if (state.contextData.decision_maker !== "老闆本人") {
+        risks.push({
+          risk: "決策者未在場",
+          severity: "High",
+          mitigation: "安排與決策者的會議",
+        });
+      }
+
+      if (state.contextData.barriers.length > 2) {
+        risks.push({
+          risk: `客戶存在多重障礙: ${state.contextData.barriers.join(", ")}`,
+          severity: "High",
+          mitigation: "逐一解決各項障礙,優先處理最關鍵的",
+        });
+      }
+    }
+
+    // 從 sellerData 提取風險
+    if (state.sellerData) {
+      if (state.sellerData.safety_alert) {
+        risks.push({
+          risk: "業務表現觸發安全警報",
+          severity: "Critical",
+          mitigation: state.sellerData.next_action.suggested_script,
+        });
+      }
+
+      if (state.sellerData.progress_score < 40) {
+        risks.push({
+          risk: "銷售進度不理想",
+          severity: "High",
+          mitigation: `建議策略: ${state.sellerData.recommended_strategy}`,
+        });
+      }
+    }
+
+    // 從 competitorKeywords 提取風險
     if (state.hasCompetitor) {
       risks.push({
-        risk: `Competitors mentioned: ${state.competitorKeywords?.join(", ")}`,
+        risk: `競爭對手提及: ${state.competitorKeywords?.join(", ")}`,
         severity: "Medium",
-        mitigation:
-          "Differentiate value proposition and address competitive concerns",
+        mitigation: "強化差異化價值主張,突顯 iCHEF 優勢",
       });
     }
 
