@@ -332,10 +332,13 @@ export class MeddicOrchestrator {
       qualificationStatus: state.buyerData.qualificationStatus,
       dimensions: state.buyerData.dimensions,
 
-      // Summary
-      executiveSummary: state.summaryData.executiveSummary,
-      keyFindings: state.summaryData.keyFindings,
-      nextSteps: state.summaryData.nextSteps,
+      // Summary - 使用新的 Agent4Output 欄位
+      executiveSummary: `SMS: ${state.summaryData.sms_text}`, // 暫時映射
+      keyFindings: state.summaryData.pain_points, // 使用 pain_points 代替
+      nextSteps: state.summaryData.action_items.ichef.map((action) => ({
+        action,
+        owner: "iCHEF",
+      })), // 轉換格式
 
       // Risk assessment
       risks: this.extractRisks(state),
@@ -352,7 +355,7 @@ export class MeddicOrchestrator {
         agent1: state.contextData,
         agent2: state.buyerData,
         agent3: state.sellerData,
-        agent4: state.summaryData,
+        agent4: state.summaryData, // 保留完整的新格式
         agent5: state.crmData,
         agent6: state.coachData,
       },

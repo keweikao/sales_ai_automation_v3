@@ -24,7 +24,11 @@ const promptContents = prompts.map(({ name, varName }) => {
   const filePath = join(PROMPTS_DIR, `${name}.md`);
   const content = readFileSync(filePath, "utf-8");
   // Escape backticks and ${} in the content
-  const escapedContent = content.replace(/`/g, "\\`").replace(/\$/g, "\\$");
+  // Use double backslashes to ensure proper escaping in template literals
+  const escapedContent = content
+    .replace(/\\/g, "\\\\")    // Escape backslashes first
+    .replace(/`/g, "\\`")       // Escape backticks
+    .replace(/\$/g, "\\$");     // Escape dollar signs
   return { varName, content: escapedContent };
 });
 

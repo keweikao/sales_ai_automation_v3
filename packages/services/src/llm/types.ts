@@ -106,17 +106,24 @@ export interface Agent3Output {
 
 /**
  * Agent 4: Summary Agent
- * Customer-oriented meeting summary
+ * Customer-oriented meeting summary with SMS and Markdown output
  */
 export interface Agent4Output {
-  executiveSummary: string; // 2-3 sentences
-  keyFindings: string[]; // 3-5 most important insights
-  nextSteps: Array<{
-    action: string;
-    owner?: string;
-    deadline?: string;
-  }>;
-  hookPoint?: string; // Customer's strongest interest
+  sms_text: string;
+  hook_point: {
+    customer_interest: string;
+    customer_quote: string;
+  };
+  tone_used: "Casual" | "Formal";
+  character_count: number;
+  markdown: string;
+  pain_points: string[];
+  solutions: string[];
+  key_decisions: string[];
+  action_items: {
+    ichef: string[];
+    customer: string[];
+  };
 }
 
 /**
@@ -206,7 +213,11 @@ export interface AnalysisResult {
   // Summary
   executiveSummary: string;
   keyFindings: string[];
-  nextSteps: Agent4Output["nextSteps"];
+  nextSteps: Array<{
+    action: string;
+    owner?: string;
+    deadline?: string;
+  }>;
 
   // Risk assessment
   risks: Array<{
