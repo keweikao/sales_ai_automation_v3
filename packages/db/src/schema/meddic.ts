@@ -12,6 +12,9 @@ export const meddicAnalyses = pgTable("meddic_analyses", {
     .notNull()
     .references(() => opportunities.id),
 
+  // Product line (多產品線支援)
+  productLine: text("product_line").default("ichef").notNull(),
+
   // MEDDIC dimension scores (1-5)
   metricsScore: integer("metrics_score"),
   economicBuyerScore: integer("economic_buyer_score"),

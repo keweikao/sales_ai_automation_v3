@@ -344,18 +344,18 @@ import {
   geminiMeddicAnalysisTool,
 } from "./external/gemini-llm.js";
 import {
-  gdriveCreateFolderTool,
-  gdriveSearchFilesTool,
-  gdriveShareFileTool,
-  gdriveUploadReportTool,
-} from "./external/google-drive.js";
-import {
   calendarCreateEventTool,
   calendarDeleteEventTool,
   calendarListEventsTool,
   calendarScheduleFollowUpTool,
   calendarUpdateEventTool,
 } from "./external/google-calendar.js";
+import {
+  gdriveCreateFolderTool,
+  gdriveSearchFilesTool,
+  gdriveShareFileTool,
+  gdriveUploadReportTool,
+} from "./external/google-drive.js";
 import {
   groqCheckAudioSizeTool,
   groqEstimateCostTool,
@@ -376,6 +376,13 @@ import {
   slackPostAlertTool,
   slackPostFormattedAnalysisTool,
 } from "./external/slack.js";
+import {
+  // Analytics MCP Tools (4 tools)
+  exportSheetsTo,
+  opportunityForecastTool,
+  repPerformanceTool,
+  teamDashboardTool,
+} from "./tools/analytics/index.js";
 import {
   // Analysis Ops Tools (6 tools)
   analysisCompletenessCheckTool,
@@ -410,13 +417,6 @@ import {
   transcriptionRetryRepairTool,
   transcriptionStuckTasksCheckTool,
 } from "./tools/ops/index.js";
-import {
-  // Analytics MCP Tools (4 tools)
-  exportSheetsTo,
-  opportunityForecastTool,
-  repPerformanceTool,
-  teamDashboardTool,
-} from "./tools/analytics/index.js";
 
 /**
  * 建立包含所有工具的完整 MCP Server

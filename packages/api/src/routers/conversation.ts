@@ -70,6 +70,8 @@ const uploadConversationSchema = z
         username: z.string(),
       })
       .optional(),
+    // 產品線（可選，預設為 'ichef'）
+    productLine: z.enum(["ichef", "beauty"]).optional(),
   })
   .refine(
     (data) => data.audioBase64 || data.slackFileUrl,
@@ -157,8 +159,12 @@ export const uploadConversation = protectedProcedure
         type,
         metadata,
         slackUser,
+        productLine,
       } = input;
       const userId = context.session?.user.id;
+
+      // 解析 productLine (預設 'ichef')
+      const resolvedProductLine = productLine || "ichef";
 
       if (!userId) {
         console.error(`[${requestId}] ❌ UNAUTHORIZED: No userId in session`);
@@ -354,6 +360,8 @@ export const uploadConversation = protectedProcedure
           // Slack 業務資訊
           slackUserId: slackUser?.id,
           slackUsername: slackUser?.username,
+          // 產品線
+          productLine: resolvedProductLine,
         })
         .returning();
 
@@ -389,6 +397,7 @@ export const uploadConversation = protectedProcedure
           opportunityId,
           audioUrl,
           caseNumber,
+          productLine: resolvedProductLine,
           metadata: {
             fileName: title || `audio-${Date.now()}`,
             fileSize: audioBuffer.length,
@@ -692,11 +701,26 @@ export const listConversations = protectedProcedure
     };
   });
 
+// ============================================================
+// 權限控制 - 三級權限：管理者、主管、一般業務
+// ============================================================
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim()).filter(Boolean);
+const MANAGER_EMAILS = (process.env.MANAGER_EMAILS || "").split(",").map(e => e.trim()).filter(Boolean);
+
+// 檢查用戶角色
+function getUserRole(userEmail: string | null | undefined): "admin" | "manager" | "sales" {
+  if (!userEmail) return "sales";
+  if (ADMIN_EMAILS.includes(userEmail)) return "admin";
+  if (MANAGER_EMAILS.includes(userEmail)) return "manager";
+  return "sales";
+}
+
 export const getConversation = protectedProcedure
   .input(getConversationSchema)
   .handler(async ({ input, context }) => {
     const { conversationId } = input;
     const userId = context.session?.user.id;
+    const userEmail = context.session?.user.email;
 
     if (!userId) {
       throw new ORPCError("UNAUTHORIZED");
@@ -717,7 +741,13 @@ export const getConversation = protectedProcedure
       throw new ORPCError("NOT_FOUND");
     }
 
-    if (conversation.opportunity.userId !== userId) {
+    // 檢查權限
+    const isOwner = conversation.opportunity.userId === userId;
+    const userRole = getUserRole(userEmail);
+    const hasAdminAccess = userRole === "admin" || userRole === "manager";
+
+    // 一般業務只能看自己的，管理者和主管可以看全部
+    if (!isOwner && !hasAdminAccess) {
       throw new ORPCError("FORBIDDEN");
     }
 

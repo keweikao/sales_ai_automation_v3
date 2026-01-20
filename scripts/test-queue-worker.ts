@@ -13,14 +13,14 @@ interface TranscriptionMessage {
 
 async function testQueueWorker() {
   console.log("🧪 開始測試 Queue Worker");
-  console.log("=" .repeat(60));
+  console.log("=".repeat(60));
 
   // 你需要先手動創建一個測試 conversation 和 opportunity
   const testMessage: TranscriptionMessage = {
     conversationId: "test-conversation-1",
     audioUrl: "https://example.com/test-audio.mp3", // 這會被替換為實際的 R2 URL
     opportunityId: "test-opportunity-1",
-    channelId: "C12345678" // Slack channel ID
+    channelId: "C12345678", // Slack channel ID
   };
 
   console.log("\n📝 測試訊息:");

@@ -15,7 +15,9 @@ const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
 
 if (!GROQ_API_KEY) {
   console.error("❌ 錯誤: 請設定 GROQ_API_KEY 環境變數");
-  console.error("   執行方式: GROQ_API_KEY=your_key bun run scripts/test-transcription.ts");
+  console.error(
+    "   執行方式: GROQ_API_KEY=your_key bun run scripts/test-transcription.ts"
+  );
   process.exit(1);
 }
 

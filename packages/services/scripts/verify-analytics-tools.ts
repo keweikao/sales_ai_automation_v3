@@ -7,33 +7,33 @@ console.log("🧪 Verifying Analytics MCP Tools Registration...\n");
 
 // 驗證 Analytics 工具檔案存在
 const analyticsTools = [
-	{
-		name: "team-dashboard.tool.ts",
-		exportName: "teamDashboardTool",
-		toolName: "generate_team_dashboard",
-	},
-	{
-		name: "rep-performance.tool.ts",
-		exportName: "repPerformanceTool",
-		toolName: "generate_rep_performance",
-	},
-	{
-		name: "opportunity-forecast.tool.ts",
-		exportName: "opportunityForecastTool",
-		toolName: "forecast_opportunities",
-	},
-	{
-		name: "export-sheets.tool.ts",
-		exportName: "exportSheetsTo",
-		toolName: "export_analytics_to_sheets",
-	},
+  {
+    name: "team-dashboard.tool.ts",
+    exportName: "teamDashboardTool",
+    toolName: "generate_team_dashboard",
+  },
+  {
+    name: "rep-performance.tool.ts",
+    exportName: "repPerformanceTool",
+    toolName: "generate_rep_performance",
+  },
+  {
+    name: "opportunity-forecast.tool.ts",
+    exportName: "opportunityForecastTool",
+    toolName: "forecast_opportunities",
+  },
+  {
+    name: "export-sheets.tool.ts",
+    exportName: "exportSheetsTo",
+    toolName: "export_analytics_to_sheets",
+  },
 ];
 
 console.log("📋 Analytics Tools Files:");
 for (const tool of analyticsTools) {
-	console.log(`  ✅ ${tool.name}`);
-	console.log(`     Export: ${tool.exportName}`);
-	console.log(`     MCP Name: ${tool.toolName}`);
+  console.log(`  ✅ ${tool.name}`);
+  console.log(`     Export: ${tool.exportName}`);
+  console.log(`     MCP Name: ${tool.toolName}`);
 }
 
 console.log("\n📦 Expected Tool Categories:");
@@ -45,20 +45,26 @@ console.log("  ━━━━━━━━━━━━━━━━━━━━━�
 console.log("  📊 Total Expected: 50 MCP tools");
 
 console.log("\n📁 Files Created:");
-console.log("  ✅ packages/services/src/mcp/tools/analytics/team-dashboard.tool.ts");
-console.log("  ✅ packages/services/src/mcp/tools/analytics/rep-performance.tool.ts");
 console.log(
-	"  ✅ packages/services/src/mcp/tools/analytics/opportunity-forecast.tool.ts"
+  "  ✅ packages/services/src/mcp/tools/analytics/team-dashboard.tool.ts"
 );
-console.log("  ✅ packages/services/src/mcp/tools/analytics/export-sheets.tool.ts");
+console.log(
+  "  ✅ packages/services/src/mcp/tools/analytics/rep-performance.tool.ts"
+);
+console.log(
+  "  ✅ packages/services/src/mcp/tools/analytics/opportunity-forecast.tool.ts"
+);
+console.log(
+  "  ✅ packages/services/src/mcp/tools/analytics/export-sheets.tool.ts"
+);
 console.log("  ✅ packages/services/src/mcp/tools/analytics/index.ts");
 
 console.log("\n🔧 Integration Updates:");
 console.log(
-	"  ✅ Updated packages/services/src/mcp/server.ts with Analytics imports"
+  "  ✅ Updated packages/services/src/mcp/server.ts with Analytics imports"
 );
 console.log(
-	"  ✅ Registered 4 Analytics tools in createFullMCPServer() function"
+  "  ✅ Registered 4 Analytics tools in createFullMCPServer() function"
 );
 
 console.log("\n📊 Analytics Tools Summary:");

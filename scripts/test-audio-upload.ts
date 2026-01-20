@@ -96,13 +96,11 @@ async function testAudioUpload() {
       console.log("   Conversation ID:", result.conversationId);
       console.log("   您可以透過以下方式監控:");
       console.log(
-        `   1. Queue Worker Logs: npx wrangler tail (在 apps/queue-worker 目錄)`
+        "   1. Queue Worker Logs: npx wrangler tail (在 apps/queue-worker 目錄)"
       );
+      console.log("   2. Database: bun run db:studio (檢查 conversations 表)");
       console.log(
-        `   2. Database: bun run db:studio (檢查 conversations 表)`
-      );
-      console.log(
-        `   3. R2 Storage: Cloudflare Dashboard → R2 → sales-ai-audio-files`
+        "   3. R2 Storage: Cloudflare Dashboard → R2 → sales-ai-audio-files"
       );
     }
 

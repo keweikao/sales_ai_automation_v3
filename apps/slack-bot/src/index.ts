@@ -14,11 +14,12 @@ import {
 } from "./blocks/edit-summary-modal";
 import { handleSlackCommand } from "./commands";
 import { handleSlackEvent } from "./events";
+import { processAudioWithMetadata } from "./events/file";
 import {
   buildAudioUploadModal,
   parseAudioUploadFormValues,
-  processAudioWithMetadata,
-} from "./events/file";
+} from "./utils/form-builder";
+import { resolveProductLine } from "./utils/product-line-resolver";
 import { createNotificationService } from "./services/notification";
 import type { Env, PendingAudioFile, SlackRequestBody } from "./types";
 import { SlackClient } from "./utils/slack-client";
@@ -227,8 +228,17 @@ app.post("/slack/interactions", async (c) => {
                   JSON.stringify(pendingFile, null, 2)
                 );
 
+                // 解析產品線
+                const productLine = resolveProductLine(
+                  pendingFile.channelId,
+                  env
+                );
+                console.log(
+                  `[Modal] Resolved product line: ${productLine} for channel: ${pendingFile.channelId}`
+                );
+
                 const slackClient = new SlackClient(env.SLACK_BOT_TOKEN);
-                const modal = buildAudioUploadModal(pendingFile);
+                const modal = buildAudioUploadModal(pendingFile, productLine);
                 console.log("[Modal] Modal built successfully");
                 console.log(`[Modal] Trigger ID: ${payload.trigger_id}`);
 
@@ -411,31 +421,43 @@ app.post("/slack/interactions", async (c) => {
       // 處理音檔上傳表單提交
       try {
         const privateMetadata = payload.view?.private_metadata;
-        const pendingFile: PendingAudioFile = JSON.parse(privateMetadata);
+        const modalData = JSON.parse(privateMetadata);
+        const productLine = modalData.productLine || "ichef";
         const values = payload.view?.state?.values;
 
+        console.log(
+          `[Modal Submit] Processing form for product line: ${productLine}`
+        );
+
         // 解析表單值
-        const metadata = parseAudioUploadFormValues(values);
+        const metadata = parseAudioUploadFormValues(values, productLine);
 
         // 驗證所有必填欄位
         const errors: Record<string, string> = {};
 
-        if (!metadata.customerNumber.trim()) {
-          errors.customer_number_block = "請輸入客戶編號";
+        if (!metadata.customerNumber?.trim()) {
+          errors.customer_number = "請輸入客戶編號";
         }
-        if (!metadata.customerName.trim()) {
-          errors.customer_name_block = "請輸入客戶名稱";
+        if (!metadata.customerName?.trim()) {
+          errors.customer_name = "請輸入客戶名稱";
         }
         if (!metadata.storeType) {
-          errors.store_type_block = "請選擇店型";
+          errors.store_type = "請選擇店型";
         }
-        if (!metadata.serviceType) {
-          errors.service_type_block = "請選擇營運型態";
+
+        // iCHEF 特定驗證
+        if (productLine === "ichef" && !metadata.serviceType) {
+          errors.service_type = "請選擇營運型態";
         }
-        if (!metadata.currentPos) {
-          errors.current_pos_block = "請選擇現有 POS 系統";
+
+        // Beauty 特定驗證
+        if (productLine === "beauty" && !metadata.staffCount) {
+          errors.staff_count = "請選擇員工數量";
         }
-        // decisionMakerOnsite 透過下拉選單必定有值，不需額外驗證
+
+        if (!metadata.currentSystem) {
+          errors.current_system = "請選擇現有系統";
+        }
 
         if (Object.keys(errors).length > 0) {
           return c.json({
@@ -444,9 +466,55 @@ app.post("/slack/interactions", async (c) => {
           });
         }
 
+        // 重建 PendingAudioFile
+        const pendingFile: PendingAudioFile = {
+          fileId: modalData.fileId,
+          fileName: modalData.fileName,
+          channelId: modalData.channelId,
+          userId: modalData.userId,
+          userName: modalData.userName,
+          threadTs: modalData.threadTs,
+          downloadUrl: modalData.downloadUrl,
+        };
+
+        // 合併 metadata (轉換為舊格式以保持向後相容)
+        const legacyMetadata = {
+          customerNumber: metadata.customerNumber || "",
+          customerName: metadata.customerName || "",
+          storeType: metadata.storeType as
+            | "cafe"
+            | "beverage"
+            | "hotpot"
+            | "bbq"
+            | "snack"
+            | "restaurant"
+            | "bar"
+            | "fastfood"
+            | "other",
+          serviceType: metadata.serviceType as
+            | "dine_in_only"
+            | "takeout_only"
+            | "dine_in_main"
+            | "takeout_main",
+          currentPos: (metadata.currentSystem || "none") as
+            | "none"
+            | "ichef_old"
+            | "dudu"
+            | "eztable"
+            | "other_pos"
+            | "traditional"
+            | "manual",
+          decisionMakerOnsite: metadata.decisionMakerPresent === "yes",
+          // 新增欄位
+          productLine: metadata.productLine,
+          staffCount: metadata.staffCount,
+          currentSystem: metadata.currentSystem,
+          decisionMakerPresent: metadata.decisionMakerPresent,
+        };
+
         // 非同步處理音檔
         c.executionCtx.waitUntil(
-          processAudioWithMetadata(pendingFile, metadata, env)
+          processAudioWithMetadata(pendingFile, legacyMetadata, env)
         );
 
         // 返回空回應關閉 Modal
@@ -456,7 +524,7 @@ app.post("/slack/interactions", async (c) => {
         return c.json({
           response_action: "errors",
           errors: {
-            customer_name_block:
+            customer_name:
               error instanceof Error ? error.message : "處理表單時發生錯誤",
           },
         });

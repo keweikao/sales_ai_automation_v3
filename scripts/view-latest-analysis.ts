@@ -2,8 +2,8 @@
  * 查看最新的 MEDDIC 分析結果
  */
 
-import pg from "pg";
 import * as dotenv from "dotenv";
+import pg from "pg";
 
 // 載入環境變數
 dotenv.config();
@@ -125,9 +125,7 @@ async function viewAnalysis() {
         console.log(`   • ${finding}`);
       }
       if (analysis.key_findings.length > 5) {
-        console.log(
-          `   ... 還有 ${analysis.key_findings.length - 5} 個發現`
-        );
+        console.log(`   ... 還有 ${analysis.key_findings.length - 5} 個發現`);
       }
     }
 
@@ -170,25 +168,16 @@ async function viewAnalysis() {
 
       if (agents.context) {
         console.log("\n📍 Agent 1 - Context (情境分析):");
-        console.log(
-          `   決策者: ${agents.context.decision_maker || "未知"}`
-        );
+        console.log(`   決策者: ${agents.context.decision_maker || "未知"}`);
         console.log(
           `   決策者已確認: ${agents.context.decision_maker_confirmed ? "是" : "否"}`
         );
-        console.log(
-          `   緊急程度: ${agents.context.urgency_level || "未知"}`
-        );
-        console.log(
-          `   截止日期: ${agents.context.deadline_date || "無"}`
-        );
+        console.log(`   緊急程度: ${agents.context.urgency_level || "未知"}`);
+        console.log(`   截止日期: ${agents.context.deadline_date || "無"}`);
         console.log(
           `   客戶動機: ${agents.context.customer_motivation || "未知"}`
         );
-        if (
-          agents.context.barriers &&
-          agents.context.barriers.length > 0
-        ) {
+        if (agents.context.barriers && agents.context.barriers.length > 0) {
           console.log(`   障礙: ${agents.context.barriers.join(", ")}`);
         }
       }
@@ -198,35 +187,29 @@ async function viewAnalysis() {
         console.log(
           `   未成交原因: ${agents.buyer.not_closed_reason || "未知"}`
         );
-        console.log(
-          `   詳細說明: ${agents.buyer.not_closed_detail || "無"}`
-        );
+        console.log(`   詳細說明: ${agents.buyer.not_closed_detail || "無"}`);
         console.log(
           `   客戶類型: ${agents.buyer.customer_type?.type || "未知"}`
         );
         if (agents.buyer.switch_concerns?.detected) {
-          console.log(`   轉換顧慮: ${agents.buyer.switch_concerns.worry_about}`);
+          console.log(
+            `   轉換顧慮: ${agents.buyer.switch_concerns.worry_about}`
+          );
           console.log(`   複雜度: ${agents.buyer.switch_concerns.complexity}`);
         }
-        console.log(
-          `   現有系統: ${agents.buyer.current_system || "未知"}`
-        );
+        console.log(`   現有系統: ${agents.buyer.current_system || "未知"}`);
       }
 
       if (agents.seller) {
         console.log("\n📈 Agent 3 - Seller (賣方分析):");
-        console.log(
-          `   進度分數: ${agents.seller.progress_score || 0}/100`
-        );
+        console.log(`   進度分數: ${agents.seller.progress_score || 0}/100`);
         console.log(
           `   有明確要求: ${agents.seller.has_clear_ask ? "是" : "否"}`
         );
         console.log(
           `   推薦策略: ${agents.seller.recommended_strategy || "未知"}`
         );
-        console.log(
-          `   策略原因: ${agents.seller.strategy_reason || "無"}`
-        );
+        console.log(`   策略原因: ${agents.seller.strategy_reason || "無"}`);
         console.log(
           `   安全警報: ${agents.seller.safety_alert ? "⚠️ 是" : "✅ 否"}`
         );
@@ -235,9 +218,7 @@ async function viewAnalysis() {
       if (agents.summary) {
         console.log("\n📋 Agent 4 - Summary (摘要):");
         console.log(`   SMS 簡訊: ${agents.summary.sms_text || "無"}`);
-        console.log(
-          `   痛點數量: ${agents.summary.pain_points?.length || 0}`
-        );
+        console.log(`   痛點數量: ${agents.summary.pain_points?.length || 0}`);
         console.log(
           `   解決方案數量: ${agents.summary.solutions?.length || 0}`
         );
@@ -252,18 +233,14 @@ async function viewAnalysis() {
       if (agents.crm) {
         console.log("\n💼 Agent 5 - CRM:");
         console.log(`   階段: ${agents.crm.stage_name || "未知"}`);
-        console.log(
-          `   階段信心: ${agents.crm.stage_confidence || "未知"}`
-        );
+        console.log(`   階段信心: ${agents.crm.stage_confidence || "未知"}`);
         if (agents.crm.budget?.mentioned) {
           console.log(`   預算範圍: ${agents.crm.budget.range}`);
         }
         console.log(
           `   決策者數量: ${agents.crm.decision_makers?.length || 0}`
         );
-        console.log(
-          `   痛點數量: ${agents.crm.pain_points?.length || 0}`
-        );
+        console.log(`   痛點數量: ${agents.crm.pain_points?.length || 0}`);
         console.log(
           `   時間線緊急度: ${agents.crm.timeline?.urgency || "未知"}`
         );
@@ -279,9 +256,7 @@ async function viewAnalysis() {
           console.log(`   嚴重度: ${agents.coach.alert_severity}`);
           console.log(`   警報訊息: ${agents.coach.alert_message}`);
         }
-        console.log(
-          `   優點數量: ${agents.coach.strengths?.length || 0}`
-        );
+        console.log(`   優點數量: ${agents.coach.strengths?.length || 0}`);
         console.log(
           `   改進建議數量: ${agents.coach.improvements?.length || 0}`
         );

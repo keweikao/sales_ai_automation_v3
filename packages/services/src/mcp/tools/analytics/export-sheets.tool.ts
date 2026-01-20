@@ -7,47 +7,47 @@ import { z } from "zod";
 import type { MCPTool } from "../../../mcp/types.js";
 
 const ExportSheetsInputSchema = z.object({
-	dataType: z.enum(["team", "rep", "opportunity"]),
-	period: z.string().optional().default("month"),
-	repId: z.string().optional(),
-	format: z.enum(["csv", "json"]).optional().default("csv"),
-	outputPath: z.string().optional(),
+  dataType: z.enum(["team", "rep", "opportunity"]),
+  period: z.string().optional().default("month"),
+  repId: z.string().optional(),
+  format: z.enum(["csv", "json"]).optional().default("csv"),
+  outputPath: z.string().optional(),
 });
 
 const ExportSheetsOutputSchema = z.object({
-	filePath: z.string(),
-	rowCount: z.number(),
-	format: z.string(),
-	dataType: z.string(),
-	timestamp: z.date(),
+  filePath: z.string(),
+  rowCount: z.number(),
+  format: z.string(),
+  dataType: z.string(),
+  timestamp: z.date(),
 });
 
 type Input = z.infer<typeof ExportSheetsInputSchema>;
 type Output = z.infer<typeof ExportSheetsOutputSchema>;
 
 export const exportSheetsTo = {
-	name: "export_analytics_to_sheets",
-	description:
-		"將分析數據匯出為 CSV 或 JSON 格式。支援團隊績效、業務個人績效、商機預測等數據類型。可直接匯入 Google Sheets 或 Excel。",
-	inputSchema: ExportSheetsInputSchema,
-	handler: async (input: Input): Promise<Output> => {
-		try {
-			const { neon } = await import("@neondatabase/serverless");
-			const sql = neon(process.env.DATABASE_URL || "");
+  name: "export_analytics_to_sheets",
+  description:
+    "將分析數據匯出為 CSV 或 JSON 格式。支援團隊績效、業務個人績效、商機預測等數據類型。可直接匯入 Google Sheets 或 Excel。",
+  inputSchema: ExportSheetsInputSchema,
+  handler: async (input: Input): Promise<Output> => {
+    try {
+      const { neon } = await import("@neondatabase/serverless");
+      const sql = neon(process.env.DATABASE_URL || "");
 
-			// 計算時間範圍
-			const periodDays =
-				input.period === "week" ? 7 : input.period === "month" ? 30 : 90;
-			const sinceDate = new Date();
-			sinceDate.setDate(sinceDate.getDate() - periodDays);
+      // 計算時間範圍
+      const periodDays =
+        input.period === "week" ? 7 : input.period === "month" ? 30 : 90;
+      const sinceDate = new Date();
+      sinceDate.setDate(sinceDate.getDate() - periodDays);
 
-			let data: unknown[] = [];
-			let headers: string[] = [];
+      let data: unknown[] = [];
+      let headers: string[] = [];
 
-			// 根據數據類型查詢
-			switch (input.dataType) {
-				case "team": {
-					const teamData = await sql`
+      // 根據數據類型查詢
+      switch (input.dataType) {
+        case "team": {
+          const teamData = await sql`
 						SELECT
 							u.name as rep_name,
 							COUNT(DISTINCT c.id) as conversation_count,
@@ -69,29 +69,29 @@ export const exportSheetsTo = {
 						ORDER BY avg_meddic_score DESC
 					`;
 
-					data = teamData;
-					headers = [
-						"Rep Name",
-						"Conversations",
-						"Avg MEDDIC Score",
-						"Metrics",
-						"Economic Buyer",
-						"Decision Criteria",
-						"Decision Process",
-						"Identify Pain",
-						"Champion",
-						"Deals Won",
-						"Avg Deal Value",
-					];
-					break;
-				}
+          data = teamData;
+          headers = [
+            "Rep Name",
+            "Conversations",
+            "Avg MEDDIC Score",
+            "Metrics",
+            "Economic Buyer",
+            "Decision Criteria",
+            "Decision Process",
+            "Identify Pain",
+            "Champion",
+            "Deals Won",
+            "Avg Deal Value",
+          ];
+          break;
+        }
 
-				case "rep": {
-					if (!input.repId) {
-						throw new Error("repId is required for rep data export");
-					}
+        case "rep": {
+          if (!input.repId) {
+            throw new Error("repId is required for rep data export");
+          }
 
-					const repData = await sql`
+          const repData = await sql`
 						SELECT
 							c.case_number,
 							c.created_at,
@@ -113,26 +113,26 @@ export const exportSheetsTo = {
 						ORDER BY c.created_at DESC
 					`;
 
-					data = repData;
-					headers = [
-						"Case Number",
-						"Date",
-						"Overall Score",
-						"Metrics",
-						"Economic Buyer",
-						"Decision Criteria",
-						"Decision Process",
-						"Identify Pain",
-						"Champion",
-						"Qualification Status",
-						"Opportunity Stage",
-						"Opportunity Value",
-					];
-					break;
-				}
+          data = repData;
+          headers = [
+            "Case Number",
+            "Date",
+            "Overall Score",
+            "Metrics",
+            "Economic Buyer",
+            "Decision Criteria",
+            "Decision Process",
+            "Identify Pain",
+            "Champion",
+            "Qualification Status",
+            "Opportunity Stage",
+            "Opportunity Value",
+          ];
+          break;
+        }
 
-				case "opportunity": {
-					const oppData = await sql`
+        case "opportunity": {
+          const oppData = await sql`
 						SELECT
 							o.id as opportunity_id,
 							o.account_name,
@@ -156,96 +156,96 @@ export const exportSheetsTo = {
 						LIMIT 100
 					`;
 
-					data = oppData;
-					headers = [
-						"Opportunity ID",
-						"Account Name",
-						"Stage",
-						"Value",
-						"MEDDIC Score",
-						"Metrics",
-						"Economic Buyer",
-						"Decision Criteria",
-						"Decision Process",
-						"Identify Pain",
-						"Champion",
-						"Qualification Status",
-						"Last Conversation Date",
-					];
-					break;
-				}
-			}
+          data = oppData;
+          headers = [
+            "Opportunity ID",
+            "Account Name",
+            "Stage",
+            "Value",
+            "MEDDIC Score",
+            "Metrics",
+            "Economic Buyer",
+            "Decision Criteria",
+            "Decision Process",
+            "Identify Pain",
+            "Champion",
+            "Qualification Status",
+            "Last Conversation Date",
+          ];
+          break;
+        }
+      }
 
-			// 生成檔案內容
-			let fileContent: string;
-			let filePath: string;
+      // 生成檔案內容
+      let fileContent: string;
+      let filePath: string;
 
-			if (input.format === "csv") {
-				// CSV 格式
-				const csvRows = [
-					headers.join(","),
-					...data.map((row) =>
-						Object.values(row as Record<string, unknown>)
-							.map((value) => {
-								if (value === null || value === undefined) return "";
-								if (typeof value === "string" && value.includes(",")) {
-									return `"${value}"`;
-								}
-								if (value instanceof Date) {
-									return value.toISOString().split("T")[0];
-								}
-								return String(value);
-							})
-							.join(",")
-					),
-				];
+      if (input.format === "csv") {
+        // CSV 格式
+        const csvRows = [
+          headers.join(","),
+          ...data.map((row) =>
+            Object.values(row as Record<string, unknown>)
+              .map((value) => {
+                if (value === null || value === undefined) return "";
+                if (typeof value === "string" && value.includes(",")) {
+                  return `"${value}"`;
+                }
+                if (value instanceof Date) {
+                  return value.toISOString().split("T")[0];
+                }
+                return String(value);
+              })
+              .join(",")
+          ),
+        ];
 
-				fileContent = csvRows.join("\n");
-				filePath =
-					input.outputPath ||
-					`reports/analytics-${input.dataType}-${input.period}-${new Date().toISOString().split("T")[0]}.csv`;
-			} else {
-				// JSON 格式
-				fileContent = JSON.stringify(
-					{
-						dataType: input.dataType,
-						period: input.period,
-						exportedAt: new Date().toISOString(),
-						headers,
-						data,
-					},
-					null,
-					2
-				);
-				filePath =
-					input.outputPath ||
-					`reports/analytics-${input.dataType}-${input.period}-${new Date().toISOString().split("T")[0]}.json`;
-			}
+        fileContent = csvRows.join("\n");
+        filePath =
+          input.outputPath ||
+          `reports/analytics-${input.dataType}-${input.period}-${new Date().toISOString().split("T")[0]}.csv`;
+      } else {
+        // JSON 格式
+        fileContent = JSON.stringify(
+          {
+            dataType: input.dataType,
+            period: input.period,
+            exportedAt: new Date().toISOString(),
+            headers,
+            data,
+          },
+          null,
+          2
+        );
+        filePath =
+          input.outputPath ||
+          `reports/analytics-${input.dataType}-${input.period}-${new Date().toISOString().split("T")[0]}.json`;
+      }
 
-			// 寫入檔案
-			const { filesystemWriteTool } = await import(
-				"../../../mcp/external/filesystem.js"
-			);
-			await filesystemWriteTool.handler(
-				{
-					path: filePath,
-					content: fileContent,
-					createDirs: true,
-				},
-				{ timestamp: new Date() }
-			);
+      // 寫入檔案
+      const { filesystemWriteTool } = await import(
+        "../../../mcp/external/filesystem.js"
+      );
+      await filesystemWriteTool.handler(
+        {
+          path: filePath,
+          content: fileContent,
+          createDirs: true,
+        },
+        { timestamp: new Date() }
+      );
 
-			return {
-				filePath,
-				rowCount: data.length,
-				format: input.format,
-				dataType: input.dataType,
-				timestamp: new Date(),
-			};
-		} catch (error) {
-			throw new Error(
-				`Export to sheets failed: ${error instanceof Error ? error.message : "Unknown error"}`
-			);
-		}
-	},
+      return {
+        filePath,
+        rowCount: data.length,
+        format: input.format,
+        dataType: input.dataType,
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      throw new Error(
+        `Export to sheets failed: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
+    }
+  },
 } satisfies MCPTool<Input, Output>;

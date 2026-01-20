@@ -326,13 +326,16 @@ export class MeddicOrchestrator {
     }
 
     // 從新的 Agent2Output 推導 MEDDIC 等價資訊
-    const overallScore = this.calculateOverallScoreFromBuyerData(state.buyerData);
+    const overallScore = this.calculateOverallScoreFromBuyerData(
+      state.buyerData
+    );
     const qualificationStatus = this.deriveQualificationStatus(state.buyerData);
 
     // 計算各維度分數
     const meddicScores = {
       metrics: 0, // 新 Agent2Output 不包含,設為 0
-      economicBuyer: state.contextData?.decision_maker === "老闆本人" ? 100 : 50,
+      economicBuyer:
+        state.contextData?.decision_maker === "老闆本人" ? 100 : 50,
       decisionCriteria: 0,
       decisionProcess: 0,
       identifyPain: state.buyerData.not_closed_detail.length > 0 ? 80 : 20,
@@ -360,15 +363,18 @@ export class MeddicOrchestrator {
       economicBuyer: {
         name: "Economic Buyer (經濟決策者)",
         score: meddicScores.economicBuyer,
-        evidence: state.contextData?.decision_maker === "老闆本人"
-          ? ["決策者在場參與會議"]
-          : [],
-        gaps: state.contextData?.decision_maker !== "老闆本人"
-          ? ["決策者未在場"]
-          : [],
-        recommendations: state.contextData?.decision_maker !== "老闆本人"
-          ? ["安排與老闆的正式會議"]
-          : [],
+        evidence:
+          state.contextData?.decision_maker === "老闆本人"
+            ? ["決策者在場參與會議"]
+            : [],
+        gaps:
+          state.contextData?.decision_maker !== "老闆本人"
+            ? ["決策者未在場"]
+            : [],
+        recommendations:
+          state.contextData?.decision_maker !== "老闆本人"
+            ? ["安排與老闆的正式會議"]
+            : [],
       },
       decisionCriteria: {
         name: "Decision Criteria (決策標準)",
@@ -387,15 +393,18 @@ export class MeddicOrchestrator {
       identifyPain: {
         name: "Identify Pain (痛點識別)",
         score: meddicScores.identifyPain,
-        evidence: state.buyerData.not_closed_detail.length > 0
-          ? [`客戶痛點: ${state.buyerData.not_closed_detail}`]
-          : [],
-        gaps: state.buyerData.not_closed_detail.length === 0
-          ? ["尚未充分識別客戶痛點"]
-          : [],
-        recommendations: state.buyerData.not_closed_detail.length === 0
-          ? ["深入挖掘客戶的核心業務挑戰"]
-          : [],
+        evidence:
+          state.buyerData.not_closed_detail.length > 0
+            ? [`客戶痛點: ${state.buyerData.not_closed_detail}`]
+            : [],
+        gaps:
+          state.buyerData.not_closed_detail.length === 0
+            ? ["尚未充分識別客戶痛點"]
+            : [],
+        recommendations:
+          state.buyerData.not_closed_detail.length === 0
+            ? ["深入挖掘客戶的核心業務挑戰"]
+            : [],
       },
       champion: {
         name: "Champion (內部推手)",
@@ -411,7 +420,8 @@ export class MeddicOrchestrator {
       meddicScores,
       overallScore,
       qualificationStatus,
-      dimensions: dimensionsObject as unknown as import("./types.js").MeddicDimensions,
+      dimensions:
+        dimensionsObject as unknown as import("./types.js").MeddicDimensions,
 
       // Summary - 從新的 Agent4Output 映射
       executiveSummary: state.summaryData.sms_text,
@@ -575,7 +585,10 @@ export class MeddicOrchestrator {
       if (state.buyerData.switch_concerns.detected) {
         risks.push({
           risk: `客戶對轉換有顧慮: ${state.buyerData.switch_concerns.worry_about}`,
-          severity: state.buyerData.switch_concerns.complexity === "複雜" ? "High" : "Medium",
+          severity:
+            state.buyerData.switch_concerns.complexity === "複雜"
+              ? "High"
+              : "Medium",
           mitigation: "提供詳細的轉換計劃和支援服務,降低轉換成本",
         });
       }

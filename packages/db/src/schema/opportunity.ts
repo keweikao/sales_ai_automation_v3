@@ -9,6 +9,9 @@ export const opportunities = pgTable("opportunities", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
 
+  // Product line (多產品線支援)
+  productLine: text("product_line").default("ichef").notNull(),
+
   // Salesforce integration
   customerNumber: text("customer_number").notNull().unique(), // Opportunity UUID from Salesforce, e.g. "201700-000001"
 

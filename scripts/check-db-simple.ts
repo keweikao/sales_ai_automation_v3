@@ -2,8 +2,8 @@
  * 簡單的資料庫查詢 - 使用 pg 直接連線
  */
 
-import pg from "pg";
 import * as dotenv from "dotenv";
+import pg from "pg";
 
 // 載入環境變數
 dotenv.config();
@@ -72,12 +72,12 @@ async function checkDatabase() {
 
       if (analysisResult.rows.length > 0) {
         const analysis = analysisResult.rows[0];
-        console.log(`   ✅ MEDDIC 分析: 已完成`);
+        console.log("   ✅ MEDDIC 分析: 已完成");
         console.log(`      - 總分: ${analysis.overall_score}`);
         console.log(`      - 狀態: ${analysis.qualification_status}`);
         console.log(`      - 分析時間: ${analysis.created_at}`);
       } else {
-        console.log(`   ⏳ MEDDIC 分析: 處理中或失敗`);
+        console.log("   ⏳ MEDDIC 分析: 處理中或失敗");
       }
 
       console.log("");

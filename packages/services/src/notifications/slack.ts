@@ -73,7 +73,12 @@ export class SlackNotificationServiceImpl implements SlackNotificationService {
       "/100)";
 
     // 如果有 threadTs 就在同一個 thread 內回覆
-    await this.sendCustomMessage(params.userId, blocks, fallbackText, params.threadTs);
+    await this.sendCustomMessage(
+      params.userId,
+      blocks,
+      fallbackText,
+      params.threadTs
+    );
   }
 
   /**
@@ -90,7 +95,12 @@ export class SlackNotificationServiceImpl implements SlackNotificationService {
     const fallbackText = "❌ 音檔處理失敗: " + params.fileName;
 
     // 如果有 threadTs 就在同一個 thread 內回覆
-    await this.sendCustomMessage(params.userId, blocks, fallbackText, params.threadTs);
+    await this.sendCustomMessage(
+      params.userId,
+      blocks,
+      fallbackText,
+      params.threadTs
+    );
   }
 
   /**

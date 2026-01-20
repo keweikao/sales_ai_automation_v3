@@ -1,0 +1,41 @@
+name = "sales-ai-slack-bot-beauty"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
+
+[vars]
+ENVIRONMENT = "production"
+PRODUCT_LINE = "beauty"
+
+# 環境變數需要在 Cloudflare Dashboard 設定
+# 或使用 wrangler secret put 命令設定以下變數：
+# - SLACK_BOT_TOKEN
+# - SLACK_SIGNING_SECRET
+# - API_BASE_URL
+# - API_TOKEN
+#
+# EVERY8D SMS 簡訊服務 (可選):
+# - EVERY8D_UID      # EVERY8D 帳號 (例: ichef_sales)
+# - EVERY8D_PWD      # EVERY8D 密碼
+# - EVERY8D_API_URL  # API URL (預設: https://api.e8d.tw/API21/HTTP/sendSMS.ashx)
+
+[observability]
+enabled = true
+
+# ============================================================
+# Cron Triggers - Slack Bot Ops Agent
+# ============================================================
+[triggers]
+crons = [
+  "*/5 * * * *",   # 每 5 分鐘檢查 Slack 相關警示
+]
+
+# 開發環境設定
+[env.dev]
+name = "sales-ai-slack-bot-beauty-dev"
+vars = { ENVIRONMENT = "development", PRODUCT_LINE = "beauty" }
+
+# 預覽環境設定
+[env.preview]
+name = "sales-ai-slack-bot-beauty-preview"
+vars = { ENVIRONMENT = "preview", PRODUCT_LINE = "beauty" }

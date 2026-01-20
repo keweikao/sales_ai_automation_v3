@@ -14,20 +14,17 @@ async function viewAnalysis() {
     // 取得 Conversation 資訊
     console.log("📥 正在取得分析結果...\n");
 
-    const response = await fetch(
-      `${API_URL}/rpc/conversations/get`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+    const response = await fetch(`${API_URL}/rpc/conversations/get`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        json: {
+          conversationId: CONVERSATION_ID,
         },
-        body: JSON.stringify({
-          json: {
-            conversationId: CONVERSATION_ID,
-          },
-        }),
-      }
-    );
+      }),
+    });
 
     if (!response.ok) {
       console.error(`❌ API 錯誤: ${response.status} ${response.statusText}`);
@@ -46,7 +43,6 @@ async function viewAnalysis() {
 
     console.log("✅ 成功取得分析結果!\n");
     console.log(JSON.stringify(data, null, 2));
-
   } catch (error) {
     console.error("\n❌ 執行失敗:", error);
 

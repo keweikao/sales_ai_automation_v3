@@ -3,9 +3,12 @@
  * 測試新的 Agent4Output 類型和 JSON 輸出格式
  */
 
-import { GeminiClient } from "../packages/services/src/llm/gemini.js";
 import { createSummaryAgent } from "../packages/services/src/llm/agents.js";
-import type { AnalysisState, Agent4Output } from "../packages/services/src/llm/types.js";
+import { GeminiClient } from "../packages/services/src/llm/gemini.js";
+import type {
+  Agent4Output,
+  AnalysisState,
+} from "../packages/services/src/llm/types.js";
 
 async function testAgent4Fix() {
   console.log("🧪 測試 Agent 4 修復");
@@ -19,12 +22,9 @@ async function testAgent4Fix() {
   }
 
   // 2. 建立 Gemini client
-  const geminiClient = new GeminiClient(
-    process.env.GEMINI_API_KEY,
-    {
-      defaultModel: "gemini-2.5-flash",
-    }
-  );
+  const geminiClient = new GeminiClient(process.env.GEMINI_API_KEY, {
+    defaultModel: "gemini-2.5-flash",
+  });
 
   // 3. 建立 Summary Agent
   const summaryAgent = createSummaryAgent(geminiClient);
@@ -195,7 +195,9 @@ async function testAgent4Fix() {
     let allFieldsPresent = true;
     for (const field of requiredFields) {
       const present = field in summaryData;
-      console.log(`  ${present ? "✅" : "❌"} ${field}: ${present ? "存在" : "缺少"}`);
+      console.log(
+        `  ${present ? "✅" : "❌"} ${field}: ${present ? "存在" : "缺少"}`
+      );
       if (!present) allFieldsPresent = false;
     }
     console.log();
@@ -208,7 +210,7 @@ async function testAgent4Fix() {
     console.log("📱 SMS 驗證:");
     console.log(`  內容: ${summaryData.sms_text}`);
     console.log(`  字數: ${summaryData.character_count} 字`);
-    console.log(`  目標: 50-60 字 (不含 [SHORT_URL])`);
+    console.log("  目標: 50-60 字 (不含 [SHORT_URL])");
 
     const smsWithoutUrl = summaryData.sms_text.replace(/\[SHORT_URL\]/g, "");
     const actualCharCount = smsWithoutUrl.length;
@@ -227,26 +229,38 @@ async function testAgent4Fix() {
     console.log("📝 Markdown 摘要:");
     const markdownLines = summaryData.markdown.split("\n").length;
     console.log(`  行數: ${markdownLines}`);
-    console.log(`  包含標題: ${summaryData.markdown.includes("#") ? "✅" : "❌"}`);
-    console.log(`  包含待辦: ${summaryData.markdown.includes("待辦") ? "✅" : "❌"}`);
+    console.log(
+      `  包含標題: ${summaryData.markdown.includes("#") ? "✅" : "❌"}`
+    );
+    console.log(
+      `  包含待辦: ${summaryData.markdown.includes("待辦") ? "✅" : "❌"}`
+    );
     console.log();
 
     // 6.5 驗證陣列欄位
     console.log("📋 陣列欄位:");
     console.log(`  痛點: ${summaryData.pain_points.length} 項`);
-    summaryData.pain_points.forEach((p, i) => console.log(`    ${i + 1}. ${p}`));
+    summaryData.pain_points.forEach((p, i) =>
+      console.log(`    ${i + 1}. ${p}`)
+    );
     console.log(`  解決方案: ${summaryData.solutions.length} 項`);
     summaryData.solutions.forEach((s, i) => console.log(`    ${i + 1}. ${s}`));
     console.log(`  決議: ${summaryData.key_decisions.length} 項`);
-    summaryData.key_decisions.forEach((d, i) => console.log(`    ${i + 1}. ${d}`));
+    summaryData.key_decisions.forEach((d, i) =>
+      console.log(`    ${i + 1}. ${d}`)
+    );
     console.log();
 
     // 6.6 驗證待辦事項
     console.log("✅ 待辦事項:");
     console.log(`  iCHEF: ${summaryData.action_items.ichef.length} 項`);
-    summaryData.action_items.ichef.forEach((a, i) => console.log(`    ${i + 1}. ${a}`));
+    summaryData.action_items.ichef.forEach((a, i) =>
+      console.log(`    ${i + 1}. ${a}`)
+    );
     console.log(`  客戶: ${summaryData.action_items.customer.length} 項`);
-    summaryData.action_items.customer.forEach((a, i) => console.log(`    ${i + 1}. ${a}`));
+    summaryData.action_items.customer.forEach((a, i) =>
+      console.log(`    ${i + 1}. ${a}`)
+    );
     console.log();
 
     // 7. 總結
@@ -259,7 +273,6 @@ async function testAgent4Fix() {
     console.log("  - 所有必要欄位都存在");
     console.log("  - Gemini 2.5 Flash 正確返回 JSON");
     console.log();
-
   } catch (error) {
     console.error("❌ 測試失敗:");
     console.error(error);

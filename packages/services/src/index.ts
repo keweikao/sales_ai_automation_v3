@@ -93,12 +93,11 @@ export { generateAudioKey, generateTranscriptKey } from "./storage/types.js";
 // Compression Services
 // ============================================================
 
+export type { CompressionResult } from "./compression/lambda-compressor.js";
 export {
   createLambdaCompressor,
   LambdaAudioCompressor,
 } from "./compression/lambda-compressor.js";
-
-export type { CompressionResult } from "./compression/lambda-compressor.js";
 
 // ============================================================
 // Alert Services

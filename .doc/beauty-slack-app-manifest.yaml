@@ -1,0 +1,34 @@
+display_information:
+  name: Beauty Sales Bot
+  description: 美業銷售助手 - 自動分析銷售對話並提供 MEDDIC 分析
+  background_color: "#e91e63"
+features:
+  bot_user:
+    display_name: Beauty Sales Bot
+    always_online: true
+oauth_config:
+  scopes:
+    bot:
+      - app_mentions:read
+      - channels:history
+      - channels:read
+      - chat:write
+      - commands
+      - files:read
+      - files:write
+      - im:history
+      - im:read
+      - im:write
+settings:
+  event_subscriptions:
+    request_url: https://sales-ai-slack-bot-beauty.salesaiautomationv3.workers.dev/slack/events
+    bot_events:
+      - app_mention
+      - file_shared
+      - message.im
+  interactivity:
+    is_enabled: true
+    request_url: https://sales-ai-slack-bot-beauty.salesaiautomationv3.workers.dev/slack/interactivity
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false

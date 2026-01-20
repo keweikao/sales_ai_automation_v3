@@ -26,11 +26,13 @@ async function manualAnalyze() {
       }
     );
 
-    console.log(`📥 Response Status: ${response.status} ${response.statusText}`);
+    console.log(
+      `📥 Response Status: ${response.status} ${response.statusText}`
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`\n❌ 分析失敗:`);
+      console.error("\n❌ 分析失敗:");
       console.error(`   Status: ${response.status}`);
       console.error(`   Error: ${errorText}`);
       process.exit(1);

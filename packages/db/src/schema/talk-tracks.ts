@@ -15,6 +15,9 @@ import { conversations } from "./conversation";
 export const talkTracks = pgTable("talk_tracks", {
   id: text("id").primaryKey(),
 
+  // Product line (多產品線支援)
+  productLine: text("product_line").default("ichef").notNull(),
+
   // 情境分類
   situation: text("situation").notNull(), // "價格異議", "需要老闆決定", "轉換顧慮", "已有其他系統", "要再考慮"
 

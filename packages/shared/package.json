@@ -13,6 +13,10 @@
       "types": "./src/errors/index.ts",
       "import": "./src/errors/index.ts"
     },
+    "./product-configs": {
+      "types": "./src/product-configs/index.ts",
+      "import": "./src/product-configs/index.ts"
+    },
     "./types": {
       "types": "./src/types/index.ts",
       "import": "./src/types/index.ts"

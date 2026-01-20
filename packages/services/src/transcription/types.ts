@@ -4,10 +4,7 @@
  */
 
 // Import from local types.ts instead of shared package
-import type {
-  Transcript,
-  TranscriptSegment,
-} from "../llm/types.js";
+import type { Transcript, TranscriptSegment } from "../llm/types.js";
 
 // Re-export for compatibility
 export type { Transcript, TranscriptSegment };

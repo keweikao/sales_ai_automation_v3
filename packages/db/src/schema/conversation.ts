@@ -9,6 +9,9 @@ export const conversations = pgTable("conversations", {
     .notNull()
     .references(() => opportunities.id),
 
+  // Product line (多產品線支援)
+  productLine: text("product_line").default("ichef").notNull(),
+
   // Case tracking
   caseNumber: text("case_number").unique(), // Auto-generated case number, e.g. "202601-IC046"
 

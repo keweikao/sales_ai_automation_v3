@@ -26,14 +26,14 @@ export class LambdaAudioCompressor {
 
   constructor(options: CompressionOptions) {
     this.lambdaUrl = options.lambdaUrl;
-    this.timeout = options.timeout || 30000; // 預設 30 秒
+    this.timeout = options.timeout || 30_000; // 預設 30 秒
   }
 
   /**
    * 壓縮音檔 (從 Base64)
    */
   async compressFromBase64(audioBase64: string): Promise<CompressionResult> {
-    console.log(`[LambdaCompressor] Starting compression from base64`);
+    console.log("[LambdaCompressor] Starting compression from base64");
     console.log(
       `[LambdaCompressor] Input size: ${(Buffer.from(audioBase64, "base64").length / 1024 / 1024).toFixed(2)} MB`
     );
@@ -57,9 +57,7 @@ export class LambdaAudioCompressor {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(
-          `Lambda returned ${response.status}: ${errorText}`
-        );
+        throw new Error(`Lambda returned ${response.status}: ${errorText}`);
       }
 
       const result = (await response.json()) as
@@ -115,7 +113,9 @@ export class LambdaAudioCompressor {
    * 壓縮音檔 (從 URL)
    */
   async compressFromUrl(audioUrl: string): Promise<CompressionResult> {
-    console.log(`[LambdaCompressor] Starting compression from URL: ${audioUrl}`);
+    console.log(
+      `[LambdaCompressor] Starting compression from URL: ${audioUrl}`
+    );
 
     try {
       const controller = new AbortController();
@@ -136,9 +136,7 @@ export class LambdaAudioCompressor {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(
-          `Lambda returned ${response.status}: ${errorText}`
-        );
+        throw new Error(`Lambda returned ${response.status}: ${errorText}`);
       }
 
       const result = (await response.json()) as

@@ -28,7 +28,9 @@ export class GeminiClient implements LLMClient {
    */
   async generate(prompt: string, options?: LLMOptions): Promise<LLMResponse> {
     const modelName = options?.model || this.defaultModel;
-    console.log(`[Gemini] Using model: ${modelName} (default: ${this.defaultModel}, options.model: ${options?.model})`);
+    console.log(
+      `[Gemini] Using model: ${modelName} (default: ${this.defaultModel}, options.model: ${options?.model})`
+    );
     const model = this.genAI.getGenerativeModel({ model: modelName });
 
     const generationConfig = {

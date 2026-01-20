@@ -1,0 +1,96 @@
+import type { ProductLineConfig } from "./types";
+
+export const ichefConfig: ProductLineConfig = {
+  id: "ichef",
+  name: "ichef",
+  displayName: "iCHEF POS 系統",
+
+  formFields: {
+    storeType: {
+      label: "店型",
+      required: true,
+      options: [
+        { value: "coffee_shop", label: "咖啡廳", emoji: "☕" },
+        { value: "drink_shop", label: "飲料店", emoji: "🧋" },
+        { value: "restaurant", label: "餐廳", emoji: "🍽️" },
+        { value: "hot_pot", label: "火鍋店", emoji: "🍲" },
+        { value: "breakfast", label: "早餐店", emoji: "🥐" },
+        { value: "fast_food", label: "速食店", emoji: "🍔" },
+        { value: "bakery", label: "烘焙店", emoji: "🥖" },
+        { value: "other", label: "其他", emoji: "🏪" },
+      ],
+    },
+
+    serviceType: {
+      label: "營運型態",
+      required: true,
+      options: [
+        { value: "dine_in", label: "內用為主", emoji: "🪑" },
+        { value: "takeout", label: "外帶為主", emoji: "🥡" },
+        { value: "delivery", label: "外送為主", emoji: "🛵" },
+        { value: "mixed", label: "混合經營", emoji: "🔄" },
+      ],
+    },
+
+    currentSystem: {
+      label: "現有POS系統",
+      required: true,
+      options: [
+        { value: "none", label: "無", emoji: "🆕" },
+        { value: "ichef_old", label: "iCHEF舊版", emoji: "📟" },
+        { value: "dudu", label: "DUDU", emoji: "🦆" },
+        { value: "eztable", label: "EZTABLE", emoji: "📱" },
+        { value: "inline", label: "Inline", emoji: "💳" },
+        { value: "other", label: "其他", emoji: "❓" },
+      ],
+    },
+  },
+
+  prompts: {
+    globalContext: "iCHEF POS System for Restaurant",
+    productContext: "F&B Industry, Independent Owners",
+    commitmentEvents: [
+      {
+        id: "CE1",
+        name: "Time",
+        definition: "Schedule install/onboarding meeting (預約安裝時間)",
+      },
+      {
+        id: "CE2",
+        name: "Data",
+        definition: "Submit menu/table/inventory data for setup (提交菜單資料)",
+      },
+      {
+        id: "CE3",
+        name: "Money",
+        definition: "Sign contract/Pay deposit (簽約/付訂金)",
+      },
+    ],
+    demoMetaFields: ["storeType", "serviceType", "currentPos"],
+  },
+
+  talkTracks: {
+    situations: [
+      { id: "price_objection", name: "價格異議", description: "客戶認為太貴" },
+      {
+        id: "competitor_comparison",
+        name: "競品比較",
+        description: "與其他POS比較",
+      },
+      { id: "feature_inquiry", name: "功能詢問", description: "詢問特定功能" },
+      {
+        id: "implementation_concern",
+        name: "導入顧慮",
+        description: "擔心實施困難",
+      },
+      {
+        id: "contract_negotiation",
+        name: "合約協商",
+        description: "合約條款討論",
+      },
+      { id: "decision_delay", name: "決策拖延", description: "想要再考慮" },
+      { id: "staff_resistance", name: "員工抗拒", description: "員工不想用" },
+      { id: "data_migration", name: "資料轉移", description: "擔心資料轉移" },
+    ],
+  },
+};

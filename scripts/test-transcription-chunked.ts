@@ -7,9 +7,9 @@
  * 3. 合併轉錄結果
  */
 
+import { exec } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
-import { exec } from "node:child_process";
 import { promisify } from "node:util";
 
 const execAsync = promisify(exec);
@@ -32,14 +32,19 @@ async function getAudioDuration(audioPath: string): Promise<number> {
   return Number.parseFloat(stdout.trim());
 }
 
-async function splitAudio(audioPath: string, outputDir: string): Promise<string[]> {
+async function splitAudio(
+  audioPath: string,
+  outputDir: string
+): Promise<string[]> {
   console.log("\n✂️  切割音檔...");
 
   const duration = await getAudioDuration(audioPath);
   console.log(`   總長度: ${(duration / 60).toFixed(2)} 分鐘`);
 
   const numChunks = Math.ceil(duration / CHUNK_DURATION);
-  console.log(`   將切割成 ${numChunks} 個片段 (每段 ${CHUNK_DURATION / 60} 分鐘)`);
+  console.log(
+    `   將切割成 ${numChunks} 個片段 (每段 ${CHUNK_DURATION / 60} 分鐘)`
+  );
 
   const chunkPaths: string[] = [];
 
@@ -60,7 +65,10 @@ async function splitAudio(audioPath: string, outputDir: string): Promise<string[
   return chunkPaths;
 }
 
-async function transcribeChunk(chunkPath: string, chunkIndex: number): Promise<any> {
+async function transcribeChunk(
+  chunkPath: string,
+  chunkIndex: number
+): Promise<any> {
   console.log(`\n🎤 轉錄片段 ${chunkIndex}...`);
 
   const audioBuffer = await readFile(chunkPath);

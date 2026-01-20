@@ -37,6 +37,8 @@ const createOpportunitySchema = z.object({
   industry: z.string().optional(),
   companySize: z.string().optional(),
   notes: z.string().optional(),
+  // 產品線（可選，預設為 'ichef'）
+  productLine: z.enum(["ichef", "beauty"]).optional(),
 });
 
 const updateOpportunitySchema = z.object({
@@ -61,6 +63,7 @@ const updateOpportunitySchema = z.object({
   industry: z.string().optional(),
   companySize: z.string().optional(),
   notes: z.string().optional(),
+  productLine: z.enum(["ichef", "beauty"]).optional(),
 });
 
 const deleteOpportunitySchema = z.object({
@@ -81,6 +84,7 @@ const listOpportunitiesSchema = z.object({
     .optional(),
   source: z.enum(["manual", "import", "api", "referral"]).optional(),
   search: z.string().optional(),
+  productLine: z.enum(["ichef", "beauty"]).optional(),
   limit: z.number().min(1).max(100).default(20),
   offset: z.number().min(0).default(0),
 });
@@ -121,6 +125,7 @@ export const createOpportunity = protectedProcedure
         industry: input.industry,
         companySize: input.companySize,
         notes: input.notes,
+        productLine: input.productLine || "ichef",
       })
       .returning();
 
@@ -242,7 +247,7 @@ export const deleteOpportunity = protectedProcedure
 export const listOpportunities = protectedProcedure
   .input(listOpportunitiesSchema)
   .handler(async ({ input, context }) => {
-    const { status, source, search, limit, offset } = input;
+    const { status, source, search, productLine, limit, offset } = input;
     const userId = context.session?.user.id;
 
     if (!userId) {
@@ -261,6 +266,10 @@ export const listOpportunities = protectedProcedure
 
     if (source) {
       conditions.push(eq(opportunities.source, source));
+    }
+
+    if (productLine) {
+      conditions.push(eq(opportunities.productLine, productLine));
     }
 
     if (search) {

@@ -2,9 +2,12 @@
  * 檢查資料庫中最新的 conversations 記錄
  */
 
-import { db } from "../packages/db/src/index.js";
-import { conversations, meddicAnalyses } from "../packages/db/src/schema/index.js";
 import { desc, eq } from "drizzle-orm";
+import { db } from "../packages/db/src/index.js";
+import {
+  conversations,
+  meddicAnalyses,
+} from "../packages/db/src/schema/index.js";
 
 async function checkLatestConversations() {
   console.log("🔍 檢查最新的 Conversations 記錄\n");
@@ -46,11 +49,11 @@ async function checkLatestConversations() {
         .limit(1);
 
       if (analysis.length > 0) {
-        console.log(`   ✅ MEDDIC 分析: 已完成`);
+        console.log("   ✅ MEDDIC 分析: 已完成");
         console.log(`      - 總分: ${analysis[0].overallScore}`);
         console.log(`      - 狀態: ${analysis[0].qualificationStatus}`);
       } else {
-        console.log(`   ⏳ MEDDIC 分析: 處理中或失敗`);
+        console.log("   ⏳ MEDDIC 分析: 處理中或失敗");
       }
 
       console.log("");
