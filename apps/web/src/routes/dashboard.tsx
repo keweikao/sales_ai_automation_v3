@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { orpc } from "@/utils/orpc";
+import { client } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,
@@ -26,8 +26,17 @@ function RouteComponent() {
   const { session } = Route.useRouteContext();
 
   // 查詢用戶的 conversations
-  // 注意: 不傳參數,使用後端的 default 值 (limit: 20, offset: 0)
-  const conversationsQuery = useQuery(orpc.conversations.list.queryOptions({}));
+  const conversationsQuery = useQuery({
+    queryKey: ["conversations", "list"],
+    queryFn: async () => {
+      // 直接使用 client,明確傳遞參數
+      const result = await client.conversations.list({
+        limit: 20,
+        offset: 0,
+      });
+      return result;
+    },
+  });
 
   const conversations = conversationsQuery.data?.items || [];
   const isLoading = conversationsQuery.isLoading;
