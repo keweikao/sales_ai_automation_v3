@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { orpc } from "@/utils/orpc";
+import { client } from "@/utils/orpc";
 
 export const Route = createFileRoute("/")({
   component: DashboardPage,
@@ -94,7 +94,12 @@ function getStatusLabel(status: string | null): string {
 }
 
 function DashboardPage() {
-  const dashboardQuery = useQuery(orpc.analytics.dashboard.queryOptions({}));
+  const dashboardQuery = useQuery({
+    queryKey: ["analytics", "dashboard", {}],
+    queryFn: async () => {
+      return await client.analytics.dashboard({});
+    },
+  });
 
   const dashboard = dashboardQuery.data;
   const isLoading = dashboardQuery.isLoading;

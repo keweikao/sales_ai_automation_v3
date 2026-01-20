@@ -41,7 +41,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { orpc } from "@/utils/orpc";
+import { client } from "@/utils/orpc";
 
 export const Route = createFileRoute("/reports/")({
   component: ReportsPage,
@@ -152,7 +152,12 @@ function DimensionScoreBar({
 
 // Rep Performance Report Component
 function RepPerformanceReport() {
-  const reportQuery = useQuery(orpc.analytics.repPerformance.queryOptions({}));
+  const reportQuery = useQuery({
+    queryKey: ["analytics", "repPerformance", {}],
+    queryFn: async () => {
+      return await client.analytics.repPerformance({});
+    },
+  });
 
   const report = reportQuery.data;
   const isLoading = reportQuery.isLoading;
@@ -429,7 +434,12 @@ function RepPerformanceReport() {
 
 // Team Performance Report Component
 function TeamPerformanceReport() {
-  const reportQuery = useQuery(orpc.analytics.teamPerformance.queryOptions({}));
+  const reportQuery = useQuery({
+    queryKey: ["analytics", "teamPerformance", {}],
+    queryFn: async () => {
+      return await client.analytics.teamPerformance({});
+    },
+  });
 
   const report = reportQuery.data;
   const isLoading = reportQuery.isLoading;

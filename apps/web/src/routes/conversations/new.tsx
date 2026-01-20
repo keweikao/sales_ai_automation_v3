@@ -67,9 +67,12 @@ function NewConversationPage() {
   });
 
   // Fetch opportunities for dropdown
-  const opportunitiesQuery = useQuery(
-    orpc.opportunities.list.queryOptions({ limit: 100 })
-  );
+  const opportunitiesQuery = useQuery({
+    queryKey: ["opportunities", "list", { limit: 100 }],
+    queryFn: async () => {
+      return await client.opportunities.list({ limit: 100 });
+    },
+  });
 
   const uploadMutation = useMutation({
     mutationFn: async () => {
