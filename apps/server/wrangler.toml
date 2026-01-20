@@ -7,6 +7,14 @@ compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
 ENVIRONMENT = "production"
 BETTER_AUTH_URL = "https://sales-ai-server.salesaiautomationv3.workers.dev"
 CORS_ORIGIN = "https://sales-ai-web.salesaiautomationv3.workers.dev"
+# ============================================================
+# 權限白名單 - 三級權限：管理者、主管、一般業務
+# ============================================================
+# 管理者：最高權限（目前與主管權限相同，可查看所有資料）
+ADMIN_EMAILS = "stephen.kao@ichef.com.tw"
+# 主管：可以查看所有業務的資料
+MANAGER_EMAILS = "wade.lin@ichef.com.tw,benjamin.we@ichef.com.tw"
+# 一般業務：只能查看自己創建的資料（不需設定，預設權限）
 
 # 以下變數需要使用 wrangler secret put 命令設定：
 # - DATABASE_URL
@@ -56,3 +64,6 @@ name = "sales-ai-server-dev"
 ENVIRONMENT = "development"
 BETTER_AUTH_URL = "http://localhost:3000"
 CORS_ORIGIN = "http://localhost:5173"
+# 權限白名單 - 三級權限
+ADMIN_EMAILS = "stephen.kao@ichef.com.tw"
+MANAGER_EMAILS = "wade.lin@ichef.com.tw,benjamin.we@ichef.com.tw"
