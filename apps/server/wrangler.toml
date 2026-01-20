@@ -6,7 +6,7 @@ compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
 [vars]
 ENVIRONMENT = "production"
 BETTER_AUTH_URL = "https://sales-ai-server.salesaiautomationv3.workers.dev"
-CORS_ORIGIN = "https://sales-ai-web.salesaiautomationv3.workers.dev"
+CORS_ORIGIN = "https://sales-ai-web.pages.dev"
 # ============================================================
 # 權限白名單 - 三級權限：管理者、主管、一般業務
 # ============================================================
