@@ -69,7 +69,9 @@ async function updateAudioUrls() {
 
     for (const conversationId of batch) {
       const r2Url = urlMap.get(conversationId);
-      if (!r2Url) continue;
+      if (!r2Url) {
+        continue;
+      }
 
       try {
         // 取得目前的 audio_url

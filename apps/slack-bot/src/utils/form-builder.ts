@@ -17,7 +17,9 @@ import type { PendingAudioFile } from "../types";
  * - 09-1234-5678
  */
 function validateTaiwanPhoneNumber(phone: string): boolean {
-  if (!phone) return false; // 必填欄位，空值視為無效
+  if (!phone) {
+    return false; // 必填欄位，空值視為無效
+  }
 
   // 移除所有非數字字元
   const digitsOnly = phone.replace(/\D/g, "");
@@ -34,7 +36,9 @@ function validateTaiwanPhoneNumber(phone: string): boolean {
  * 輸出: "0912-345-678"
  */
 function formatTaiwanPhoneNumber(phone: string): string {
-  if (!phone) return "";
+  if (!phone) {
+    return "";
+  }
 
   const digitsOnly = phone.replace(/\D/g, "");
 

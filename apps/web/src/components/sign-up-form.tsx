@@ -7,7 +7,7 @@ import Loader from "./loader";
 import { Button } from "./ui/button";
 
 export default function SignUpForm() {
-  const navigate = useNavigate({
+  const _navigate = useNavigate({
     from: "/",
   });
   const { isPending } = authClient.useSession();

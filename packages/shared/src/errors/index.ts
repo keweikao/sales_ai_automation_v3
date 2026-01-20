@@ -87,9 +87,9 @@ export function formatErrorForLog(error: unknown): string {
     return JSON.stringify(details, null, 2);
   }
   if (error instanceof Error) {
-    return error.name + ": " + error.message + "\n" + (error.stack || "");
+    return `${error.name}: ${error.message}\n${error.stack || ""}`;
   }
-  return "Unknown error: " + JSON.stringify(error);
+  return `Unknown error: ${JSON.stringify(error)}`;
 }
 
 export const errors = {
@@ -109,7 +109,7 @@ export const errors = {
   INVALID_AUDIO_FORMAT: (format: string) =>
     new AppError(
       "INVALID_AUDIO_FORMAT",
-      "不支援的音檔格式: " + format + "。支援格式: mp3, wav, m4a, ogg",
+      `不支援的音檔格式: ${format}。支援格式: mp3, wav, m4a, ogg`,
       400,
       undefined,
       { format }
@@ -135,7 +135,7 @@ export const errors = {
   TRANSCRIPTION_TIMEOUT: (duration: number) =>
     new AppError(
       "TRANSCRIPTION_TIMEOUT",
-      "轉錄處理超時(" + duration + "秒),音檔可能過大或過於複雜",
+      `轉錄處理超時(${duration}秒),音檔可能過大或過於複雜`,
       504,
       undefined,
       { duration }
@@ -160,7 +160,7 @@ export const errors = {
   DATABASE_ERROR: (operation: string, originalError?: unknown) =>
     new AppError(
       "DATABASE_ERROR",
-      "資料庫操作失敗: " + operation,
+      `資料庫操作失敗: ${operation}`,
       500,
       originalError,
       { operation }
@@ -169,7 +169,7 @@ export const errors = {
   RECORD_NOT_FOUND: (recordType: string, id: string) =>
     new AppError(
       "RECORD_NOT_FOUND",
-      "找不到指定的" + recordType + ": " + id,
+      `找不到指定的${recordType}: ${id}`,
       404,
       undefined,
       { recordType, id }
@@ -178,7 +178,7 @@ export const errors = {
   OPPORTUNITY_NOT_FOUND: (opportunityId: string) =>
     new AppError(
       "OPPORTUNITY_NOT_FOUND",
-      "找不到指定的商機: " + opportunityId,
+      `找不到指定的商機: ${opportunityId}`,
       404,
       undefined,
       { opportunityId }

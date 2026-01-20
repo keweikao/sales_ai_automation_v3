@@ -133,7 +133,7 @@ describe("Groq Whisper 轉錄服務", () => {
       ];
 
       const mergeTranscriptions = (
-        transcriptions: Array<{ text: string; segments: Array<unknown> }>
+        transcriptions: Array<{ text: string; segments: unknown[] }>
       ) => {
         return {
           text: transcriptions.map((t) => t.text).join(" "),

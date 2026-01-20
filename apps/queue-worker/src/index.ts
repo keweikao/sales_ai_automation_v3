@@ -432,7 +432,7 @@ export default {
             ) {
               const firstOpportunity = missedOpportunities[0];
               alerts.push(
-                "錯失推進機會 - " + String(firstOpportunity).substring(0, 100)
+                `錯失推進機會 - ${String(firstOpportunity).substring(0, 100)}`
               );
             }
 
@@ -479,7 +479,7 @@ export default {
                 },
               });
               contactPhone = oppResult?.contactPhone ?? undefined;
-            } catch (error) {
+            } catch (_error) {
               console.log(
                 "[Queue] ⚠️  Could not fetch contact phone (non-critical)"
               );
@@ -586,7 +586,7 @@ export default {
                 conversationData?.createdAt?.toISOString() ||
                 new Date().toISOString(),
               transcript: {
-                fullText: transcriptResult.text || "",
+                fullText: transcriptResult.fullText || "",
                 segments: (transcriptResult.segments || []).map((seg) => ({
                   speaker: seg.speaker || "Unknown",
                   text: seg.text,
@@ -595,15 +595,16 @@ export default {
               },
               meddicAnalysis: {
                 overallScore: analysisResult.overallScore ?? 0,
-                dimensions: analysisResult.dimensions || {},
+                dimensions: (analysisResult.meddicScores ||
+                  {}) as unknown as Record<string, unknown>,
                 keyFindings: analysisResult.keyFindings ?? [],
                 nextSteps: (analysisResult.nextSteps ?? []).map((step) => ({
                   action: step.action,
                   priority: "Medium",
                 })),
               },
-              audioUrl: conversationData?.audioUrl,
-              duration: conversationData?.duration,
+              audioUrl: conversationData?.audioUrl ?? undefined,
+              duration: conversationData?.duration ?? undefined,
             };
 
             // 執行快取更新 (Layer 1 寫入 + Layer 2 & 3 失效)

@@ -47,7 +47,7 @@ describe("Performance - Database", () => {
     });
 
     it("批次 INSERT (10 筆): 應該在 200ms 內", () => {
-      const recordCount = 10;
+      const _recordCount = 10;
       const maxBatchInsertTimeMs = 200;
       const typicalBatchInsertTimeMs = 50;
 
@@ -57,7 +57,7 @@ describe("Performance - Database", () => {
 
   describe("Transaction Performance", () => {
     it("簡單交易: 應該在 100ms 內", () => {
-      const operationCount = 3; // INSERT + UPDATE + SELECT
+      const _operationCount = 3; // INSERT + UPDATE + SELECT
       const maxTransactionTimeMs = 100;
       const typicalTransactionTimeMs = 30;
 
@@ -65,7 +65,7 @@ describe("Performance - Database", () => {
     });
 
     it("複雜交易: 應該在 500ms 內", () => {
-      const operationCount = 10;
+      const _operationCount = 10;
       const maxTransactionTimeMs = 500;
       const typicalTransactionTimeMs = 150;
 
@@ -119,8 +119,8 @@ describe("Performance - Database", () => {
 
   describe("Scalability", () => {
     it("1000 筆記錄: 查詢應該保持高效", () => {
-      const totalRecords = 1000;
-      const pageSize = 50;
+      const _totalRecords = 1000;
+      const _pageSize = 50;
       const maxQueryTimeMs = 200;
       const typicalQueryTimeMs = 60;
 
@@ -128,8 +128,8 @@ describe("Performance - Database", () => {
     });
 
     it("10000 筆記錄: 查詢應該保持合理性能", () => {
-      const totalRecords = 10_000;
-      const pageSize = 50;
+      const _totalRecords = 10_000;
+      const _pageSize = 50;
       const maxQueryTimeMs = 500;
       const typicalQueryTimeMs = 150;
 

@@ -7,12 +7,12 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { QueueTranscriptionMessage } from "../../apps/queue-worker/src/index.js";
 
 describe("Queue Worker - Message Processing", () => {
-  let mockEnv: any;
+  let _mockEnv: any;
   let mockMessage: QueueTranscriptionMessage;
 
   beforeEach(() => {
     // Mock environment variables
-    mockEnv = {
+    _mockEnv = {
       DATABASE_URL: "postgresql://test",
       GROQ_API_KEY: "test-groq-key",
       GEMINI_API_KEY: "test-gemini-key",
@@ -60,7 +60,7 @@ describe("Queue Worker - Message Processing", () => {
 
     it("應該處理缺少 Slack 用戶的情況", () => {
       const messageWithoutSlack = { ...mockMessage };
-      delete messageWithoutSlack.slackUser;
+      messageWithoutSlack.slackUser = undefined;
 
       expect(messageWithoutSlack.slackUser).toBeUndefined();
       expect(messageWithoutSlack.conversationId).toBeDefined();

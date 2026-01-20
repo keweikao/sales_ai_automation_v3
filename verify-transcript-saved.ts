@@ -30,7 +30,7 @@ async function verifyLatestConversation() {
 
   const conv = latest[0];
   const transcript = conv.transcript as any;
-  const hasTranscript = transcript && transcript.fullText;
+  const hasTranscript = transcript?.fullText;
 
   console.log(`📝 Latest Conversation: ${conv.caseNumber}`);
   console.log(`   ID: ${conv.id}`);

@@ -28,10 +28,7 @@ const createShareToken = protectedProcedure
     });
 
     if (!conversation) {
-      throw new ORPCError({
-        code: "NOT_FOUND",
-        message: "Conversation not found",
-      });
+      throw new ORPCError("NOT_FOUND", { message: "Conversation not found" });
     }
 
     // 檢查是否已有有效的 token
@@ -68,6 +65,12 @@ const createShareToken = protectedProcedure
       })
       .returning();
 
+    if (!newToken) {
+      throw new ORPCError("INTERNAL_SERVER_ERROR", {
+        message: "Failed to create share token",
+      });
+    }
+
     return {
       token: newToken.token,
       expiresAt: newToken.expiresAt,
@@ -92,24 +95,19 @@ const getConversationByToken = publicProcedure
     });
 
     if (!shareToken) {
-      throw new ORPCError({
-        code: "NOT_FOUND",
+      throw new ORPCError("NOT_FOUND", {
         message: "Invalid or expired share link",
       });
     }
 
     // 檢查是否過期
     if (new Date(shareToken.expiresAt) < new Date()) {
-      throw new ORPCError({
-        code: "FORBIDDEN",
-        message: "Share link has expired",
-      });
+      throw new ORPCError("FORBIDDEN", { message: "Share link has expired" });
     }
 
     // 檢查是否被撤銷
     if (shareToken.isRevoked) {
-      throw new ORPCError({
-        code: "FORBIDDEN",
+      throw new ORPCError("FORBIDDEN", {
         message: "Share link has been revoked",
       });
     }
@@ -129,17 +127,16 @@ const getConversationByToken = publicProcedure
       where: eq(conversations.id, shareToken.conversationId),
       with: {
         opportunity: true,
-        meddicAnalysis: true,
-        slackUser: true,
+        meddicAnalyses: true,
       },
     });
 
     if (!conversation) {
-      throw new ORPCError({
-        code: "NOT_FOUND",
-        message: "Conversation not found",
-      });
+      throw new ORPCError("NOT_FOUND", { message: "Conversation not found" });
     }
+
+    // 取得最新的 MEDDIC 分析
+    const latestMeddicAnalysis = conversation.meddicAnalyses?.[0];
 
     // 返回公開可見的資料（移除敏感資訊）
     return {
@@ -156,21 +153,23 @@ const getConversationByToken = publicProcedure
             overallScore: conversation.meddicAnalysis.overallScore,
             status: conversation.meddicAnalysis.status,
             dimensions: conversation.meddicAnalysis.dimensions,
-            keyFindings: conversation.meddicAnalysis.keyFindings,
-            nextSteps: conversation.meddicAnalysis.nextSteps,
-            risks: conversation.meddicAnalysis.risks,
           }
-        : null,
+        : latestMeddicAnalysis
+          ? {
+              overallScore: latestMeddicAnalysis.overallScore,
+              status: latestMeddicAnalysis.status,
+              dimensions: latestMeddicAnalysis.dimensions,
+            }
+          : null,
       opportunity: conversation.opportunity
         ? {
-            customerId: conversation.opportunity.customerId,
+            customerNumber: conversation.opportunity.customerNumber,
             companyName: conversation.opportunity.companyName,
           }
         : null,
-      slackUser: conversation.slackUser
+      slackUser: conversation.slackUserId
         ? {
-            slackUsername: conversation.slackUser.slackUsername,
-            slackEmail: conversation.slackUser.slackEmail,
+            slackUsername: conversation.slackUsername,
           }
         : null,
       createdAt: conversation.createdAt,

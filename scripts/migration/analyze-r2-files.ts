@@ -3,8 +3,8 @@
  * 分析 R2 中的檔案並與 GCS 比較
  */
 
+import { readFileSync } from "node:fs";
 import { ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
-import { readFileSync } from "fs";
 import { r2Config } from "./config";
 
 interface GCSManifest {

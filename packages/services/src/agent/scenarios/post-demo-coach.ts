@@ -17,7 +17,7 @@ import type {
 // Post-Demo Scenario Constants
 // ============================================================
 
-const POST_DEMO_CRITICAL_SIGNALS = {
+const _POST_DEMO_CRITICAL_SIGNALS = {
   positive: [
     "什麼時候可以開始",
     "多久可以上線",
@@ -207,7 +207,7 @@ function analyzeDemoOutcome(output: SalesCoachOutput): DemoOutcome {
  */
 function generatePostDemoRecommendations(
   demoOutcome: DemoOutcome,
-  context: ScenarioContext
+  _context: ScenarioContext
 ): Recommendation[] {
   const recommendations: Recommendation[] = [];
 
@@ -375,7 +375,7 @@ function generatePostDemoAlerts(
  */
 function generatePostDemoFollowUps(
   demoOutcome: DemoOutcome,
-  context: ScenarioContext
+  _context: ScenarioContext
 ): FollowUp[] {
   const followUps: FollowUp[] = [];
   const now = new Date();

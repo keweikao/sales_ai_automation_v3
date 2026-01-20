@@ -23,7 +23,7 @@ if (!GROQ_API_KEY) {
 }
 
 const CHUNK_DURATION = 600; // 每段 10 分鐘
-const MAX_FILE_SIZE_MB = 20; // 目標大小 < 25MB
+const _MAX_FILE_SIZE_MB = 20; // 目標大小 < 25MB
 
 async function getAudioDuration(audioPath: string): Promise<number> {
   const { stdout } = await execAsync(
@@ -122,7 +122,7 @@ async function mergeTranscriptions(transcriptions: any[]): Promise<any> {
     const trans = transcriptions[i];
 
     // 合併文字
-    fullText += trans.text + " ";
+    fullText += `${trans.text} `;
 
     // 合併片段,調整時間戳
     if (trans.segments) {
@@ -135,7 +135,7 @@ async function mergeTranscriptions(transcriptions: any[]): Promise<any> {
       }
 
       // 更新時間偏移
-      const lastSegment = trans.segments[trans.segments.length - 1];
+      const lastSegment = trans.segments.at(-1);
       if (lastSegment) {
         timeOffset += lastSegment.end;
       }
@@ -177,7 +177,7 @@ async function testChunkedTranscription() {
     const finalResult = await mergeTranscriptions(transcriptions);
 
     // 步驟 4: 顯示結果
-    console.log("\n" + "=".repeat(60));
+    console.log(`\n${"=".repeat(60)}`);
     console.log("✅ 轉錄完成!");
     console.log("=".repeat(60));
 
@@ -190,12 +190,14 @@ async function testChunkedTranscription() {
     console.log("\n前 10 個片段:");
     console.log("=".repeat(60));
 
-    finalResult.segments.slice(0, 10).forEach((segment: any, index: number) => {
-      const startTime = segment.start.toFixed(2);
-      const endTime = segment.end.toFixed(2);
-      console.log(`\n[${startTime}s - ${endTime}s]:`);
-      console.log(`  ${segment.text}`);
-    });
+    finalResult.segments
+      .slice(0, 10)
+      .forEach((segment: any, _index: number) => {
+        const startTime = segment.start.toFixed(2);
+        const endTime = segment.end.toFixed(2);
+        console.log(`\n[${startTime}s - ${endTime}s]:`);
+        console.log(`  ${segment.text}`);
+      });
 
     // 儲存完整結果
     const outputPath = resolve(__dirname, "../transcription-result.json");
@@ -206,7 +208,7 @@ async function testChunkedTranscription() {
     console.log("\n🧹 清理臨時檔案...");
     await execAsync(`rm -rf "${tempDir}"`);
 
-    console.log("\n" + "=".repeat(60));
+    console.log(`\n${"=".repeat(60)}`);
     console.log("✅ 測試完成!");
   } catch (error) {
     console.error("\n❌ 測試失敗:");

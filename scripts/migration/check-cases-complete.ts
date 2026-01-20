@@ -32,7 +32,7 @@ async function checkCasesComplete() {
       // Audio 資訊
       if (data.audio) {
         console.log("\nAudio:");
-        console.log("  - url:", data.audio.url?.substring(0, 80) + "...");
+        console.log("  - url:", `${data.audio.url?.substring(0, 80)}...`);
         console.log("  - duration:", data.audio.duration);
         console.log("  - mimeType:", data.audio.mimeType);
       }
@@ -50,7 +50,7 @@ async function checkCasesComplete() {
       console.log("  - createdAt:", data.createdAt?._seconds);
       console.log("  - updatedAt:", data.updatedAt?._seconds);
 
-      console.log("\n" + "=".repeat(50) + "\n");
+      console.log(`\n${"=".repeat(50)}\n`);
     }
 
     // 也檢查一下非 completed 狀態的數量

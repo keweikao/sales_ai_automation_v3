@@ -269,7 +269,7 @@ async function viewAnalysis() {
       }
     }
 
-    console.log("\n" + "=".repeat(80));
+    console.log(`\n${"=".repeat(80)}`);
     console.log("✅ 完成!");
   } catch (error) {
     console.error("\n❌ 查詢失敗:", error);

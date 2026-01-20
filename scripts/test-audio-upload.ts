@@ -50,7 +50,7 @@ async function testAudioUpload() {
     console.log("\n📤 步驟 2: 準備上傳資料...");
 
     const uploadData: UploadConversationRequest = {
-      opportunityId: "test-opportunity-" + Date.now(),
+      opportunityId: `test-opportunity-${Date.now()}`,
       audioBase64,
       title: "測試會議 - 知事官邸",
       type: "discovery_call",
@@ -104,7 +104,7 @@ async function testAudioUpload() {
       );
     }
 
-    console.log("\n" + "=".repeat(60));
+    console.log(`\n${"=".repeat(60)}`);
     console.log("✅ 測試完成!");
   } catch (error) {
     console.error("\n❌ 測試失敗:");

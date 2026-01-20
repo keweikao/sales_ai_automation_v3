@@ -40,7 +40,7 @@ interface FileInfoResponse {
 }
 
 export class SlackClient {
-  private token: string;
+  private readonly token: string;
 
   constructor(token: string) {
     this.token = token;

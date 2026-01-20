@@ -127,7 +127,7 @@ async function main() {
     result.duration = (Date.now() - startTime) / 1000;
 
     const report = generateReport(result);
-    console.log("\n" + report);
+    console.log(`\n${report}`);
 
     // Save report to file
     await saveReport(result);

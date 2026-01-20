@@ -58,7 +58,9 @@ function getParamValue(
 ): string | undefined {
   for (const name of names) {
     const value = params.get(name);
-    if (value) return value;
+    if (value) {
+      return value;
+    }
   }
   return undefined;
 }
@@ -72,7 +74,9 @@ function getObjectValue(
 ): string | undefined {
   for (const name of names) {
     const value = obj[name];
-    if (value) return value;
+    if (value) {
+      return value;
+    }
   }
   return undefined;
 }
@@ -83,11 +87,21 @@ function getObjectValue(
 export function utmToQueryString(utm: UTMParams): string {
   const params = new URLSearchParams();
 
-  if (utm.utmSource) params.set("utm_source", utm.utmSource);
-  if (utm.utmMedium) params.set("utm_medium", utm.utmMedium);
-  if (utm.utmCampaign) params.set("utm_campaign", utm.utmCampaign);
-  if (utm.utmTerm) params.set("utm_term", utm.utmTerm);
-  if (utm.utmContent) params.set("utm_content", utm.utmContent);
+  if (utm.utmSource) {
+    params.set("utm_source", utm.utmSource);
+  }
+  if (utm.utmMedium) {
+    params.set("utm_medium", utm.utmMedium);
+  }
+  if (utm.utmCampaign) {
+    params.set("utm_campaign", utm.utmCampaign);
+  }
+  if (utm.utmTerm) {
+    params.set("utm_term", utm.utmTerm);
+  }
+  if (utm.utmContent) {
+    params.set("utm_content", utm.utmContent);
+  }
 
   return params.toString();
 }
@@ -134,7 +148,9 @@ export function normalizeUTMParams(utm: UTMParams): UTMParams {
  * 從常見來源推斷 UTM 參數
  */
 export function inferUTMFromReferrer(referrer: string): UTMParams {
-  if (!referrer) return {};
+  if (!referrer) {
+    return {};
+  }
 
   try {
     const url = new URL(referrer);

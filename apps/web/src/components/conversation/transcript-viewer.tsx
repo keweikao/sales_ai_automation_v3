@@ -205,8 +205,6 @@ export function TranscriptViewer({
             const isHighlighted = originalIndex === highlightedIndex;
 
             return (
-              // biome-ignore lint/a11y/noStaticElementInteractions: Role is conditionally set based on onSegmentClick
-              // biome-ignore lint/a11y/noNoninteractiveElementInteractions: Element becomes interactive when onSegmentClick is provided
               <div
                 className={cn(
                   "rounded-lg p-3 transition-all",

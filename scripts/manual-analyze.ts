@@ -44,7 +44,7 @@ async function manualAnalyze() {
     console.log("\n結果:");
     console.log(JSON.stringify(result, null, 2));
 
-    console.log("\n" + "=".repeat(80));
+    console.log(`\n${"=".repeat(80)}`);
     console.log("✅ 完成!");
   } catch (error) {
     console.error("\n❌ 執行失敗:", error);

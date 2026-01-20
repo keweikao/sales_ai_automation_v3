@@ -99,7 +99,7 @@ async function testTranscription() {
       }
     }
 
-    console.log("\n" + "=".repeat(60));
+    console.log(`\n${"=".repeat(60)}`);
     console.log("✅ 測試完成!");
 
     // 儲存完整結果到檔案

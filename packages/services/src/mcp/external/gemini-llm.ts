@@ -224,7 +224,7 @@ ${input.transcript}
 4. 至少 3 條可執行的建議
 5. 關鍵洞察（重要發現或警示）`;
 
-      const schema = {
+      const _schema = {
         type: "object",
         properties: {
           overallScore: { type: "number" },

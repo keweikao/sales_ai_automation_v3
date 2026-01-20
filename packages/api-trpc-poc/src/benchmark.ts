@@ -57,7 +57,7 @@ type TRPCConversationGetOutput = Awaited<ReturnType<ConversationRouter["get"]>>;
 // ============================================================
 
 // 測試 1: 輸入驗證
-const testInput: TRPCConversationCreate = {
+const _testInput: TRPCConversationCreate = {
   opportunityId: "opp_123",
   type: "discovery_call",
   title: "Test Conversation",

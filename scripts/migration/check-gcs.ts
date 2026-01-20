@@ -1,6 +1,6 @@
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { Storage } from "@google-cloud/storage";
-import { existsSync, readFileSync } from "fs";
-import { resolve } from "path";
 
 // Load migration env
 const migrationEnvPath = resolve(__dirname, "../../.env.migration");
@@ -8,9 +8,13 @@ if (existsSync(migrationEnvPath)) {
   const text = readFileSync(migrationEnvPath, "utf-8");
   for (const line of text.split("\n")) {
     const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue;
+    }
     const eqIndex = trimmed.indexOf("=");
-    if (eqIndex === -1) continue;
+    if (eqIndex === -1) {
+      continue;
+    }
     const key = trimmed.slice(0, eqIndex).trim();
     let value = trimmed.slice(eqIndex + 1).trim();
     if (
@@ -19,7 +23,9 @@ if (existsSync(migrationEnvPath)) {
     ) {
       value = value.slice(1, -1);
     }
-    if (!process.env[key]) process.env[key] = value;
+    if (!process.env[key]) {
+      process.env[key] = value;
+    }
   }
 }
 
@@ -60,7 +66,7 @@ async function main() {
       1024 /
       1024
     ).toFixed(2);
-    console.log("  " + file.name + " (" + sizeMB + " MB)");
+    console.log(`  ${file.name} (${sizeMB} MB)`);
   }
 
   console.log("\n========================================");

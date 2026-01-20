@@ -8,7 +8,9 @@ import { db, firestore } from "./config";
 import { parseV2Case } from "./types-v2";
 
 function normalizeCustomerId(customerId: string): string {
-  if (!customerId) return customerId;
+  if (!customerId) {
+    return customerId;
+  }
   return customerId.replace(/[\u2010-\u2014\u2212\uFE58\uFE63\uFF0D]/g, "-");
 }
 

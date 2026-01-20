@@ -103,7 +103,7 @@ async function checkMigrationStatus() {
       console.log("  ❌ No product_line indexes found");
     }
 
-    console.log("\n" + "=".repeat(60) + "\n");
+    console.log(`\n${"=".repeat(60)}\n`);
 
     // Summary
     const allColumnsExist =

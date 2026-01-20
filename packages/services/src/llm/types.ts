@@ -5,36 +5,36 @@
 
 // TODO: Add @sales_ai_automation_v3/shared to package.json dependencies
 // Temporarily using local type definitions
-export type TranscriptSegment = {
+export interface TranscriptSegment {
   speaker: string;
   text: string;
   timestamp?: number;
   start: number; // Start time in seconds
   end: number; // End time in seconds
-};
+}
 
-export type Transcript = {
+export interface Transcript {
   fullText: string;
   segments: TranscriptSegment[];
   language?: string;
   duration?: number;
-};
+}
 
-export type MeddicScores = {
+export interface MeddicScores {
   metrics: number;
   economicBuyer: number;
   decisionCriteria: number;
   decisionProcess: number;
   identifyPain: number;
   champion: number;
-};
+}
 
-export type DimensionAnalysis = {
+export interface DimensionAnalysis {
   score: number;
   confidence: number;
   evidence: string[];
   suggestions: string[];
-};
+}
 
 export type MeddicDimensions =
   | "metrics"

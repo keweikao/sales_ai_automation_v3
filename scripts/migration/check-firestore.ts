@@ -21,7 +21,7 @@ async function checkFirestore() {
     for (const doc of leadsSnapshot.docs) {
       console.log(
         `  - ${doc.id}:`,
-        JSON.stringify(doc.data()).substring(0, 100) + "..."
+        `${JSON.stringify(doc.data()).substring(0, 100)}...`
       );
     }
 
@@ -34,7 +34,7 @@ async function checkFirestore() {
     for (const doc of casesSnapshot.docs) {
       console.log(
         `  - ${doc.id}:`,
-        JSON.stringify(doc.data()).substring(0, 100) + "..."
+        `${JSON.stringify(doc.data()).substring(0, 100)}...`
       );
     }
   } catch (error) {

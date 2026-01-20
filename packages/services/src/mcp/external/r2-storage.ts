@@ -40,7 +40,7 @@ export const r2UploadFileTool: MCPTool<R2UploadInput, R2UploadOutput> = {
   description:
     "上傳檔案到 Cloudflare R2 儲存空間。支援 Base64 或 UTF-8 編碼。無出站流量費用。",
   inputSchema: R2UploadInputSchema,
-  handler: async (input, context) => {
+  handler: async (input, _context) => {
     try {
       // 建立 R2 服務實例
       // 注意：在 Cloudflare Workers 環境中，credentials 會從 env 取得

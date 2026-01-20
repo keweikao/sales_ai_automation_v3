@@ -25,6 +25,8 @@
     "dist",
     "src/agent/**/*",
     "src/mcp/**/*",
-    "src/ops/**/*"
+    "src/ops/**/*",
+    "src/**/__tests__/**/*",
+    "src/**/*.test.ts"
   ]
 }

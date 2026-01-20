@@ -68,7 +68,7 @@ function readPromptsFromDir(dirPath: string): PromptEntry[] {
 
       entries.push({ name, content: escapedContent });
     }
-  } catch (error) {
+  } catch (_error) {
     // Directory doesn't exist, return empty array
     console.warn(`Warning: Directory ${dirPath} not found, skipping.`);
     return [];
@@ -99,7 +99,7 @@ function readLegacyPrompts(): PromptEntry[] {
       const content = readFileSync(filePath, "utf-8");
       const escapedContent = escapeContent(content);
       entries.push({ name, content: escapedContent });
-    } catch (error) {
+    } catch (_error) {
       console.warn(`Warning: Legacy prompt ${name}.md not found, skipping.`);
     }
   }

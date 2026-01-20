@@ -3,7 +3,7 @@
  * 用於在不改變 Slack Event Subscription URL 的情況下測試
  */
 
-import { readFileSync } from "fs";
+import { readFileSync } from "node:fs";
 
 const API_BASE_URL = "https://sales-ai-server.salesaiautomationv3.workers.dev";
 const API_TOKEN = process.env.API_TOKEN || "";

@@ -128,10 +128,16 @@ function DimensionScoreBar({
   trend: "up" | "down" | "stable";
   gap?: string;
 }) {
-  const getScoreColor = (s: number) => {
-    if (s >= 4) return "bg-green-500";
-    if (s >= 3) return "bg-yellow-500";
-    if (s >= 2) return "bg-orange-500";
+  const _getScoreColor = (s: number) => {
+    if (s >= 4) {
+      return "bg-green-500";
+    }
+    if (s >= 3) {
+      return "bg-yellow-500";
+    }
+    if (s >= 2) {
+      return "bg-orange-500";
+    }
     return "bg-red-500";
   };
 

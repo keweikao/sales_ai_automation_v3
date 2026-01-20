@@ -29,17 +29,17 @@ async function rollback() {
   try {
     // 1. 刪除 MEDDIC Analyses（先刪除，因為有 FK）
     console.log("Deleting MEDDIC analyses...");
-    const meddicResult = await db.delete(meddicAnalyses);
+    const _meddicResult = await db.delete(meddicAnalyses);
     console.log("Deleted MEDDIC analyses");
 
     // 2. 刪除 Conversations
     console.log("Deleting conversations...");
-    const convResult = await db.delete(conversations);
+    const _convResult = await db.delete(conversations);
     console.log("Deleted conversations");
 
     // 3. 刪除 Opportunities（source='import'）
     console.log("Deleting migrated opportunities...");
-    const oppResult = await db
+    const _oppResult = await db
       .delete(opportunities)
       .where(eq(opportunities.source, "import"));
     console.log("Deleted migrated opportunities");

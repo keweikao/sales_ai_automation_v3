@@ -157,15 +157,21 @@ export const updateLeadSource = protectedProcedure
       updatedAt: new Date(),
     };
 
-    if (updates.name !== undefined) updateData.name = updates.name;
-    if (updates.description !== undefined)
+    if (updates.name !== undefined) {
+      updateData.name = updates.name;
+    }
+    if (updates.description !== undefined) {
       updateData.description = updates.description;
-    if (updates.isActive !== undefined)
+    }
+    if (updates.isActive !== undefined) {
       updateData.isActive = updates.isActive ? "true" : "false";
-    if (updates.webhookSecret !== undefined)
+    }
+    if (updates.webhookSecret !== undefined) {
       updateData.webhookSecret = updates.webhookSecret;
-    if (updates.fieldMapping !== undefined)
+    }
+    if (updates.fieldMapping !== undefined) {
       updateData.fieldMapping = updates.fieldMapping;
+    }
 
     const result = await db
       .update(leadSources)

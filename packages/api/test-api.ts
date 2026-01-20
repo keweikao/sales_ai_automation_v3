@@ -14,7 +14,9 @@ async function testApiRoutes() {
 
   const routerKeys = Object.keys(appRouter);
   console.log(`   Found ${routerKeys.length} top-level routes:`);
-  for (const key of routerKeys) console.log(`   - ${key}`);
+  for (const key of routerKeys) {
+    console.log(`   - ${key}`);
+  }
 
   if (!routerKeys.includes("opportunities")) {
     console.error("❌ Missing 'opportunities' router");
@@ -37,7 +39,9 @@ async function testApiRoutes() {
   console.log("📋 Step 2: Verifying opportunity routes...");
   const opportunityRoutes = Object.keys(appRouter.opportunities);
   console.log(`   Found ${opportunityRoutes.length} opportunity routes:`);
-  for (const key of opportunityRoutes) console.log(`   - opportunities.${key}`);
+  for (const key of opportunityRoutes) {
+    console.log(`   - opportunities.${key}`);
+  }
 
   const expectedOpportunityRoutes = [
     "create",
@@ -64,8 +68,9 @@ async function testApiRoutes() {
   console.log("📋 Step 3: Verifying conversation routes...");
   const conversationRoutes = Object.keys(appRouter.conversations);
   console.log(`   Found ${conversationRoutes.length} conversation routes:`);
-  for (const key of conversationRoutes)
+  for (const key of conversationRoutes) {
     console.log(`   - conversations.${key}`);
+  }
 
   const expectedConversationRoutes = ["upload", "analyze", "list", "get"];
   const missingConversationRoutes = expectedConversationRoutes.filter(
@@ -85,7 +90,9 @@ async function testApiRoutes() {
   console.log("📋 Step 4: Verifying analytics routes...");
   const analyticsRoutes = Object.keys(appRouter.analytics);
   console.log(`   Found ${analyticsRoutes.length} analytics routes:`);
-  for (const key of analyticsRoutes) console.log(`   - analytics.${key}`);
+  for (const key of analyticsRoutes) {
+    console.log(`   - analytics.${key}`);
+  }
 
   const expectedAnalyticsRoutes = [
     "dashboard",

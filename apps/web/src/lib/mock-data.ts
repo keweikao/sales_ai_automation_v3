@@ -610,7 +610,7 @@ export function getMeddicStatusInfo(score: number) {
       return status;
     }
   }
-  return meddicStatusOptions[meddicStatusOptions.length - 1];
+  return meddicStatusOptions.at(-1);
 }
 
 // Format duration helper

@@ -149,7 +149,7 @@ async function testR2Connection() {
       })
     );
     console.log("   ✅ 測試檔案已清理\n");
-  } catch (error) {
+  } catch (_error) {
     console.log("   ⚠️ 清理測試檔案失敗（非關鍵）\n");
   }
 

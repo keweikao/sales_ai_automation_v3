@@ -62,7 +62,7 @@ async function verifyDeployment() {
       WHERE indexname LIKE '%product_line%';
     `);
 
-    const indexCount = Number.parseInt(indexCheck.rows[0].count);
+    const indexCount = Number.parseInt(indexCheck.rows[0].count, 10);
     if (indexCount >= 4) {
       console.log(`✅ Found ${indexCount} product_line indexes`);
     } else {
@@ -160,11 +160,11 @@ async function verifyDeployment() {
     );
 
     // 測試載入 iCHEF prompts
-    const ichefPrompts = loadMeddicPrompts("ichef");
+    const _ichefPrompts = loadMeddicPrompts("ichef");
     console.log("✅ iCHEF prompts 載入成功");
 
     // 測試載入 Beauty prompts
-    const beautyPrompts = loadMeddicPrompts("beauty");
+    const _beautyPrompts = loadMeddicPrompts("beauty");
     console.log("✅ Beauty prompts 載入成功");
 
     // 測試建立 Agent Prompt

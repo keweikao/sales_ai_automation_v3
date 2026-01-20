@@ -76,8 +76,12 @@ function NewConversationPage() {
 
   const uploadMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedFile) throw new Error("請選擇音檔");
-      if (!formData.opportunityId) throw new Error("請選擇商機");
+      if (!selectedFile) {
+        throw new Error("請選擇音檔");
+      }
+      if (!formData.opportunityId) {
+        throw new Error("請選擇商機");
+      }
 
       // Convert file to base64
       const arrayBuffer = await selectedFile.arrayBuffer();
@@ -161,8 +165,12 @@ function NewConversationPage() {
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024) {
+      return `${bytes} B`;
+    }
+    if (bytes < 1024 * 1024) {
+      return `${(bytes / 1024).toFixed(1)} KB`;
+    }
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 

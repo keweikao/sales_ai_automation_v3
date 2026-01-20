@@ -815,9 +815,15 @@ const MANAGER_EMAILS = (process.env.MANAGER_EMAILS || "")
 function getUserRole(
   userEmail: string | null | undefined
 ): "admin" | "manager" | "sales" {
-  if (!userEmail) return "sales";
-  if (ADMIN_EMAILS.includes(userEmail)) return "admin";
-  if (MANAGER_EMAILS.includes(userEmail)) return "manager";
+  if (!userEmail) {
+    return "sales";
+  }
+  if (ADMIN_EMAILS.includes(userEmail)) {
+    return "admin";
+  }
+  if (MANAGER_EMAILS.includes(userEmail)) {
+    return "manager";
+  }
   return "sales";
 }
 
@@ -877,7 +883,7 @@ export const getConversation = protectedProcedure
       createdAt: conversation.createdAt,
       analyzedAt: conversation.analyzedAt,
       analysis: conversation.meddicAnalyses[0] || null,
-      smsSent: conversation.smsSent || false,
+      smsSent: conversation.smsSent,
       smsSentAt: conversation.smsSentAt || null,
     };
   });

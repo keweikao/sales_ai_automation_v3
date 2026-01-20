@@ -19,7 +19,7 @@ import { createFullMCPServer } from "../packages/services/src/mcp/server.js";
  * Slack 命令處理器
  */
 export class SlackCommandHandler {
-  private server: ReturnType<typeof createFullMCPServer>;
+  private readonly server: ReturnType<typeof createFullMCPServer>;
 
   constructor() {
     this.server = createFullMCPServer({ enableLogging: false });
@@ -169,7 +169,7 @@ _生成時間: ${new Date().toLocaleString("zh-TW")}_`;
   ): Promise<string> {
     await this.sendTypingIndicator(channelId);
 
-    const minScore = Number.parseInt(args[0]) || 50;
+    const minScore = Number.parseInt(args[0], 10) || 50;
 
     const result = await this.server.safeExecuteTool(
       "forecast_opportunities",
@@ -228,7 +228,7 @@ _生成時間: ${new Date().toLocaleString("zh-TW")}_`;
    */
   private async handleScheduleCommand(
     args: string[],
-    userId: string,
+    _userId: string,
     channelId: string
   ): Promise<string> {
     const oppId = args[0];
@@ -326,7 +326,9 @@ ${
     identifyPain: number;
     champion: number;
   }): string {
-    if (!scores) return "";
+    if (!scores) {
+      return "";
+    }
 
     const suggestions: string[] = [];
 
@@ -398,15 +400,10 @@ export default {
       channelId
     );
 
-    return new Response(
-      JSON.stringify({
-        response_type: "in_channel", // 或 "ephemeral" 僅自己可見
-        text: response,
-      }),
-      {
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    return Response.json({
+      response_type: "in_channel", // 或 "ephemeral" 僅自己可見
+      text: response,
+    });
   },
 };
 
@@ -427,7 +424,7 @@ if (import.meta.main) {
     "channel-456"
   );
   console.log(teamResult);
-  console.log("\n" + "=".repeat(80) + "\n");
+  console.log(`\n${"=".repeat(80)}\n`);
 
   // 測試 /forecast
   console.log("2. 測試: /forecast");
@@ -438,7 +435,7 @@ if (import.meta.main) {
     "channel-456"
   );
   console.log(forecastResult);
-  console.log("\n" + "=".repeat(80) + "\n");
+  console.log(`\n${"=".repeat(80)}\n`);
 
   // 測試 /help
   console.log("3. 測試: /help");

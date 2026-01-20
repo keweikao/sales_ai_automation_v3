@@ -58,7 +58,7 @@ async function testGoogleIntegration() {
   }
 
   console.log(
-    `\n✅ 已註冊 ${googleTools.length} 個 Google 工具\n` + "=".repeat(80)
+    `\n✅ 已註冊 ${googleTools.length} 個 Google 工具\n${"=".repeat(80)}`
   );
 
   // Test 1: Google Drive - 上傳測試報告

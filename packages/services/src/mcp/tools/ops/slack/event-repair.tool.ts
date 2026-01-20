@@ -147,7 +147,7 @@ export const slackEventRepairTool: MCPTool<Input, Output> = {
           } else {
             actions.push(`⚠️ ${scope.name} 權限可能缺失`);
           }
-        } catch (error) {
+        } catch (_error) {
           actions.push(`❌ ${scope.name} 測試失敗`);
         }
       }

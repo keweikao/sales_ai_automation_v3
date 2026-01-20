@@ -22,7 +22,7 @@ import type {
  * Slack 通知服務實現類
  */
 export class SlackNotificationServiceImpl implements SlackNotificationService {
-  private client: WebClient;
+  private readonly client: WebClient;
 
   constructor(config: SlackNotificationConfig) {
     this.client = new WebClient(config.token);
@@ -93,7 +93,7 @@ export class SlackNotificationServiceImpl implements SlackNotificationService {
       params.retryCount
     );
 
-    const fallbackText = "❌ 音檔處理失敗: " + params.fileName;
+    const fallbackText = `❌ 音檔處理失敗: ${params.fileName}`;
 
     // 如果有 threadTs 就在同一個 thread 內回覆
     await this.sendCustomMessage(

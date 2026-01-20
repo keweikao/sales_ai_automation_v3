@@ -8,7 +8,7 @@ import { createFullMCPServer } from "../packages/services/src/mcp/server.js";
 async function testEndToEnd() {
   console.log("🚀 End-to-End Integration Test\n");
   console.log("測試完整的自動化週報流程\n");
-  console.log("=".repeat(80) + "\n");
+  console.log(`${"=".repeat(80)}\n`);
 
   const server = createFullMCPServer({ enableLogging: false });
 
@@ -181,7 +181,7 @@ async function testEndToEnd() {
       console.log("  bun run scripts/setup-google-oauth.ts\n");
     }
 
-    console.log("=".repeat(80) + "\n");
+    console.log(`${"=".repeat(80)}\n`);
 
     // Workflow 2: 高風險商機自動跟進
     console.log("⚠️  Workflow 2: 高風險商機自動跟進\n");
@@ -271,7 +271,7 @@ async function testEndToEnd() {
       console.log("  (可能缺少測試數據)\n");
     }
 
-    console.log("=".repeat(80) + "\n");
+    console.log(`${"=".repeat(80)}\n`);
 
     // 測試總結
     console.log("✨ End-to-End Test Complete!\n");

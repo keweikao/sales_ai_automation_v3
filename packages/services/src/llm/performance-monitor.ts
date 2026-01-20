@@ -96,7 +96,7 @@ export class PerformanceMonitor {
    * 取得最近一次執行的指標
    */
   getLatestMetrics(): PerformanceMetrics | undefined {
-    return this.metrics[this.metrics.length - 1];
+    return this.metrics.at(-1);
   }
 
   /**

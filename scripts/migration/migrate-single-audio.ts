@@ -29,14 +29,20 @@ function parseGcsUri(gcsUri: string): { bucket: string; path: string } | null {
 // 從檔案路徑提取 conversation ID
 function extractConversationId(filePath: string): string | undefined {
   const filename = filePath.split("/").pop();
-  if (!filename) return undefined;
+  if (!filename) {
+    return undefined;
+  }
   return filename.replace(/\.(mp3|wav|m4a|ogg|webm)$/i, "");
 }
 
 // 格式化檔案大小
 function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
