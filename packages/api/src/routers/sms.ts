@@ -1,11 +1,11 @@
-import { ORPCError } from "@orpc/server";
-import { db } from "@sales_ai_automation_v3/db";
-import { conversations } from "@sales_ai_automation_v3/db/schema";
+import { db } from "@Sales_ai_automation_v3/db";
+import { conversations } from "@Sales_ai_automation_v3/db/schema";
 import {
   generateCustomerSMSContent,
   generateShareToken,
   sendSMS,
-} from "@sales_ai_automation_v3/services";
+} from "@Sales_ai_automation_v3/services";
+import { ORPCError } from "@orpc/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { protectedProcedure } from "../index";

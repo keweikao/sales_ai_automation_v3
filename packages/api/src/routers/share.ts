@@ -1,10 +1,10 @@
-import { ORPCError } from "@orpc/server";
-import { db } from "@sales_ai_automation_v3/db";
-import { conversations, shareTokens } from "@sales_ai_automation_v3/db/schema";
+import { db } from "@Sales_ai_automation_v3/db";
+import { conversations, shareTokens } from "@Sales_ai_automation_v3/db/schema";
 import {
   generateShareToken,
   getTokenExpiry,
-} from "@sales_ai_automation_v3/services";
+} from "@Sales_ai_automation_v3/services";
+import { ORPCError } from "@orpc/server";
 import { and, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { z } from "zod";
