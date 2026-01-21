@@ -8,13 +8,32 @@ import {
   agent5CrmPrompt,
   agent6CoachPrompt,
   globalContextPrompt,
+  MEDDIC_PROMPTS,
+  type ProductLine,
 } from "./prompts.generated";
+
+export type { ProductLine };
 
 /**
  * iCHEF Business Framework - Three-layer commitment events
  * V2 Source: global-context.md
+ * @deprecated Use GLOBAL_CONTEXT_FOR_PRODUCT_LINE for product-line specific context
  */
 export const GLOBAL_CONTEXT = (): string => globalContextPrompt;
+
+/**
+ * Get Global Context based on product line
+ * - ichef: Uses iCHEF Restaurant POS context
+ * - beauty: Uses Qlieer 美業預約管理 context
+ */
+export const GLOBAL_CONTEXT_FOR_PRODUCT_LINE = (
+  productLine: ProductLine = "ichef"
+): string => {
+  if (productLine === "beauty" && MEDDIC_PROMPTS.beauty.globalContext) {
+    return MEDDIC_PROMPTS.beauty.globalContext;
+  }
+  return globalContextPrompt; // Default to iCHEF
+};
 
 /**
  * Meeting Background Analysis

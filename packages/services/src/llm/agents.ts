@@ -12,7 +12,8 @@ import {
   AGENT4_PROMPT,
   AGENT5_PROMPT,
   AGENT6_PROMPT,
-  GLOBAL_CONTEXT,
+  GLOBAL_CONTEXT_FOR_PRODUCT_LINE,
+  type ProductLine,
 } from "./prompts.js";
 import type {
   Agent1Output,
@@ -57,8 +58,9 @@ export class ContextAgent implements BaseAgent {
 
   async execute(state: AnalysisState): Promise<AnalysisState> {
     const transcriptText = formatTranscript(state.transcript);
+    const productLine = (state.metadata?.productLine || "ichef") as ProductLine;
 
-    const prompt = `${GLOBAL_CONTEXT()}\n\n${AGENT1_PROMPT()}\n\n## Meeting Transcript:\n${transcriptText}\n\n## Metadata:\n${JSON.stringify(state.metadata, null, 2)}`;
+    const prompt = `${GLOBAL_CONTEXT_FOR_PRODUCT_LINE(productLine)}\n\n${AGENT1_PROMPT()}\n\n## Meeting Transcript:\n${transcriptText}\n\n## Metadata:\n${JSON.stringify(state.metadata, null, 2)}`;
 
     const response = await this.geminiClient.generateJSON<Agent1Output>(prompt);
 
@@ -82,8 +84,9 @@ export class BuyerAgent implements BaseAgent {
 
   async execute(state: AnalysisState): Promise<AnalysisState> {
     const transcriptText = formatTranscript(state.transcript);
+    const productLine = (state.metadata?.productLine || "ichef") as ProductLine;
 
-    const prompt = `${GLOBAL_CONTEXT()}\n\n${AGENT2_PROMPT()}\n\n## Meeting Transcript:\n${transcriptText}`;
+    const prompt = `${GLOBAL_CONTEXT_FOR_PRODUCT_LINE(productLine)}\n\n${AGENT2_PROMPT()}\n\n## Meeting Transcript:\n${transcriptText}`;
 
     const response = await this.geminiClient.generateJSON<Agent2Output>(prompt);
 
@@ -111,9 +114,10 @@ export class QualityLoopAgent implements BaseAgent {
 
     const transcriptText = formatTranscript(state.transcript);
     const previousAnalysis = JSON.stringify(state.buyerData, null, 2);
+    const productLine = (state.metadata?.productLine || "ichef") as ProductLine;
 
     const prompt =
-      `${GLOBAL_CONTEXT()}\n\n${AGENT2_PROMPT()}\n\n` +
+      `${GLOBAL_CONTEXT_FOR_PRODUCT_LINE(productLine)}\n\n${AGENT2_PROMPT()}\n\n` +
       `## Previous Analysis (needs improvement):\n${previousAnalysis}\n\n` +
       `## Meeting Transcript:\n${transcriptText}\n\n` +
       "IMPORTANT: The previous analysis was incomplete. Please provide more specific evidence, identify pain points more clearly, and ensure all MEDDIC scores are justified.";
@@ -141,9 +145,10 @@ export class SellerAgent implements BaseAgent {
   async execute(state: AnalysisState): Promise<AnalysisState> {
     const transcriptText = formatTranscript(state.transcript);
     const buyerInsights = JSON.stringify(state.buyerData, null, 2);
+    const productLine = (state.metadata?.productLine || "ichef") as ProductLine;
 
     const prompt =
-      `${GLOBAL_CONTEXT()}\n\n${AGENT3_PROMPT()}\n\n` +
+      `${GLOBAL_CONTEXT_FOR_PRODUCT_LINE(productLine)}\n\n${AGENT3_PROMPT()}\n\n` +
       `## Buyer Analysis:\n${buyerInsights}\n\n` +
       `## Meeting Transcript:\n${transcriptText}`;
 
@@ -171,9 +176,10 @@ export class SummaryAgent implements BaseAgent {
     const contextData = JSON.stringify(state.contextData, null, 2);
     const buyerData = JSON.stringify(state.buyerData, null, 2);
     const sellerData = JSON.stringify(state.sellerData, null, 2);
+    const productLine = (state.metadata?.productLine || "ichef") as ProductLine;
 
     const prompt =
-      `${GLOBAL_CONTEXT()}\n\n${AGENT4_PROMPT()}\n\n` +
+      `${GLOBAL_CONTEXT_FOR_PRODUCT_LINE(productLine)}\n\n${AGENT4_PROMPT()}\n\n` +
       `## Context Analysis:\n${contextData}\n\n` +
       `## Buyer Analysis:\n${buyerData}\n\n` +
       `## Seller Analysis:\n${sellerData}\n\n` +
@@ -202,9 +208,10 @@ export class CRMAgent implements BaseAgent {
     const transcriptText = formatTranscript(state.transcript);
     const contextData = JSON.stringify(state.contextData, null, 2);
     const buyerData = JSON.stringify(state.buyerData, null, 2);
+    const productLine = (state.metadata?.productLine || "ichef") as ProductLine;
 
     const prompt =
-      `${GLOBAL_CONTEXT()}\n\n${AGENT5_PROMPT()}\n\n` +
+      `${GLOBAL_CONTEXT_FOR_PRODUCT_LINE(productLine)}\n\n${AGENT5_PROMPT()}\n\n` +
       `## Context Analysis:\n${contextData}\n\n` +
       `## Buyer Analysis:\n${buyerData}\n\n` +
       `## Meeting Transcript:\n${transcriptText}`;
@@ -232,9 +239,10 @@ export class CoachAgent implements BaseAgent {
     const transcriptText = formatTranscript(state.transcript);
     const buyerData = JSON.stringify(state.buyerData, null, 2);
     const sellerData = JSON.stringify(state.sellerData, null, 2);
+    const productLine = (state.metadata?.productLine || "ichef") as ProductLine;
 
     const prompt =
-      `${GLOBAL_CONTEXT()}\n\n${AGENT6_PROMPT()}\n\n` +
+      `${GLOBAL_CONTEXT_FOR_PRODUCT_LINE(productLine)}\n\n${AGENT6_PROMPT()}\n\n` +
       `## Buyer Analysis:\n${buyerData}\n\n` +
       `## Seller Analysis:\n${sellerData}\n\n` +
       `## Meeting Transcript:\n${transcriptText}`;

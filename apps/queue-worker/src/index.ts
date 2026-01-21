@@ -47,9 +47,13 @@ export interface Env {
   // Database
   DATABASE_URL: string;
 
-  // AI Services
-  GROQ_API_KEY: string;
-  GEMINI_API_KEY: string;
+  // AI Services (分產品線)
+  GROQ_API_KEY: string; // 預設 (向後兼容)
+  GROQ_API_KEY_ICHEF?: string;
+  GROQ_API_KEY_BEAUTY?: string;
+  GEMINI_API_KEY: string; // 預設 (向後兼容)
+  GEMINI_API_KEY_ICHEF?: string;
+  GEMINI_API_KEY_BEAUTY?: string;
 
   // R2 Storage
   CLOUDFLARE_R2_ACCESS_KEY: string;
@@ -57,8 +61,9 @@ export interface Env {
   CLOUDFLARE_R2_ENDPOINT: string;
   CLOUDFLARE_R2_BUCKET: string;
 
-  // Slack
-  SLACK_BOT_TOKEN: string;
+  // Slack (多 Bot 支援)
+  SLACK_BOT_TOKEN: string; // iCHEF Bot (預設)
+  SLACK_BOT_TOKEN_BEAUTY?: string; // Beauty Bot
 
   // Server API
   SERVER_URL: string;
@@ -102,10 +107,35 @@ export default {
     const sql = neon(env.DATABASE_URL);
     const db = drizzle(sql, { schema });
 
-    // 初始化 Slack 通知服務
-    const slackService = createSlackNotificationService({
-      token: env.SLACK_BOT_TOKEN,
-    });
+    // Helper: 根據 productLine 取得對應的 Slack Bot Token
+    const getSlackToken = (productLine: string): string => {
+      if (productLine === "beauty" && env.SLACK_BOT_TOKEN_BEAUTY) {
+        return env.SLACK_BOT_TOKEN_BEAUTY;
+      }
+      return env.SLACK_BOT_TOKEN; // 預設使用 iCHEF Bot
+    };
+
+    // Helper: 根據 productLine 取得對應的 GROQ API Key
+    const getGroqApiKey = (productLine: string): string => {
+      if (productLine === "beauty" && env.GROQ_API_KEY_BEAUTY) {
+        return env.GROQ_API_KEY_BEAUTY;
+      }
+      if (productLine === "ichef" && env.GROQ_API_KEY_ICHEF) {
+        return env.GROQ_API_KEY_ICHEF;
+      }
+      return env.GROQ_API_KEY; // 預設 (向後兼容)
+    };
+
+    // Helper: 根據 productLine 取得對應的 Gemini API Key
+    const getGeminiApiKey = (productLine: string): string => {
+      if (productLine === "beauty" && env.GEMINI_API_KEY_BEAUTY) {
+        return env.GEMINI_API_KEY_BEAUTY;
+      }
+      if (productLine === "ichef" && env.GEMINI_API_KEY_ICHEF) {
+        return env.GEMINI_API_KEY_ICHEF;
+      }
+      return env.GEMINI_API_KEY; // 預設 (向後兼容)
+    };
 
     for (const message of batch.messages) {
       const startTime = Date.now();
@@ -122,6 +152,14 @@ export default {
       // 解析 productLine (預設 'ichef')
       // 優先順序: message payload -> DB conversation record -> 預設 'ichef'
       const resolvedProductLine = productLine || "ichef";
+
+      // 根據 productLine 初始化對應的 Slack 通知服務
+      const slackService = createSlackNotificationService({
+        token: getSlackToken(resolvedProductLine),
+      });
+      console.log(
+        `[Queue] 📱 Using ${resolvedProductLine === "beauty" ? "Beauty" : "iCHEF"} Slack Bot for notifications`
+      );
 
       // threadTs 需要在 try block 之前宣告,以便在 catch block 中使用
       let threadTs: string | undefined;
@@ -175,8 +213,11 @@ export default {
         // ========================================
         // Step 2: Whisper 轉錄
         // ========================================
-        console.log("[Queue] 🎙️  Starting Whisper transcription...");
-        const whisperService = createGroqWhisperService(env.GROQ_API_KEY);
+        const groqApiKey = getGroqApiKey(resolvedProductLine);
+        console.log(
+          `[Queue] 🎙️  Starting Whisper transcription (${resolvedProductLine})...`
+        );
+        const whisperService = createGroqWhisperService(groqApiKey);
         const transcriptResult = await whisperService.transcribe(audioBuffer, {
           language: "zh",
           chunkIfNeeded: true,
@@ -244,8 +285,11 @@ export default {
         // ========================================
         // Step 4: MEDDIC 分析
         // ========================================
-        console.log("[Queue] 🧠 Starting MEDDIC analysis...");
-        const geminiClient = createGeminiClient(env.GEMINI_API_KEY);
+        const geminiApiKey = getGeminiApiKey(resolvedProductLine);
+        console.log(
+          `[Queue] 🧠 Starting MEDDIC analysis (${resolvedProductLine})...`
+        );
+        const geminiClient = createGeminiClient(geminiApiKey);
         const orchestrator = createOrchestrator(geminiClient);
 
         const analysisResult = await orchestrator.analyze(
