@@ -377,7 +377,7 @@ export const uploadConversation = protectedProcedure
             type,
             status: "pending", // 初始狀態為 pending
             audioUrl,
-            transcript: null, // 稍後由 Queue Worker 填充
+            // transcript 由 Queue Worker 轉錄後回填，不傳讓資料庫使用預設值 NULL
             duration: metadata?.duration || 0,
             conversationDate: metadata?.conversationDate
               ? new Date(metadata.conversationDate)
