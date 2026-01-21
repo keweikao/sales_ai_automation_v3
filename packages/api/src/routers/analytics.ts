@@ -12,6 +12,7 @@ import {
   user,
   userProfiles,
 } from "@Sales_ai_automation_v3/db/schema";
+import { MEDDIC_DIMENSION_NAMES } from "@Sales_ai_automation_v3/shared";
 import { ORPCError } from "@orpc/server";
 import { and, avg, count, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -60,6 +61,138 @@ const teamPerformanceSchema = z.object({
 });
 
 // ============================================================
+// Utility Functions
+// ============================================================
+
+/**
+ * 分數四捨五入工具函數
+ * @param score - 原始分數
+ * @param decimals - 小數位數（預設 1）
+ * @returns 四捨五入後的分數
+ */
+function roundScore(score: number | null | undefined, decimals = 1): number {
+  if (score == null) {
+    return 0;
+  }
+  const multiplier = 10 ** decimals;
+  return Math.round(Number(score) * multiplier) / multiplier;
+}
+
+/**
+ * 建立日期過濾條件
+ * @param dateFrom - 起始日期（可選）
+ * @param dateTo - 結束日期（可選）
+ * @returns Drizzle ORM 過濾條件陣列
+ */
+function buildDateConditions(dateFrom?: string, dateTo?: string) {
+  const conditions = [];
+  if (dateFrom) {
+    conditions.push(gte(meddicAnalyses.createdAt, new Date(dateFrom)));
+  }
+  if (dateTo) {
+    conditions.push(lte(meddicAnalyses.createdAt, new Date(dateTo)));
+  }
+  return conditions;
+}
+
+// ============================================================
+// KV Cache Helper
+// ============================================================
+
+async function getKVCacheService(context: any) {
+  const honoEnv = context.honoContext?.env;
+  if (!honoEnv?.CACHE_KV) {
+    return null;
+  }
+  const { createKVCacheService } = await import(
+    "@Sales_ai_automation_v3/services"
+  );
+  return createKVCacheService(honoEnv.CACHE_KV);
+}
+
+// ============================================================
+// Opportunity Stats (for /report dashboard)
+// ============================================================
+
+export const getOpportunityStats = protectedProcedure.handler(
+  async ({ context }) => {
+    const cacheKey = "stats:opportunity:global";
+    const TTL_SECONDS = 300; // 5 minutes
+
+    // 1. Try to get from KV cache
+    const cacheService = await getKVCacheService(context);
+    if (cacheService) {
+      const cached = await cacheService.get<{
+        total: number;
+        byStatus: Record<string, number>;
+        averageMeddicScore: number;
+        recentActivity: number;
+      }>(cacheKey);
+
+      if (cached) {
+        console.log("[OpportunityStats] Cache hit");
+        return cached;
+      }
+    }
+
+    console.log("[OpportunityStats] Cache miss, querying DB");
+
+    // 2. Query from DB
+    // Total opportunities
+    const totalResult = await db.select({ count: count() }).from(opportunities);
+    const total = totalResult[0]?.count || 0;
+
+    // By status
+    const statusResults = await db
+      .select({
+        status: opportunities.status,
+        count: count(),
+      })
+      .from(opportunities)
+      .groupBy(opportunities.status);
+
+    const byStatus: Record<string, number> = {};
+    for (const row of statusResults) {
+      if (row.status) {
+        byStatus[row.status] = row.count;
+      }
+    }
+
+    // Average MEDDIC score
+    const avgScoreResult = await db
+      .select({ avgScore: avg(meddicAnalyses.overallScore) })
+      .from(meddicAnalyses);
+    const averageMeddicScore = roundScore(
+      Number(avgScoreResult[0]?.avgScore) || 0
+    );
+
+    // Recent activity (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentResult = await db
+      .select({ count: count() })
+      .from(conversations)
+      .where(gte(conversations.createdAt, sevenDaysAgo));
+    const recentActivity = recentResult[0]?.count || 0;
+
+    const result = {
+      total,
+      byStatus,
+      averageMeddicScore,
+      recentActivity,
+    };
+
+    // 3. Write to KV cache
+    if (cacheService) {
+      await cacheService.set(cacheKey, result, TTL_SECONDS);
+      console.log("[OpportunityStats] Wrote to cache");
+    }
+
+    return result;
+  }
+);
+
+// ============================================================
 // Dashboard Overview
 // ============================================================
 
@@ -74,14 +207,44 @@ export const getDashboard = protectedProcedure
 
     const { dateFrom, dateTo } = input;
 
+    // KV 快取 (只快取無日期參數的預設查詢)
+    const shouldCache = !(dateFrom || dateTo);
+    const cacheKey = `user:${userId}:dashboard`;
+    const TTL_SECONDS = 300; // 5 minutes
+
+    if (shouldCache) {
+      const cacheService = await getKVCacheService(context);
+      if (cacheService) {
+        const cached = await cacheService.get<{
+          summary: {
+            totalOpportunities: number;
+            totalConversations: number;
+            totalAnalyses: number;
+            averageScore: number;
+          };
+          statusDistribution: Array<{ status: string | null; count: number }>;
+          recentAnalyses: Array<{
+            id: string;
+            opportunityId: string;
+            opportunityCompanyName: string;
+            customerNumber: string;
+            overallScore: number | null;
+            status: string | null;
+            createdAt: Date;
+          }>;
+        }>(cacheKey);
+
+        if (cached) {
+          console.log(`[Dashboard] Cache hit for user ${userId}`);
+          return cached;
+        }
+      }
+    }
+
+    console.log(`[Dashboard] Cache miss for user ${userId}, querying DB`);
+
     // Build date filters
-    const dateConditions = [];
-    if (dateFrom) {
-      dateConditions.push(gte(meddicAnalyses.createdAt, new Date(dateFrom)));
-    }
-    if (dateTo) {
-      dateConditions.push(lte(meddicAnalyses.createdAt, new Date(dateTo)));
-    }
+    const dateConditions = buildDateConditions(dateFrom, dateTo);
 
     // Total opportunities
     const totalOpportunitiesResults = await db
@@ -167,7 +330,7 @@ export const getDashboard = protectedProcedure
       .orderBy(desc(meddicAnalyses.createdAt))
       .limit(10);
 
-    return {
+    const result = {
       summary: {
         totalOpportunities: totalOpportunitiesResult.count,
         totalConversations: totalConversationsResult.count,
@@ -190,6 +353,17 @@ export const getDashboard = protectedProcedure
         createdAt: a.createdAt,
       })),
     };
+
+    // 寫入 KV 快取
+    if (shouldCache) {
+      const cacheService = await getKVCacheService(context);
+      if (cacheService) {
+        await cacheService.set(cacheKey, result, TTL_SECONDS);
+        console.log(`[Dashboard] Wrote cache for user ${userId}`);
+      }
+    }
+
+    return result;
   });
 
 // ============================================================
@@ -296,13 +470,10 @@ export const getMeddicTrends = protectedProcedure
     }
 
     // Build date filters
-    const dateConditions = [eq(opportunities.userId, userId)];
-    if (dateFrom) {
-      dateConditions.push(gte(meddicAnalyses.createdAt, new Date(dateFrom)));
-    }
-    if (dateTo) {
-      dateConditions.push(lte(meddicAnalyses.createdAt, new Date(dateTo)));
-    }
+    const dateConditions = [
+      eq(opportunities.userId, userId),
+      ...buildDateConditions(dateFrom, dateTo),
+    ];
 
     // Get all analyses in date range
     const analyses = await db
@@ -461,14 +632,15 @@ export const getRepPerformance = protectedProcedure
     }
 
     // 建立日期過濾條件
-    const dateConditions = [];
     const currentPeriodStart = dateFrom
       ? new Date(dateFrom)
       : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const currentPeriodEnd = dateTo ? new Date(dateTo) : new Date();
 
-    dateConditions.push(gte(meddicAnalyses.createdAt, currentPeriodStart));
-    dateConditions.push(lte(meddicAnalyses.createdAt, currentPeriodEnd));
+    const dateConditions = [
+      gte(meddicAnalyses.createdAt, currentPeriodStart),
+      lte(meddicAnalyses.createdAt, currentPeriodEnd),
+    ];
 
     // 計算上一期間（用於比較）
     const periodLength =
@@ -667,17 +839,9 @@ export const getRepPerformance = protectedProcedure
     const strengths: string[] = [];
     const weaknesses: string[] = [];
 
-    const dimensionNames: Record<string, string> = {
-      metrics: "量化指標 (Metrics)",
-      economicBuyer: "經濟買家 (Economic Buyer)",
-      decisionCriteria: "決策標準 (Decision Criteria)",
-      decisionProcess: "決策流程 (Decision Process)",
-      identifyPain: "痛點識別 (Identify Pain)",
-      champion: "內部支持者 (Champion)",
-    };
-
     for (const [key, value] of Object.entries(dimensionScores)) {
-      const name = dimensionNames[key];
+      const name =
+        MEDDIC_DIMENSION_NAMES[key as keyof typeof MEDDIC_DIMENSION_NAMES];
       if (!name) {
         continue;
       }
@@ -916,8 +1080,8 @@ export const getRepPerformance = protectedProcedure
         totalOpportunities: totalOpportunitiesResult[0]?.count || 0,
         totalConversations: totalConversationsResult[0]?.count || 0,
         totalAnalyses: currentPeriodStats[0]?.count || 0,
-        averageScore: Math.round(currentAvgScore * 10) / 10,
-        scoreChange: Math.round(scoreChange * 10) / 10,
+        averageScore: roundScore(currentAvgScore),
+        scoreChange: roundScore(scoreChange),
       },
 
       // MEDDIC 六維度分析
@@ -940,12 +1104,12 @@ export const getRepPerformance = protectedProcedure
       // 進步追蹤
       progressTracking: {
         last30Days: {
-          avgScore: Math.round(last30Avg * 10) / 10,
-          change: Math.round((last30Avg - prev30Avg) * 10) / 10,
+          avgScore: roundScore(last30Avg),
+          change: roundScore(last30Avg - prev30Avg),
         },
         last90Days: {
-          avgScore: Math.round(last90Avg * 10) / 10,
-          change: Math.round((last90Avg - prev90Avg) * 10) / 10,
+          avgScore: roundScore(last90Avg),
+          change: roundScore(last90Avg - prev90Avg),
         },
         milestones,
       },
@@ -1182,7 +1346,7 @@ export const getTeamPerformance = protectedProcedure
           name: userNameMap.get(m.userId) || "未知",
           opportunityCount: Number(m.opportunityCount) || 0,
           conversationCount: convCountMap.get(m.userId) || 0,
-          averageScore: Math.round(currentScore * 10) / 10,
+          averageScore: roundScore(currentScore),
           trend,
           needsAttention,
         };
@@ -1354,7 +1518,7 @@ export const getTeamPerformance = protectedProcedure
         week:
           weekStart.toISOString().split("T")[0] ??
           weekStart.toISOString().slice(0, 10),
-        avgScore: Math.round((Number(weekStats[0]?.avgScore) || 0) * 10) / 10,
+        avgScore: roundScore(Number(weekStats[0]?.avgScore) || 0),
       });
     }
 
@@ -1405,8 +1569,8 @@ export const getTeamPerformance = protectedProcedure
         teamSize: memberIds.length,
         totalOpportunities: totalOpportunities[0]?.count || 0,
         totalConversations: totalConversations[0]?.count || 0,
-        teamAverageScore: Math.round(teamAvgScore * 10) / 10,
-        scoreChange: Math.round((teamAvgScore - teamPrevAvgScore) * 10) / 10,
+        teamAverageScore: roundScore(teamAvgScore),
+        scoreChange: roundScore(teamAvgScore - teamPrevAvgScore),
       },
 
       // 成員排名
@@ -1435,6 +1599,7 @@ export const getTeamPerformance = protectedProcedure
 
 export const analyticsRouter = {
   dashboard: getDashboard,
+  opportunityStats: getOpportunityStats,
   opportunityAnalytics: getOpportunityAnalytics,
   meddicTrends: getMeddicTrends,
   repPerformance: getRepPerformance,

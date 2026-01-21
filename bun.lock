@@ -181,6 +181,7 @@
         "@orpc/openapi": "catalog:",
         "@orpc/server": "catalog:",
         "@orpc/zod": "catalog:",
+        "@sales_ai_automation_v3/shared": "workspace:*",
         "dotenv": "catalog:",
         "drizzle-orm": "^0.45.1",
         "hono": "^4.11.3",

@@ -9,9 +9,10 @@
  * - 使用 Schemas: import { conversationStatusSchema } from '@sales_ai_automation_v3/shared/schemas'
  */
 
+// 導出常數定義
+export * from "./constants/meddic.js";
 // 導出錯誤處理
 export * from "./errors/index.js";
-
 // 導出類型定義
 export * from "./types/index.js";
 
