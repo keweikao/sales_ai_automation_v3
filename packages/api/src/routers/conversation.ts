@@ -401,6 +401,8 @@ export const uploadConversation = protectedProcedure
         }
       } catch (error) {
         console.error(`[${requestId}] ❌ DB insert failed:`, error);
+        console.error(`[${requestId}] Error stack:`, error instanceof Error ? error.stack : "no stack");
+        console.error(`[${requestId}] Error cause:`, (error as any)?.cause);
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: `資料庫寫入失敗: ${error instanceof Error ? error.message : String(error)}`,
         });

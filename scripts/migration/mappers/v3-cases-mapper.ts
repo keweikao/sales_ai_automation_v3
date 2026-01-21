@@ -176,6 +176,7 @@ export function mapCaseToConversation(
     slackThreadTs: caseDoc.notification?.slackThreadTs || null,
     slackUserId: caseDoc.salesRepSlackId || null,
     slackUsername: caseDoc.salesRepName || null,
+    slackUserEmail: caseDoc.salesRepEmail || null, // 保留業務 Email
 
     // 時間
     conversationDate: createdAt,

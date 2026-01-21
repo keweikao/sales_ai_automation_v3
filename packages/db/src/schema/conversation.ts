@@ -67,6 +67,7 @@ export const conversations = pgTable("conversations", {
   slackThreadTs: text("slack_thread_ts"),
   slackUserId: text("slack_user_id"), // 業務的 Slack User ID
   slackUsername: text("slack_username"), // 業務的 Slack Username
+  slackUserEmail: text("slack_user_email"), // 業務的 Email (從 V2 salesRepEmail 保留)
 
   // SMS notification
   smsSent: boolean("sms_sent").default(false), // SMS 是否已發送給客戶

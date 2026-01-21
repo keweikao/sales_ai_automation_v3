@@ -23,8 +23,9 @@ import {
   createSlackNotificationService,
 } from "@Sales_ai_automation_v3/services";
 import { randomUUID } from "node:crypto";
-import type { MessageBatch } from "@cloudflare/workers-types";
+import type { MessageBatch, ScheduledController } from "@cloudflare/workers-types";
 import { neon, neonConfig } from "@neondatabase/serverless";
+import { WebClient } from "@slack/web-api";
 
 // 配置 Neon 使用 Cloudflare Workers 的 fetch
 neonConfig.fetchFunction = fetch;
@@ -625,6 +626,12 @@ export default {
               conversationDetail
             );
 
+            // 失效全域統計快取 (因為新增了一筆完成的分析)
+            await cacheService.delete("stats:opportunity:global");
+            // 失效用戶 dashboard 快取
+            await cacheService.delete(`user:${opportunityData.userId}:dashboard`);
+            console.log("[Queue] ✓ Invalidated global stats and user dashboard cache");
+
             console.log(
               `[Queue] ✅ Cache updated for user ${opportunityData.userId}`
             );
@@ -715,4 +722,120 @@ export default {
       }
     }
   },
+
+  // ============================================================
+  // Scheduled Handler (Cron Triggers)
+  // ============================================================
+  async scheduled(
+    controller: ScheduledController,
+    env: Env,
+    _ctx: ExecutionContext
+  ): Promise<void> {
+    const trigger = controller.cron;
+    console.log(`[Scheduled] Cron triggered: ${trigger}`);
+
+    if (trigger === "0 0 * * 1") {
+      // 每週一 - 週報
+      console.log("[Scheduled] Running weekly report...");
+      await handleWeeklyReport(env);
+    } else if (trigger === "0 0 * * *") {
+      // 每日 - 健康報告
+      console.log("[Scheduled] Running daily health report...");
+      await handleDailyHealthReport(env);
+    }
+  },
 };
+
+// ============================================================
+// Scheduled Task Handlers
+// ============================================================
+
+async function handleDailyHealthReport(env: Env): Promise<void> {
+  try {
+    const sql = neon(env.DATABASE_URL);
+    const slackClient = new WebClient(env.SLACK_BOT_TOKEN);
+
+    // 統計過去 24 小時的處理數據
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const stats = await sql`
+      SELECT
+        COUNT(*) FILTER (WHERE status = 'completed') as completed_count,
+        COUNT(*) FILTER (WHERE status = 'failed') as failed_count,
+        COUNT(*) as total_count,
+        AVG(EXTRACT(EPOCH FROM (updated_at - created_at))) FILTER (WHERE status = 'completed') as avg_processing_time
+      FROM conversations
+      WHERE created_at >= ${yesterday.toISOString()}
+    `;
+
+    const result = stats[0] || { completed_count: 0, failed_count: 0, total_count: 0, avg_processing_time: 0 };
+    const successRate = result.total_count > 0
+      ? Math.round((Number(result.completed_count) / Number(result.total_count)) * 100)
+      : 100;
+
+    // 發送健康報告到 Slack
+    const healthEmoji = successRate >= 95 ? "🟢" : successRate >= 80 ? "🟡" : "🔴";
+    const message = [
+      `${healthEmoji} *每日系統健康報告*`,
+      `📅 ${new Date().toLocaleDateString("zh-TW")}`,
+      ``,
+      `*過去 24 小時處理統計*`,
+      `• 完成: ${result.completed_count} 筆`,
+      `• 失敗: ${result.failed_count} 筆`,
+      `• 成功率: ${successRate}%`,
+      result.avg_processing_time ? `• 平均處理時間: ${Math.round(Number(result.avg_processing_time))}s` : "",
+    ].filter(Boolean).join("\n");
+
+    await slackClient.chat.postMessage({
+      channel: "#ops-alerts",
+      text: message,
+    });
+
+    console.log("[Scheduled] Daily health report sent");
+  } catch (error) {
+    console.error("[Scheduled] Failed to send daily health report:", error);
+  }
+}
+
+async function handleWeeklyReport(env: Env): Promise<void> {
+  try {
+    const sql = neon(env.DATABASE_URL);
+    const slackClient = new WebClient(env.SLACK_BOT_TOKEN);
+
+    // 統計過去 7 天的數據
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+
+    const stats = await sql`
+      SELECT
+        COUNT(*) as total_uploads,
+        COUNT(DISTINCT opportunity_id) as unique_opportunities,
+        AVG(CASE WHEN ma.overall_score IS NOT NULL THEN ma.overall_score END) as avg_meddic_score
+      FROM conversations c
+      LEFT JOIN meddic_analyses ma ON c.id = ma.conversation_id
+      WHERE c.created_at >= ${weekAgo.toISOString()}
+    `;
+
+    const result = stats[0] || { total_uploads: 0, unique_opportunities: 0, avg_meddic_score: 0 };
+
+    const message = [
+      `📊 *週報摘要*`,
+      `📅 ${weekAgo.toLocaleDateString("zh-TW")} ~ ${new Date().toLocaleDateString("zh-TW")}`,
+      ``,
+      `*本週統計*`,
+      `• 音檔上傳: ${result.total_uploads} 筆`,
+      `• 活躍商機: ${result.unique_opportunities} 個`,
+      `• 平均 MEDDIC: ${result.avg_meddic_score ? Math.round(Number(result.avg_meddic_score)) : "N/A"} 分`,
+    ].join("\n");
+
+    await slackClient.chat.postMessage({
+      channel: "#sales-team",
+      text: message,
+    });
+
+    console.log("[Scheduled] Weekly report sent");
+  } catch (error) {
+    console.error("[Scheduled] Failed to send weekly report:", error);
+  }
+}
