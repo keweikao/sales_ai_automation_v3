@@ -339,56 +339,71 @@ export const uploadConversation = protectedProcedure
         );
       } catch (error) {
         console.error(`[${requestId}] ❌ R2 upload failed:`, error);
-        throw new ORPCError("INTERNAL_SERVER_ERROR");
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: `R2 上傳失敗: ${error instanceof Error ? error.message : String(error)}`,
+        });
       }
 
       // Step 4: Generate case number
-      const caseNumber = await getNextCaseNumber();
+      let caseNumber: string;
       const conversationId = randomUUID();
-      console.log(
-        `[${requestId}] 🎫 Generated conversationId: ${conversationId}, caseNumber: ${caseNumber}`
-      );
+      try {
+        caseNumber = await getNextCaseNumber();
+        console.log(
+          `[${requestId}] 🎫 Generated conversationId: ${conversationId}, caseNumber: ${caseNumber}`
+        );
+      } catch (error) {
+        console.error(`[${requestId}] ❌ Failed to generate case number:`, error);
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: `案件編號生成失敗: ${error instanceof Error ? error.message : String(error)}`,
+        });
+      }
 
       // Step 5: 建立資料庫記錄 (status: "pending")
       // 不再同步轉錄,而是推送到 Queue
       console.log(
         `[${requestId}] 💾 Creating conversation record with status: pending...`
       );
-      const dbStartTime = Date.now();
-      const conversationResults = await db
-        .insert(conversations)
-        .values({
-          id: conversationId,
-          opportunityId,
-          caseNumber,
-          title: title || `對話 - ${new Date().toLocaleDateString("zh-TW")}`,
-          type,
-          status: "pending", // 初始狀態為 pending
-          audioUrl,
-          transcript: null, // 稍後由 Queue Worker 填充
-          duration: metadata?.duration || 0,
-          conversationDate: metadata?.conversationDate
-            ? new Date(metadata.conversationDate)
-            : new Date(),
-          createdBy: userId,
-          // Slack 業務資訊
-          slackUserId: slackUser?.id,
-          slackUsername: slackUser?.username,
-          // 產品線
-          productLine: resolvedProductLine,
-        })
-        .returning();
+      let insertedConversation;
+      try {
+        const dbStartTime = Date.now();
+        const conversationResults = await db
+          .insert(conversations)
+          .values({
+            id: conversationId,
+            opportunityId,
+            caseNumber,
+            title: title || `對話 - ${new Date().toLocaleDateString("zh-TW")}`,
+            type,
+            status: "pending", // 初始狀態為 pending
+            audioUrl,
+            transcript: null, // 稍後由 Queue Worker 填充
+            duration: metadata?.duration || 0,
+            conversationDate: metadata?.conversationDate
+              ? new Date(metadata.conversationDate)
+              : new Date(),
+            createdBy: userId,
+            // Slack 業務資訊
+            slackUserId: slackUser?.id,
+            slackUsername: slackUser?.username,
+            // 產品線
+            productLine: resolvedProductLine,
+          })
+          .returning();
 
-      console.log(
-        `[${requestId}] ✓ DB insert completed in ${Date.now() - dbStartTime}ms`
-      );
-
-      const insertedConversation = conversationResults[0];
-      if (!insertedConversation) {
-        console.error(
-          `[${requestId}] ❌ No conversation returned from DB insert`
+        console.log(
+          `[${requestId}] ✓ DB insert completed in ${Date.now() - dbStartTime}ms`
         );
-        throw new ORPCError("INTERNAL_SERVER_ERROR");
+
+        insertedConversation = conversationResults[0];
+        if (!insertedConversation) {
+          throw new Error("No conversation returned from DB insert");
+        }
+      } catch (error) {
+        console.error(`[${requestId}] ❌ DB insert failed:`, error);
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: `資料庫寫入失敗: ${error instanceof Error ? error.message : String(error)}`,
+        });
       }
 
       // Step 6: 推送到 Queue
