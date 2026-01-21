@@ -86,7 +86,9 @@ export function UTMDetails({
         <div className="grid gap-3">
           {UTM_ITEMS.map(({ key, label, icon: Icon, color }) => {
             const value = utm[key];
-            if (!value) return null;
+            if (!value) {
+              return null;
+            }
 
             return (
               <div className="flex items-center gap-2" key={key}>

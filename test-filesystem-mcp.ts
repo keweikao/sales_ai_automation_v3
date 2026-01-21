@@ -311,7 +311,7 @@ async function testFilesystemMCP() {
     await rm("reports/test-team-report.md", { force: true });
     await rm("reports/test-daily-summary.md", { force: true });
     console.log("✅ 清理完成");
-  } catch (error) {
+  } catch (_error) {
     console.log("⚠️  清理失敗（可能檔案不存在）");
   }
   console.log();

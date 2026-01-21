@@ -6,7 +6,7 @@
 import type {
   ConversationStatus,
   TranscriptSegment,
-} from "@sales_ai_automation_v3/shared/types";
+} from "@Sales_ai_automation_v3/shared/types";
 import { z } from "zod";
 import { publicProcedure, router } from "../trpc.js";
 
@@ -43,7 +43,7 @@ export const conversationRouter = router({
     .mutation(async ({ input }) => {
       const timestamp = Date.now();
       const conversation = {
-        id: "conv_" + timestamp,
+        id: `conv_${timestamp}`,
         opportunityId: input.opportunityId,
         type: input.type,
         title: input.title,
@@ -80,7 +80,7 @@ export const conversationRouter = router({
     .input(listConversationsSchema)
     .query(async ({ input }) => {
       const conversations = Array.from({ length: input.limit }, (_, i) => ({
-        id: "conv_" + i,
+        id: `conv_${i}`,
         opportunityId: input.opportunityId || "opp_123",
         type: "discovery_call" as const,
         status: "completed" as ConversationStatus,

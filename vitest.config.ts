@@ -33,16 +33,16 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@sales_ai_automation_v3/db": path.resolve(__dirname, "packages/db/src"),
-      "@sales_ai_automation_v3/auth": path.resolve(
+      "@Sales_ai_automation_v3/db": path.resolve(__dirname, "packages/db/src"),
+      "@Sales_ai_automation_v3/auth": path.resolve(
         __dirname,
         "packages/auth/src"
       ),
-      "@sales_ai_automation_v3/services": path.resolve(
+      "@Sales_ai_automation_v3/services": path.resolve(
         __dirname,
         "packages/services/src"
       ),
-      "@sales_ai_automation_v3/shared": path.resolve(
+      "@Sales_ai_automation_v3/shared": path.resolve(
         __dirname,
         "packages/shared/src"
       ),

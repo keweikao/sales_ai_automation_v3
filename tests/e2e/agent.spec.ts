@@ -27,7 +27,7 @@ test.describe("Sales Coach Agent API", () => {
       expect(response.status()).toBe(401);
     });
 
-    test.skip("認證後應成功分析對話", async ({ request }) => {
+    test("認證後應成功分析對話", async ({ request }) => {
       // 需要先取得認證 token
       const response = await request.post(`${API_BASE_URL}/api/agent.analyze`, {
         headers: {
@@ -111,7 +111,7 @@ test.describe("Sales Coach Agent API", () => {
 });
 
 test.describe("Sales Coach Agent 完整流程", () => {
-  test.skip("應完成從分析到建議的完整流程", async ({ request }) => {
+  test("應完成從分析到建議的完整流程", async ({ request }) => {
     // 步驟 1: 分析對話
     const analyzeResponse = await request.post(
       `${API_BASE_URL}/api/agent.analyze`,
@@ -229,7 +229,7 @@ test.describe("Health Check", () => {
 });
 
 test.describe("Slack 指令模擬", () => {
-  test.skip("模擬 /coach 指令請求格式", async ({ request }) => {
+  test("模擬 /coach 指令請求格式", async ({ request }) => {
     // 模擬 Slack 指令的 payload 格式
     const slackPayload = {
       command: "/coach",
@@ -336,11 +336,21 @@ test.describe("Scenario: Close Now Alert", () => {
 
     // 計算 Close Now 分數
     let score = 0;
-    if (closeNowSignals.urgencyLevel === "high") score += 25;
-    if (closeNowSignals.budgetConfirmed) score += 25;
-    if (closeNowSignals.decisionTimeline) score += 20;
-    if (closeNowSignals.stakeholderAlignment) score += 20;
-    if (!closeNowSignals.competitorMentioned) score += 10;
+    if (closeNowSignals.urgencyLevel === "high") {
+      score += 25;
+    }
+    if (closeNowSignals.budgetConfirmed) {
+      score += 25;
+    }
+    if (closeNowSignals.decisionTimeline) {
+      score += 20;
+    }
+    if (closeNowSignals.stakeholderAlignment) {
+      score += 20;
+    }
+    if (!closeNowSignals.competitorMentioned) {
+      score += 10;
+    }
 
     expect(score).toBeGreaterThanOrEqual(80);
     expect(score).toBe(100); // 所有條件都滿足

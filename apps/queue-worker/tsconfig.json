@@ -15,8 +15,8 @@
     "forceConsistentCasingInFileNames": true,
     "types": ["@cloudflare/workers-types"],
     "paths": {
-      "@sales_ai_automation_v3/shared": ["../../packages/shared/src"],
-      "@sales_ai_automation_v3/shared/*": ["../../packages/shared/src/*"],
+      "@Sales_ai_automation_v3/shared": ["../../packages/shared/src"],
+      "@Sales_ai_automation_v3/shared/*": ["../../packages/shared/src/*"],
       "@Sales_ai_automation_v3/services": ["../../packages/services/src"],
       "@Sales_ai_automation_v3/db/schema": ["../../packages/db/src/schema"]
     }

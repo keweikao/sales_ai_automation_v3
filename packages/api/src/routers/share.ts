@@ -1,10 +1,10 @@
-import { ORPCError } from "@orpc/server";
-import { db } from "@sales_ai_automation_v3/db";
-import { conversations, shareTokens } from "@sales_ai_automation_v3/db/schema";
+import { db } from "@Sales_ai_automation_v3/db";
+import { conversations, shareTokens } from "@Sales_ai_automation_v3/db/schema";
 import {
   generateShareToken,
   getTokenExpiry,
-} from "@sales_ai_automation_v3/services";
+} from "@Sales_ai_automation_v3/services";
+import { ORPCError } from "@orpc/server";
 import { and, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { z } from "zod";
@@ -26,15 +26,14 @@ const createShareToken = protectedProcedure
       console.log(`[Share] Creating token for conversation: ${conversationId}`);
 
       // 檢查 conversation 是否存在
-      console.log(`[Share] Checking conversation exists...`);
+      console.log("[Share] Checking conversation exists...");
       const conversation = await db.query.conversations.findFirst({
         where: eq(conversations.id, conversationId),
       });
 
       if (!conversation) {
         console.warn(`[Share] Conversation not found: ${conversationId}`);
-        throw new ORPCError({
-          code: "NOT_FOUND",
+        throw new ORPCError("NOT_FOUND", {
           message: "Conversation not found",
         });
       }
@@ -42,7 +41,7 @@ const createShareToken = protectedProcedure
       console.log(`[Share] Conversation found: ${conversation.id}`);
 
       // 檢查是否已有有效的 token
-      console.log(`[Share] Checking for existing valid token...`);
+      console.log("[Share] Checking for existing valid token...");
       const existingToken = await db.query.shareTokens.findFirst({
         where: and(
           eq(shareTokens.conversationId, conversationId),
@@ -62,14 +61,14 @@ const createShareToken = protectedProcedure
       }
 
       if (existingToken && new Date(existingToken.expiresAt) <= new Date()) {
-        console.log(`[Share] Existing token expired, creating new one`);
+        console.log("[Share] Existing token expired, creating new one");
       } else {
-        console.log(`[Share] No existing token, creating new one`);
+        console.log("[Share] No existing token, creating new one");
       }
 
       // 生成新 token
       const secret = context.env.SHARE_TOKEN_SECRET || "default-secret";
-      console.log(`[Share] Generating new token...`);
+      console.log("[Share] Generating new token...");
       const token = await generateShareToken(conversationId, secret);
       const expiresAt = getTokenExpiry(14); // 14 天有效
 
@@ -78,7 +77,7 @@ const createShareToken = protectedProcedure
       );
 
       // 儲存到資料庫
-      console.log(`[Share] Saving token to database...`);
+      console.log("[Share] Saving token to database...");
       const [newToken] = await db
         .insert(shareTokens)
         .values({
@@ -91,6 +90,12 @@ const createShareToken = protectedProcedure
         })
         .returning();
 
+      if (!newToken) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Failed to create share token",
+        });
+      }
+
       console.log(`[Share] Token saved successfully: ${newToken.id}`);
 
       return {
@@ -98,7 +103,7 @@ const createShareToken = protectedProcedure
         expiresAt: newToken.expiresAt,
       };
     } catch (error) {
-      console.error(`[Share] Error creating token:`, error);
+      console.error("[Share] Error creating token:", error);
 
       // 如果是已知的 ORPCError，直接拋出
       if (error instanceof ORPCError) {
@@ -106,8 +111,7 @@ const createShareToken = protectedProcedure
       }
 
       // 否則包裝為 INTERNAL_SERVER_ERROR
-      throw new ORPCError({
-        code: "INTERNAL_SERVER_ERROR",
+      throw new ORPCError("INTERNAL_SERVER_ERROR", {
         message: `Failed to create share token: ${error instanceof Error ? error.message : String(error)}`,
       });
     }
@@ -131,24 +135,19 @@ const getConversationByToken = publicProcedure
     });
 
     if (!shareToken) {
-      throw new ORPCError({
-        code: "NOT_FOUND",
+      throw new ORPCError("NOT_FOUND", {
         message: "Invalid or expired share link",
       });
     }
 
     // 檢查是否過期
     if (new Date(shareToken.expiresAt) < new Date()) {
-      throw new ORPCError({
-        code: "FORBIDDEN",
-        message: "Share link has expired",
-      });
+      throw new ORPCError("FORBIDDEN", { message: "Share link has expired" });
     }
 
     // 檢查是否被撤銷
     if (shareToken.isRevoked) {
-      throw new ORPCError({
-        code: "FORBIDDEN",
+      throw new ORPCError("FORBIDDEN", {
         message: "Share link has been revoked",
       });
     }
@@ -172,10 +171,7 @@ const getConversationByToken = publicProcedure
     });
 
     if (!conversation) {
-      throw new ORPCError({
-        code: "NOT_FOUND",
-        message: "Conversation not found",
-      });
+      throw new ORPCError("NOT_FOUND", { message: "Conversation not found" });
     }
 
     // 返回公開可見的資料（移除敏感資訊）

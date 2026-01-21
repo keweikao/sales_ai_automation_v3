@@ -131,7 +131,7 @@ async function runAllTests() {
     database: await testDatabase(),
   };
 
-  console.log("\n" + "=".repeat(60));
+  console.log(`\n${"=".repeat(60)}`);
   console.log("📊 測試結果:");
   console.log("=".repeat(60));
   console.log(`Gemini API:     ${results.gemini ? "✅ 成功" : "❌ 失敗"}`);

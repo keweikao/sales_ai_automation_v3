@@ -193,7 +193,7 @@ describe("Form Builder (Slack Bot)", () => {
         "utf-8"
       );
       expect(content).toContain("productLine");
-    } catch (error) {
+    } catch (_error) {
       // 如果檔案不存在,可能是不同的實作方式,跳過
       console.log("⚠️ form-builder.ts 不存在,跳過測試");
     }
@@ -245,7 +245,7 @@ describe("向後相容性檢查", () => {
             content.match(/\|\|.*["']ichef["']/);
           expect(hasIchefDefault).toBeTruthy();
         }
-      } catch (error) {
+      } catch (_error) {
         // 檔案不存在就跳過
         console.log(`⚠️ ${file} 不存在,跳過檢查`);
       }

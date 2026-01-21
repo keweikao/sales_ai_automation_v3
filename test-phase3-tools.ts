@@ -114,7 +114,7 @@ async function testPhase3Tools() {
   }
 
   // 驗證預期工具數量
-  console.log("\n" + "=".repeat(60));
+  console.log(`\n${"=".repeat(60)}`);
   console.log("驗證結果:");
   console.log("=".repeat(60));
 
@@ -155,7 +155,7 @@ async function testPhase3Tools() {
     `\n${totalPassed ? "✅" : "❌"} 總計: ${total}/${expectedTotal} 工具`
   );
 
-  console.log("\n" + "=".repeat(60));
+  console.log(`\n${"=".repeat(60)}`);
   if (allPassed) {
     console.log("🎉 所有測試通過！Phase 3 Ops 工具已成功註冊");
   } else {

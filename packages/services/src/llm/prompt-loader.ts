@@ -3,7 +3,7 @@
  * 載入產品線特定的 MEDDIC 提示詞
  */
 
-import type { ProductLine } from "@sales_ai_automation_v3/shared/product-configs";
+import type { ProductLine } from "@Sales_ai_automation_v3/shared/product-configs";
 import { MEDDIC_PROMPTS } from "./prompts.generated.js";
 
 /**

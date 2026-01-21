@@ -156,8 +156,6 @@ export function MeddicScoreCard({
         <div className="space-y-3">
           {(Object.entries(dimensions) as [keyof MeddicScores, number][]).map(
             ([key, score]) => (
-              // biome-ignore lint/a11y/noStaticElementInteractions: Role is conditionally set based on onDimensionClick
-              // biome-ignore lint/a11y/noNoninteractiveElementInteractions: Element becomes interactive when onDimensionClick is provided
               <div
                 className={cn(
                   "space-y-1",

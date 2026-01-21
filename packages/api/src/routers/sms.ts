@@ -1,10 +1,11 @@
-import { ORPCError } from "@orpc/server";
-import { db } from "@sales_ai_automation_v3/db";
-import { conversations } from "@sales_ai_automation_v3/db/schema";
+import { db } from "@Sales_ai_automation_v3/db";
+import { conversations } from "@Sales_ai_automation_v3/db/schema";
 import {
   generateCustomerSMSContent,
+  generateShareToken,
   sendSMS,
-} from "@sales_ai_automation_v3/services";
+} from "@Sales_ai_automation_v3/services";
+import { ORPCError } from "@orpc/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { protectedProcedure } from "../index";
@@ -20,58 +21,43 @@ const sendCustomerSMS = protectedProcedure
   )
   .handler(async ({ input, context }) => {
     const { conversationId } = input;
-    const userId = context.session?.user.id;
 
     // 查詢 conversation 和相關資料
     const conversation = await db.query.conversations.findFirst({
       where: eq(conversations.id, conversationId),
       with: {
         opportunity: true,
-        meddicAnalysis: true,
+        meddicAnalyses: true,
       },
     });
 
     if (!conversation) {
-      throw new ORPCError({
-        code: "NOT_FOUND",
-        message: "Conversation not found",
-      });
+      throw new ORPCError("NOT_FOUND", { message: "Conversation not found" });
     }
 
     // 檢查是否有客戶電話
     const phoneNumber = conversation.opportunity?.contactPhone;
     if (!phoneNumber) {
-      throw new ORPCError({
-        code: "BAD_REQUEST",
-        message: "客戶電話號碼不存在",
-      });
+      throw new ORPCError("BAD_REQUEST", { message: "客戶電話號碼不存在" });
     }
 
-    // 生成 share token（透過 share router）
-    // 這裡我們需要直接調用 share.create 的邏輯
-    const shareRouter = await import("./share");
-    let shareToken: string;
-
-    try {
-      const tokenResult = await shareRouter.shareRouter.create.handler({
-        input: { conversationId },
-        context,
-      });
-      shareToken = tokenResult.token;
-    } catch (error) {
-      throw new ORPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "無法生成分享連結",
-      });
-    }
-
+    // 生成 share token
+    const secret = context.env.SHARE_TOKEN_SECRET || "default-secret";
+    const shareToken = generateShareToken(conversationId, secret);
     const shareUrl = `${context.env.WEB_APP_URL}/share/${shareToken}`;
+
+    // 取得 MEDDIC 分數
+    const latestMeddicAnalysis = conversation.meddicAnalyses?.[0];
+    const meddicScore =
+      conversation.meddicAnalysis?.overallScore ||
+      latestMeddicAnalysis?.overallScore ||
+      0;
 
     // 生成 SMS 內容
     const smsContent = generateCustomerSMSContent({
-      companyName: conversation.opportunity.companyName,
-      caseNumber: conversation.caseNumber,
-      meddicScore: conversation.meddicAnalysis?.overallScore || 0,
+      companyName: conversation.opportunity?.companyName || "",
+      caseNumber: conversation.caseNumber || "",
+      meddicScore,
       shareUrl,
     });
 

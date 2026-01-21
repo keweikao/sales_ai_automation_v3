@@ -11,7 +11,11 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "types": ["@cloudflare/workers-types", "node"]
+    "types": ["@cloudflare/workers-types", "node"],
+    "paths": {
+      "@Sales_ai_automation_v3/shared": ["../../packages/shared/src"],
+      "@Sales_ai_automation_v3/shared/*": ["../../packages/shared/src/*"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]

@@ -2,7 +2,7 @@
  * 新增商機頁面
  */
 
-import type { ProductLine } from "@sales_ai_automation_v3/shared/product-configs";
+import type { ProductLine } from "@Sales_ai_automation_v3/shared/product-configs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Building2, Loader2 } from "lucide-react";

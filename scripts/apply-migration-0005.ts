@@ -29,7 +29,7 @@ async function applyMigration0005() {
     console.log("📄 Migration SQL:");
     console.log("─".repeat(60));
     console.log(migrationSQL);
-    console.log("─".repeat(60) + "\n");
+    console.log(`${"─".repeat(60)}\n`);
 
     console.log("🚀 Executing migration...\n");
 
@@ -49,7 +49,7 @@ async function applyMigration0005() {
           continue;
         }
 
-        currentStatement += " " + trimmedLine;
+        currentStatement += ` ${trimmedLine}`;
 
         // Execute when we hit a semicolon
         if (trimmedLine.endsWith(";")) {
@@ -98,9 +98,9 @@ async function applyMigration0005() {
         console.log(`   - ${row.indexname}`);
       }
 
-      console.log("\n" + "=".repeat(60));
+      console.log(`\n${"=".repeat(60)}`);
       console.log("✅ Migration 0005 completed successfully!");
-      console.log("=".repeat(60) + "\n");
+      console.log(`${"=".repeat(60)}\n`);
     } catch (error) {
       await client.query("ROLLBACK");
       throw error;

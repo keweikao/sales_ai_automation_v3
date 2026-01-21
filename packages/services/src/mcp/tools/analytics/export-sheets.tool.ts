@@ -187,7 +187,9 @@ export const exportSheetsTo = {
           ...data.map((row) =>
             Object.values(row as Record<string, unknown>)
               .map((value) => {
-                if (value === null || value === undefined) return "";
+                if (value === null || value === undefined) {
+                  return "";
+                }
                 if (typeof value === "string" && value.includes(",")) {
                   return `"${value}"`;
                 }

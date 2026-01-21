@@ -18,7 +18,7 @@ const OPS_ALERT_CHANNEL_ID = "C0A7C2HUXRR"; // Slack 警示頻道 ID
 /**
  * 取得狀態對應的 emoji
  */
-function getStatusEmoji(status: string): string {
+function _getStatusEmoji(status: string): string {
   switch (status) {
     case "healthy":
       return "✅";

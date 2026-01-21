@@ -62,7 +62,7 @@ export const storageCleanupRepairTool: MCPTool<Input, Output> = {
 
       const { R2StorageService } = await import("../../../../storage/r2.js");
 
-      const r2Service = new R2StorageService({
+      const _r2Service = new R2StorageService({
         accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY || "",
         secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_KEY || "",
         endpoint: process.env.CLOUDFLARE_R2_ENDPOINT || "",
@@ -119,7 +119,9 @@ export const storageCleanupRepairTool: MCPTool<Input, Output> = {
 
       // 過濾出舊檔案
       const oldFiles = listResponse.Contents.filter((file) => {
-        if (!file.LastModified) return false;
+        if (!file.LastModified) {
+          return false;
+        }
         return file.LastModified < cutoffDate;
       });
 
@@ -139,7 +141,9 @@ export const storageCleanupRepairTool: MCPTool<Input, Output> = {
 
       // 刪除檔案
       for (const file of oldFiles) {
-        if (!file.Key) continue;
+        if (!file.Key) {
+          continue;
+        }
 
         try {
           const deleteCommand = new DeleteObjectCommand({

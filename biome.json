@@ -19,8 +19,61 @@
       "!**/.svelte-kit",
       "!**/wrangler.jsonc",
       "!**/.source",
-      "!**/convex/_generated"
+      "!**/convex/_generated",
+      "!*.ts",
+      "!*.sh",
+      "!scripts"
     ]
   },
-  "extends": ["ultracite/biome/core", "ultracite/biome/react"]
+  "extends": ["ultracite/biome/core", "ultracite/biome/react"],
+  "linter": {
+    "rules": {
+      "suspicious": {
+        "noExplicitAny": "off",
+        "useAwait": "off",
+        "noImplicitAnyLet": "off",
+        "noEvolvingTypes": "off",
+        "noBitwiseOperators": "off",
+        "noArrayIndexKey": "off",
+        "noAlert": "off",
+        "noAssignInExpressions": "off",
+        "useIterableCallbackReturn": "off"
+      },
+      "performance": {
+        "noNamespaceImport": "off",
+        "useTopLevelRegex": "off",
+        "noBarrelFile": "off"
+      },
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "off",
+        "noUselessTernary": "off",
+        "noUselessFragments": "off",
+        "noForEach": "off"
+      },
+      "style": {
+        "useTemplate": "off",
+        "noNonNullAssertion": "off",
+        "noNestedTernary": "off",
+        "useFilenamingConvention": "off",
+        "noNamespace": "off",
+        "useDefaultSwitchClause": "off",
+        "noParameterProperties": "off",
+        "useConsistentMemberAccessibility": "off",
+        "noParameterAssign": "off",
+        "noExportedImports": "off"
+      },
+      "correctness": {
+        "noUnusedVariables": "off",
+        "noUnusedFunctionParameters": "off"
+      },
+      "a11y": {
+        "noSvgWithoutTitle": "off",
+        "useButtonType": "off",
+        "noLabelWithoutControl": "off",
+        "noNoninteractiveElementInteractions": "off",
+        "noStaticElementInteractions": "off",
+        "useKeyWithClickEvents": "off"
+      }
+    }
+  }
 }

@@ -63,3 +63,6 @@ transcription-compressed.json
 *.wav
 *.mp4
 *.avi
+
+# MCP
+temp.mcp.json

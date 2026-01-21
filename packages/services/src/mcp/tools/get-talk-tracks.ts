@@ -174,7 +174,7 @@ export class GetTalkTracksTool {
 
     // If we have high success rate tracks, incorporate their insights
     const topTrack = tracks.find((t) => t.successRate >= 70);
-    if (topTrack && topTrack.context) {
+    if (topTrack?.context) {
       return `${bestPractices[situation]} 高成功率話術重點：${topTrack.context}`;
     }
 
@@ -296,12 +296,12 @@ export class GetTalkTracksTool {
     let filteredTracks = tracks;
     if (customerType === "精算型") {
       // Prioritize calculation-based tracks
-      filteredTracks = tracks.sort((a, b) =>
+      filteredTracks = tracks.sort((a, _b) =>
         a.context.includes("計算") ? -1 : 1
       );
     } else if (customerType === "衝動型") {
       // Prioritize social proof and urgency
-      filteredTracks = tracks.sort((a, b) =>
+      filteredTracks = tracks.sort((a, _b) =>
         a.context.includes("社會證明") ? -1 : 1
       );
     }

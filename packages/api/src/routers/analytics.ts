@@ -571,10 +571,16 @@ export const getRepPerformance = protectedProcedure
       current: number,
       previous: number
     ): "up" | "down" | "stable" => {
-      if (previous === 0) return "stable";
+      if (previous === 0) {
+        return "stable";
+      }
       const change = current - previous;
-      if (change > 0.3) return "up";
-      if (change < -0.3) return "down";
+      if (change > 0.3) {
+        return "up";
+      }
+      if (change < -0.3) {
+        return "down";
+      }
       return "stable";
     };
 
@@ -664,7 +670,9 @@ export const getRepPerformance = protectedProcedure
 
     for (const [key, value] of Object.entries(dimensionScores)) {
       const name = dimensionNames[key];
-      if (!name) continue;
+      if (!name) {
+        continue;
+      }
       if (value >= 4) {
         strengths.push(name);
       } else if (value <= 2) {
@@ -1202,7 +1210,7 @@ export const getTeamPerformance = protectedProcedure
         (a, b) => (Number(b[key]) || 0) - (Number(a[key]) || 0)
       );
       const topMember = sorted[0];
-      const bottomMember = sorted[sorted.length - 1];
+      const bottomMember = sorted.at(-1);
       return {
         topPerformer: topMember
           ? (userNameMap.get(topMember.userId) ?? "未知")

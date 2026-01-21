@@ -297,7 +297,7 @@ function buildAlertBlocks(input: SlackPostAlertInput): SlackBlock[] {
     critical: ":rotating_light:",
   };
 
-  const severityColor: Record<string, string> = {
+  const _severityColor: Record<string, string> = {
     info: "#2196F3",
     warning: "#FF9800",
     critical: "#F44336",

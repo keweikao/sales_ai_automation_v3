@@ -18,7 +18,9 @@ import type { V2Case } from "../types-v2";
  * U+2014 (—) → U+002D (-)
  */
 export function normalizeCustomerId(customerId: string): string {
-  if (!customerId) return customerId;
+  if (!customerId) {
+    return customerId;
+  }
   // 替換所有 Unicode 破折號變體為 ASCII 破折號
   return customerId.replace(/[\u2010-\u2014\u2212\uFE58\uFE63\uFF0D]/g, "-");
 }
@@ -138,11 +140,15 @@ export function extractUniqueOpportunities(
 
   for (const v2Case of cases) {
     const customerId = v2Case.customerId;
-    if (!customerId) continue;
+    if (!customerId) {
+      continue;
+    }
 
     // 正規化 customerId
     const normalizedCustomerId = normalizeCustomerId(customerId);
-    if (!normalizedCustomerId) continue;
+    if (!normalizedCustomerId) {
+      continue;
+    }
 
     // 如果這個正規化後的 customerId 還沒有 opportunity，就建立一個
     if (!opportunities.has(normalizedCustomerId)) {

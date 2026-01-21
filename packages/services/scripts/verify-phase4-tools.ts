@@ -93,7 +93,7 @@ const totalPhase4 =
   phase4Tools.googleDrive.length +
   phase4Tools.googleCalendar.length;
 
-console.log("\n" + "━".repeat(60));
+console.log(`\n${"━".repeat(60)}`);
 console.log(`📦 Phase 4 Total: ${totalPhase4} tools`);
 console.log("━".repeat(60));
 
@@ -113,7 +113,7 @@ console.log("   Phase 1 (Core MCP): 7 tools");
 console.log("   Phase 2 (External Services): 11 tools");
 console.log("   Phase 3 (Ops Tools): 28 tools");
 console.log(`   Phase 4 (Analytics + Google): ${totalPhase4} tools`);
-console.log("   " + "━".repeat(40));
+console.log(`   ${"━".repeat(40)}`);
 console.log(`   Total: ${7 + 11 + 28 + totalPhase4} MCP tools ✅`);
 
 console.log("\n🎯 Phase 4 Capabilities:");

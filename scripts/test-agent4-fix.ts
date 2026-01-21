@@ -198,7 +198,9 @@ async function testAgent4Fix() {
       console.log(
         `  ${present ? "✅" : "❌"} ${field}: ${present ? "存在" : "缺少"}`
       );
-      if (!present) allFieldsPresent = false;
+      if (!present) {
+        allFieldsPresent = false;
+      }
     }
     console.log();
 

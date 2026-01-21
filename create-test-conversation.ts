@@ -3,8 +3,8 @@
  * 不需要實際上傳音檔
  */
 
+import { randomUUID } from "node:crypto";
 import { neon } from "@neondatabase/serverless";
-import { randomUUID } from "crypto";
 import { drizzle } from "drizzle-orm/neon-http";
 import { conversations } from "./packages/db/src/schema/index.js";
 

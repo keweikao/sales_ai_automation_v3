@@ -35,7 +35,7 @@ async function testQueueWorker() {
   console.log("   方案 B: 上傳真實音檔到 R2,然後手動觸發 Queue Worker");
   console.log("   方案 C: 等待 Slack App 批准後進行完整流程測試");
 
-  console.log("\n" + "=".repeat(60));
+  console.log(`\n${"=".repeat(60)}`);
 }
 
 testQueueWorker();

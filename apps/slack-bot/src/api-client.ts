@@ -17,8 +17,8 @@ import type {
  * 用於從 Slack Bot 呼叫主要的 oRPC API
  */
 export class ApiClient {
-  private baseUrl: string;
-  private token?: string;
+  private readonly baseUrl: string;
+  private readonly token?: string;
 
   constructor(baseUrl: string, token?: string) {
     this.baseUrl = baseUrl.replace(/\/$/, ""); // 移除尾部斜線

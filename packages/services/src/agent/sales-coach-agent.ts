@@ -124,7 +124,6 @@ JSON 結構：
 
 export class SalesCoachAgent {
   private readonly geminiClient: GeminiClient;
-  private readonly db: Database;
   private readonly config: Required<SalesCoachAgentConfig>;
 
   // MCP Tools
@@ -259,7 +258,7 @@ export class SalesCoachAgent {
    */
   private transformLLMResponse(
     response: LLMAnalysisResponse,
-    input: SalesCoachInput
+    _input: SalesCoachInput
   ): SalesCoachOutput {
     const analysis: MeddicAnalysis = {
       scores: {
@@ -280,7 +279,7 @@ export class SalesCoachAgent {
     };
 
     const recommendations: Recommendation[] = response.recommendations.map(
-      (r, index) => ({
+      (r, _index) => ({
         id: `rec-${randomUUID().slice(0, 8)}`,
         type: r.type as Recommendation["type"],
         priority: r.priority as Recommendation["priority"],
@@ -527,9 +526,15 @@ export class SalesCoachAgent {
   private getQualificationStatus(
     score: number
   ): MeddicAnalysis["qualificationStatus"] {
-    if (score >= 70) return "Strong";
-    if (score >= 50) return "Medium";
-    if (score >= 30) return "Weak";
+    if (score >= 70) {
+      return "Strong";
+    }
+    if (score >= 50) {
+      return "Medium";
+    }
+    if (score >= 30) {
+      return "Weak";
+    }
     return "At Risk";
   }
 
@@ -538,7 +543,7 @@ export class SalesCoachAgent {
    */
   private buildDimensionsAnalysis(meddic: LLMAnalysisResponse["meddic"]) {
     const buildDimension = (
-      score: number,
+      _score: number,
       gaps: string[],
       strengths: string[]
     ) => ({

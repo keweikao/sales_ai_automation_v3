@@ -14,6 +14,9 @@ export interface Env {
 
   // 新增: 產品線 Channel 配置
   PRODUCT_LINE_CHANNELS?: string; // JSON string: {"C12345":"ichef","C67890":"beauty"}
+
+  // 產品線設定
+  PRODUCT_LINE?: string; // 'ichef' | 'beauty'
 }
 
 // Slack 請求類型
@@ -310,6 +313,9 @@ export interface AudioUploadMetadata {
   staffCount?: string; // Beauty only
   currentSystem?: string; // 統一的現有系統欄位名稱
   decisionMakerPresent?: string; // 新版欄位名稱 (yes/no/unknown)
+
+  // 客戶聯絡資訊
+  contactPhone?: string; // 客戶電話
 }
 
 // Slack Modal 相關類型

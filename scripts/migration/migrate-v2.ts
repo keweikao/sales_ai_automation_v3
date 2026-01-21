@@ -56,7 +56,7 @@ async function main() {
 
   try {
     // 載入進度
-    const progress = (await loadProgress()) || createProgress();
+    const _progress = (await loadProgress()) || createProgress();
 
     // ========== Phase 1: 讀取所有 Cases ==========
     console.log("📥 Phase 1: 讀取 Firestore cases 集合...\n");

@@ -162,7 +162,7 @@ describe("API 效能基準測試", () => {
       const concurrentRequests = 10;
       const start = performance.now();
 
-      const promises = Array(concurrentRequests)
+      const promises = new Array(concurrentRequests)
         .fill(null)
         .map(() =>
           measureApiCall(`${API_BASE_URL}/api/opportunity/list?limit=5`)
@@ -191,7 +191,7 @@ describe("API 效能基準測試", () => {
 
       // 模擬突發流量
       const start = performance.now();
-      const promises = Array(burstSize)
+      const promises = new Array(burstSize)
         .fill(null)
         .map(() => measureApiCall(`${API_BASE_URL}/health`));
 

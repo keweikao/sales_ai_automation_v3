@@ -8,7 +8,7 @@
  * 4. Orchestrator metadata 包含 productLine
  */
 
-import type { ProductLine } from "@sales_ai_automation_v3/shared/product-configs";
+import type { ProductLine } from "@Sales_ai_automation_v3/shared/product-configs";
 
 // ============================================================
 // Test 1: ProductLine Type 驗證

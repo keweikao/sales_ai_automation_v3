@@ -22,8 +22,8 @@ let testUserId: string;
 describe("E2E - Queue Integration", () => {
   beforeAll(async () => {
     // 創建測試 opportunity
-    testUserId = "test-user-" + randomUUID().slice(0, 8);
-    testOpportunityId = "test-opp-" + randomUUID().slice(0, 8);
+    testUserId = `test-user-${randomUUID().slice(0, 8)}`;
+    testOpportunityId = `test-opp-${randomUUID().slice(0, 8)}`;
 
     await db.insert(opportunities).values({
       id: testOpportunityId,

@@ -534,9 +534,15 @@ export class MeddicOrchestrator {
   ): string {
     const score = this.calculateOverallScoreFromBuyerData(buyerData);
 
-    if (score >= 70) return "Strong";
-    if (score >= 50) return "Medium";
-    if (score >= 30) return "Weak";
+    if (score >= 70) {
+      return "Strong";
+    }
+    if (score >= 50) {
+      return "Medium";
+    }
+    if (score >= 30) {
+      return "Weak";
+    }
     return "At Risk";
   }
 
@@ -553,8 +559,6 @@ export class MeddicOrchestrator {
         return "Missing Decision Maker";
       case "excellent":
         return "Excellent Performance";
-      case "low_progress":
-      case "none":
       default:
         return "Risk";
     }

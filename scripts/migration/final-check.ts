@@ -1,7 +1,7 @@
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import { neon } from "@neondatabase/serverless";
-import { existsSync, readFileSync } from "fs";
-import { resolve } from "path";
 
 // Load env files
 const envFiles = [
@@ -14,9 +14,13 @@ for (const envFile of envFiles) {
     const text = readFileSync(envFile, "utf-8");
     for (const line of text.split("\n")) {
       const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith("#")) continue;
+      if (!trimmed || trimmed.startsWith("#")) {
+        continue;
+      }
       const eqIndex = trimmed.indexOf("=");
-      if (eqIndex === -1) continue;
+      if (eqIndex === -1) {
+        continue;
+      }
       const key = trimmed.slice(0, eqIndex).trim();
       let value = trimmed.slice(eqIndex + 1).trim();
       if (
@@ -25,7 +29,9 @@ for (const envFile of envFiles) {
       ) {
         value = value.slice(1, -1);
       }
-      if (!process.env[key]) process.env[key] = value;
+      if (!process.env[key]) {
+        process.env[key] = value;
+      }
     }
   }
 }
@@ -79,7 +85,9 @@ async function main() {
   for (const t of requiredTables) {
     const exists = tables.some((table) => table.table_name === t);
     const status = exists ? "✅" : "❌";
-    if (!exists) allTablesExist = false;
+    if (!exists) {
+      allTablesExist = false;
+    }
     console.log(`  ${status} ${t}`);
   }
 

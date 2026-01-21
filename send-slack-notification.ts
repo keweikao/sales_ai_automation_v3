@@ -125,7 +125,7 @@ async function main() {
         owner: step.owner || "Unassigned",
       })),
       risks: analysis.risks || [],
-      alerts: alerts.filter((a) => a && a.trim()),
+      alerts: alerts.filter((a) => a?.trim()),
       painPoints,
       summary: (analysis.agentOutputs as any)?.agent4?.markdown,
       smsText: (analysis.agentOutputs as any)?.agent4?.sms_text,

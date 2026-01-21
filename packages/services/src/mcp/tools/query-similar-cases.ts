@@ -81,7 +81,7 @@ export class QuerySimilarCasesTool {
     const { customerType, concern, storeType } = input;
 
     // Build search conditions
-    const conditions = [];
+    const _conditions = [];
 
     // Search in conversations with matching criteria
     // Note: This is a simplified implementation. In production,
@@ -225,7 +225,7 @@ export class QuerySimilarCasesTool {
    */
   private getMockCases(
     customerType: CustomerType,
-    concern: string
+    _concern: string
   ): SimilarCase[] {
     const mockCases: Record<CustomerType, SimilarCase[]> = {
       衝動型: [

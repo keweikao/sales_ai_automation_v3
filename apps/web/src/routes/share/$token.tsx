@@ -133,7 +133,6 @@ function PublicSharePage() {
         </Card>
       )}
 
-
       {/* Footer */}
       <div className="text-center text-muted-foreground text-sm">
         <p>此報告由 iCHEF Sales AI 系統自動生成</p>

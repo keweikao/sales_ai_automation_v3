@@ -6,8 +6,12 @@
 import { gcsStorage } from "./config";
 
 function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
@@ -66,7 +70,7 @@ async function checkAudioBuckets() {
     }
   }
 
-  console.log("\n" + "═".repeat(50));
+  console.log(`\n${"═".repeat(50)}`);
   console.log("\n💡 請選擇包含音檔的 bucket，更新 .env.migration:");
   console.log("   FIREBASE_STORAGE_BUCKET=<bucket-name>");
 }

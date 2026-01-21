@@ -520,14 +520,15 @@ app.post("/slack/interactions", async (c) => {
         if (!metadata.customerName?.trim()) {
           errors.customer_name = "請輸入客戶名稱";
         }
-        if (!metadata.contactPhone?.trim()) {
-          errors.contact_phone = "請輸入客戶電話";
-        } else {
+        if (metadata.contactPhone?.trim()) {
           // 驗證電話格式
           const phoneDigits = metadata.contactPhone.replace(/\D/g, "");
           if (!/^09\d{8}$/.test(phoneDigits)) {
-            errors.contact_phone = "請輸入有效的台灣手機號碼（例如：0912-345-678）";
+            errors.contact_phone =
+              "請輸入有效的台灣手機號碼（例如：0912-345-678）";
           }
+        } else {
+          errors.contact_phone = "請輸入客戶電話";
         }
         if (!metadata.storeType) {
           errors.store_type = "請選擇店型";

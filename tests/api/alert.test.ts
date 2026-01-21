@@ -14,11 +14,11 @@ const mockApiClient = {
 };
 
 describe("Alert API", () => {
-  let authCookie: string;
+  let _authCookie: string;
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    authCookie = await getAuthCookie();
+    _authCookie = await getAuthCookie();
   });
 
   describe("GET /api/alert/list", () => {
@@ -383,7 +383,7 @@ describe("Alert API", () => {
   describe("分頁功能", () => {
     test("應該正確處理分頁", async () => {
       mockApiClient.listAlerts.mockResolvedValue({
-        alerts: Array(20).fill({ id: "alert", type: "close_now" }),
+        alerts: new Array(20).fill({ id: "alert", type: "close_now" }),
         total: 50,
       });
 
@@ -398,7 +398,7 @@ describe("Alert API", () => {
 
     test("應該回傳正確的 offset 結果", async () => {
       mockApiClient.listAlerts.mockResolvedValue({
-        alerts: Array(10).fill({ id: "alert", type: "close_now" }),
+        alerts: new Array(10).fill({ id: "alert", type: "close_now" }),
         total: 50,
       });
 

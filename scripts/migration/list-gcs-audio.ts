@@ -34,7 +34,9 @@ function extractConversationId(filePath: string): string | undefined {
   // - audio/2024/01/conversationId.mp3
   // - recordings/conversationId.mp3
   const filename = filePath.split("/").pop();
-  if (!filename) return undefined;
+  if (!filename) {
+    return undefined;
+  }
 
   // 移除副檔名
   const nameWithoutExt = filename.replace(/\.(mp3|wav|m4a|ogg|webm)$/i, "");
@@ -49,10 +51,15 @@ function getFileFormat(filename: string): string {
 
 // 格式化檔案大小
 function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024)
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+  if (bytes < 1024 * 1024 * 1024) {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 

@@ -66,7 +66,9 @@ const statusOptions: Record<string, { label: string; color: string }> = {
 };
 
 function formatDuration(seconds: number | null): string {
-  if (!seconds) return "-";
+  if (!seconds) {
+    return "-";
+  }
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
@@ -360,9 +362,11 @@ function ConversationDetailPage() {
           </Card>
 
           {/* Tabs: Transcript / Analysis */}
-          <Tabs defaultValue={conversation.analysis ? "analysis" : "transcript"}>
+          <Tabs
+            defaultValue={conversation.analysis ? "analysis" : "transcript"}
+          >
             <TabsList>
-              <TabsTrigger value="analysis" disabled={!conversation.analysis}>
+              <TabsTrigger disabled={!conversation.analysis} value="analysis">
                 MEDDIC 分析
               </TabsTrigger>
               <TabsTrigger value="transcript">轉錄文字</TabsTrigger>
@@ -588,7 +592,7 @@ function ConversationDetailPage() {
                   <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-900 dark:bg-green-950">
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                      <span className="font-medium text-sm text-green-900 dark:text-green-100">
+                      <span className="font-medium text-green-900 text-sm dark:text-green-100">
                         已發送簡訊
                       </span>
                     </div>

@@ -49,9 +49,9 @@ async function main() {
 
     console.log("📋 步驟 1: 授權應用程式\n");
     console.log("請在瀏覽器中開啟以下 URL 並授權:");
-    console.log("\n" + "=".repeat(80));
+    console.log(`\n${"=".repeat(80)}`);
     console.log(authUrl);
-    console.log("=".repeat(80) + "\n");
+    console.log(`${"=".repeat(80)}\n`);
 
     console.log("📋 步驟 2: 複製授權碼\n");
     console.log("授權後,您會看到一個授權碼,請複製它\n");
@@ -103,9 +103,9 @@ async function main() {
     };
 
     console.log("✅ 成功取得 Refresh Token!\n");
-    console.log("=" + "=".repeat(79));
-    console.log("GOOGLE_REFRESH_TOKEN=" + tokens.refresh_token);
-    console.log("=" + "=".repeat(79) + "\n");
+    console.log(`=${"=".repeat(79)}`);
+    console.log(`GOOGLE_REFRESH_TOKEN=${tokens.refresh_token}`);
+    console.log(`=${"=".repeat(79)}\n`);
 
     console.log("📝 下一步:\n");
     console.log("1. 將上述 GOOGLE_REFRESH_TOKEN 加入到 .env 檔案:");

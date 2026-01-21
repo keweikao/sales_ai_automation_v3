@@ -78,11 +78,15 @@ export const storageIntegrityCheckTool: MCPTool<Input, Output> = {
 
           // 對每個檔案檢查 DB 中是否有對應記錄
           for (const file of listResponse.Contents) {
-            if (!file.Key) continue;
+            if (!file.Key) {
+              continue;
+            }
 
             // 從 audio/xxx.mp3 提取檔名，查詢 DB
             const fileName = file.Key.split("/").pop();
-            if (!fileName) continue;
+            if (!fileName) {
+              continue;
+            }
 
             const dbRecords = await sql`
 							SELECT id

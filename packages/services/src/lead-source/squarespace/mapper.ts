@@ -32,7 +32,9 @@ export function extractUTMParams(data: SquarespaceFormData): UTMParams {
  * 組合姓名（如果分開提供）
  */
 function combineName(data: SquarespaceFormData): string | undefined {
-  if (data.name) return data.name;
+  if (data.name) {
+    return data.name;
+  }
 
   const parts = [data.fname, data.lname].filter(Boolean);
   return parts.length > 0 ? parts.join(" ") : undefined;
@@ -47,14 +49,18 @@ function getFieldValue(
   fieldName: keyof FieldMapping
 ): string | undefined {
   const mappedField = fieldMapping[fieldName];
-  if (!mappedField) return undefined;
+  if (!mappedField) {
+    return undefined;
+  }
 
   // 支援多個可能的欄位名稱（用逗號分隔）
   const possibleFields = mappedField.split(",").map((f) => f.trim());
 
   for (const field of possibleFields) {
     const value = data[field];
-    if (value) return value;
+    if (value) {
+      return value;
+    }
   }
 
   return undefined;

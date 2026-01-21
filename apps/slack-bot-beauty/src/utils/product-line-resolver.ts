@@ -3,7 +3,7 @@
  * 根據 Slack Channel ID 解析產品線
  */
 
-import type { ProductLine } from "@sales_ai_automation_v3/shared/product-configs";
+import type { ProductLine } from "@Sales_ai_automation_v3/shared/product-configs";
 import type { Env } from "../types";
 
 /**

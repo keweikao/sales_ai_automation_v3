@@ -4,7 +4,7 @@ import type { CacheService } from "./types";
  * Cloudflare KV 快取服務實作
  */
 export class KVCacheService implements CacheService {
-  constructor(private kv: KVNamespace) {}
+  constructor(private readonly kv: KVNamespace) {}
 
   async get<T>(key: string): Promise<T | null> {
     try {

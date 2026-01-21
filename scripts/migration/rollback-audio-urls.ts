@@ -90,7 +90,9 @@ async function rollbackAudioUrls() {
 
     for (const conversationId of batch) {
       const gcsUri = urlMap.get(conversationId);
-      if (!gcsUri) continue;
+      if (!gcsUri) {
+        continue;
+      }
 
       try {
         // 取得目前的 audio_url

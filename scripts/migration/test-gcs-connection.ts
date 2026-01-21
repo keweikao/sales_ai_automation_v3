@@ -31,10 +31,15 @@ function checkEnvVars(): boolean {
 
 // 格式化檔案大小
 function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  if (bytes < 1024 * 1024 * 1024)
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+  if (bytes < 1024 * 1024 * 1024) {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
@@ -93,7 +98,9 @@ async function testGcsConnection() {
         ];
 
         for (const altName of altBucketNames) {
-          if (altName === bucketName) continue;
+          if (altName === bucketName) {
+            continue;
+          }
           try {
             const altBucket = gcsStorage.bucket(altName);
             const [altExists] = await altBucket.exists();

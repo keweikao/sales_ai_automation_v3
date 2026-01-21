@@ -310,6 +310,9 @@ export interface AudioUploadMetadata {
   staffCount?: string; // Beauty only
   currentSystem?: string; // 統一的現有系統欄位名稱
   decisionMakerPresent?: string; // 新版欄位名稱 (yes/no/unknown)
+
+  // 客戶聯絡資訊
+  contactPhone?: string; // 客戶電話
 }
 
 // Slack Modal 相關類型

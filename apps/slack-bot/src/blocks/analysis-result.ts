@@ -198,8 +198,12 @@ export function buildSummaryBlocks(
       .slice(0, 3)
       .map((step) => {
         let text = `• ${step.action}`;
-        if (step.owner) text += ` (${step.owner})`;
-        if (step.deadline) text += ` - ${step.deadline}`;
+        if (step.owner) {
+          text += ` (${step.owner})`;
+        }
+        if (step.deadline) {
+          text += ` - ${step.deadline}`;
+        }
         return text;
       })
       .join("\n");
@@ -322,8 +326,12 @@ function getStatusEmoji(status: string): string {
 }
 
 function getScoreColor(score: number): string {
-  if (score >= 70) return "🟢";
-  if (score >= 40) return "🟡";
+  if (score >= 70) {
+    return "🟢";
+  }
+  if (score >= 40) {
+    return "🟡";
+  }
   return "🔴";
 }
 

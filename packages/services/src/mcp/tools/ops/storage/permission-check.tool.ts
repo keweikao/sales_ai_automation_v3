@@ -55,7 +55,7 @@ export const storagePermissionCheckTool: MCPTool<Input, Output> = {
             contentType: "text/plain",
           });
           canWrite = true;
-        } catch (error) {
+        } catch (_error) {
           canWrite = false;
         }
       }
@@ -65,7 +65,7 @@ export const storagePermissionCheckTool: MCPTool<Input, Output> = {
         try {
           const downloaded = await r2Service.download(testKey);
           canRead = downloaded.length > 0;
-        } catch (error) {
+        } catch (_error) {
           canRead = false;
         }
       }
@@ -75,7 +75,7 @@ export const storagePermissionCheckTool: MCPTool<Input, Output> = {
         try {
           await r2Service.delete(testKey);
           canDelete = true;
-        } catch (error) {
+        } catch (_error) {
           canDelete = false;
         }
       }
@@ -85,14 +85,26 @@ export const storagePermissionCheckTool: MCPTool<Input, Output> = {
       let error: string | undefined;
 
       const requiredPermissions = [];
-      if (input.checkRead) requiredPermissions.push("read");
-      if (input.checkWrite) requiredPermissions.push("write");
-      if (input.checkDelete) requiredPermissions.push("delete");
+      if (input.checkRead) {
+        requiredPermissions.push("read");
+      }
+      if (input.checkWrite) {
+        requiredPermissions.push("write");
+      }
+      if (input.checkDelete) {
+        requiredPermissions.push("delete");
+      }
 
       const failedPermissions = [];
-      if (input.checkRead && !canRead) failedPermissions.push("read");
-      if (input.checkWrite && !canWrite) failedPermissions.push("write");
-      if (input.checkDelete && !canDelete) failedPermissions.push("delete");
+      if (input.checkRead && !canRead) {
+        failedPermissions.push("read");
+      }
+      if (input.checkWrite && !canWrite) {
+        failedPermissions.push("write");
+      }
+      if (input.checkDelete && !canDelete) {
+        failedPermissions.push("delete");
+      }
 
       if (failedPermissions.length > 0) {
         if (failedPermissions.length === requiredPermissions.length) {

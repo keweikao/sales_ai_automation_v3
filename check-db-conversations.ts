@@ -32,7 +32,7 @@ async function checkConversations() {
 
     for (const conv of results) {
       const transcript = conv.transcript as any;
-      const hasTranscript = transcript && transcript.fullText;
+      const hasTranscript = transcript?.fullText;
       const transcriptLength = hasTranscript ? transcript.fullText.length : 0;
 
       console.log(`📝 ${conv.caseNumber}`);

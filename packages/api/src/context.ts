@@ -2,9 +2,9 @@ import { auth } from "@Sales_ai_automation_v3/auth";
 import { env } from "@Sales_ai_automation_v3/env/server";
 import type { Context as HonoContext } from "hono";
 
-export type CreateContextOptions = {
+export interface CreateContextOptions {
   context: HonoContext;
-};
+}
 
 // Service Account session for internal API calls
 const SERVICE_ACCOUNT_SESSION = {

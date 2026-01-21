@@ -80,8 +80,8 @@ const ALL_CHECK_TOOLS = Object.keys(CHECK_TO_REPAIR_MAPPING);
 // ============================================================
 
 export class OpsOrchestrator {
-  private options: Required<OpsOrchestratorOptions>;
-  private mcpServer: MCPServer;
+  private readonly options: Required<OpsOrchestratorOptions>;
+  private readonly mcpServer: MCPServer;
 
   constructor(options: OpsOrchestratorOptions = {}) {
     this.options = {

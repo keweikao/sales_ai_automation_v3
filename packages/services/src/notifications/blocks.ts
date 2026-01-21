@@ -31,11 +31,11 @@ export function buildProcessingStartedBlocks(
       fields: [
         {
           type: "mrkdwn",
-          text: "*檔案名稱:*\n" + fileName,
+          text: `*檔案名稱:*\n${fileName}`,
         },
         {
           type: "mrkdwn",
-          text: "*檔案大小:*\n" + fileSizeMB + " MB",
+          text: `*檔案大小:*\n${fileSizeMB} MB`,
         },
       ],
     },
@@ -47,11 +47,11 @@ export function buildProcessingStartedBlocks(
       fields: [
         {
           type: "mrkdwn",
-          text: "*案件編號:*\n" + caseNumber,
+          text: `*案件編號:*\n${caseNumber}`,
         },
         {
           type: "mrkdwn",
-          text: "*對話 ID:*\n`" + conversationId + "`",
+          text: `*對話 ID:*\n\`${conversationId}\``,
         },
       ],
     });
@@ -96,15 +96,15 @@ export function buildProcessingCompletedBlocks(
       fields: [
         {
           type: "mrkdwn",
-          text: "*案件編號:*\n" + caseNumber,
+          text: `*案件編號:*\n${caseNumber}`,
         },
         {
           type: "mrkdwn",
-          text: "*處理時間:*\n" + processingTimeSec + " 秒",
+          text: `*處理時間:*\n${processingTimeSec} 秒`,
         },
         {
           type: "mrkdwn",
-          text: "*MEDDIC 分數:*\n*" + analysisResult.overallScore + "/100*",
+          text: `*MEDDIC 分數:*\n*${analysisResult.overallScore}/100*`,
         },
         {
           type: "mrkdwn",
@@ -124,14 +124,14 @@ export function buildProcessingCompletedBlocks(
   // Block 3: 高優先級警報 (僅當有 alerts 時)
   if (analysisResult.alerts && analysisResult.alerts.length > 0) {
     const alertsText = analysisResult.alerts
-      .map((alert) => "• " + alert)
+      .map((alert) => `• ${alert}`)
       .join("\n");
 
     blocks.push({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: "⚠️ *需要注意:*\n" + alertsText,
+        text: `⚠️ *需要注意:*\n${alertsText}`,
       },
     });
     blocks.push({ type: "divider" });
@@ -140,14 +140,14 @@ export function buildProcessingCompletedBlocks(
   // Block 4: 客戶痛點 (從 painPoints 提取)
   if (analysisResult.painPoints && analysisResult.painPoints.length > 0) {
     const painPointsText = analysisResult.painPoints
-      .map((point) => "• " + point)
+      .map((point) => `• ${point}`)
       .join("\n");
 
     blocks.push({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: "💡 *客戶痛點*\n" + painPointsText,
+        text: `💡 *客戶痛點*\n${painPointsText}`,
       },
     });
     blocks.push({ type: "divider" });
@@ -158,9 +158,9 @@ export function buildProcessingCompletedBlocks(
     const risksText = analysisResult.risks
       .map((risk) => {
         const emoji = getSeverityEmoji(risk.severity);
-        let text = emoji + " *" + risk.risk + "*";
+        let text = `${emoji} *${risk.risk}*`;
         if (risk.mitigation) {
-          text += "\n_緩解措施:_ " + risk.mitigation;
+          text += `\n_緩解措施:_ ${risk.mitigation}`;
         }
         return text;
       })
@@ -201,7 +201,7 @@ export function buildProcessingCompletedBlocks(
         text: "查看完整分析",
         emoji: true,
       },
-      url: webAppUrl + "/conversations/" + conversationId,
+      url: `${webAppUrl}/conversations/${conversationId}`,
       style: "primary",
     },
   ];
@@ -234,7 +234,7 @@ export function buildProcessingCompletedBlocks(
         text: "編輯會議摘要與簡訊",
         emoji: true,
       },
-      url: webAppUrl + "/conversations/" + conversationId,
+      url: `${webAppUrl}/conversations/${conversationId}`,
     });
   }
 
@@ -269,7 +269,7 @@ export function buildProcessingFailedBlocks(
       fields: [
         {
           type: "mrkdwn",
-          text: "*檔案名稱:*\n" + fileName,
+          text: `*檔案名稱:*\n${fileName}`,
         },
       ],
     },
@@ -284,7 +284,7 @@ export function buildProcessingFailedBlocks(
     ) {
       sectionBlock.fields?.push({
         type: "mrkdwn",
-        text: "*案件編號:*\n" + caseNumber,
+        text: `*案件編號:*\n${caseNumber}`,
       });
     }
   }
@@ -293,13 +293,13 @@ export function buildProcessingFailedBlocks(
     type: "section",
     text: {
       type: "mrkdwn",
-      text: "*錯誤訊息:*\n```" + errorMessage + "```",
+      text: `*錯誤訊息:*\n\`\`\`${errorMessage}\`\`\``,
     },
   });
 
   const retryInfo =
     retryCount !== undefined
-      ? "目前重試次數: " + retryCount + "/3"
+      ? `目前重試次數: ${retryCount}/3`
       : "系統會自動重試最多 3 次";
 
   blocks.push({
@@ -307,7 +307,7 @@ export function buildProcessingFailedBlocks(
     elements: [
       {
         type: "mrkdwn",
-        text: "💡 請檢查音檔格式和大小,或稍後再試。" + retryInfo,
+        text: `💡 請檢查音檔格式和大小,或稍後再試。${retryInfo}`,
       },
     ],
   });

@@ -334,10 +334,18 @@ describe("Sales Coach Agent", () => {
         ) => {
           let score = 0;
 
-          if (signals.urgencyMentioned) score += 30;
-          if (signals.budgetConfirmed) score += 25;
-          if (signals.decisionTimelineMentioned) score += 25;
-          if (!signals.competitorMentioned) score += 10;
+          if (signals.urgencyMentioned) {
+            score += 30;
+          }
+          if (signals.budgetConfirmed) {
+            score += 25;
+          }
+          if (signals.decisionTimelineMentioned) {
+            score += 25;
+          }
+          if (!signals.competitorMentioned) {
+            score += 10;
+          }
 
           return {
             isCloseNow: score >= 70,
@@ -370,10 +378,18 @@ describe("Sales Coach Agent", () => {
 
         const detectCloseNowOpportunity = (signals: typeof weakSignals) => {
           let score = 0;
-          if (signals.urgencyMentioned) score += 30;
-          if (signals.budgetConfirmed) score += 25;
-          if (signals.decisionTimelineMentioned) score += 25;
-          if (!signals.competitorMentioned) score += 10;
+          if (signals.urgencyMentioned) {
+            score += 30;
+          }
+          if (signals.budgetConfirmed) {
+            score += 25;
+          }
+          if (signals.decisionTimelineMentioned) {
+            score += 25;
+          }
+          if (!signals.competitorMentioned) {
+            score += 10;
+          }
 
           return {
             isCloseNow: score >= 70,

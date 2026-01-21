@@ -103,8 +103,12 @@ function calculateTrend(
   previousScore: number
 ): TrendDirection {
   const diff = currentScore - previousScore;
-  if (diff >= 5) return "improving";
-  if (diff <= -5) return "declining";
+  if (diff >= 5) {
+    return "improving";
+  }
+  if (diff <= -5) {
+    return "declining";
+  }
   return "stable";
 }
 
@@ -136,7 +140,7 @@ async function getTeamMembers(
 async function getRepPerformance(
   repId: string,
   startDate: Date,
-  endDate: Date
+  _endDate: Date
 ): Promise<{
   demos: number;
   opportunities: number;

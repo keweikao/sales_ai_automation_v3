@@ -1,6 +1,6 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
-import { readFileSync } from "fs";
-import { resolve } from "path";
 
 // Load env
 const envContent = readFileSync(
@@ -10,9 +10,13 @@ const envContent = readFileSync(
 const envVars: Record<string, string> = {};
 for (const line of envContent.split("\n")) {
   const trimmed = line.trim();
-  if (!trimmed || trimmed.startsWith("#")) continue;
+  if (!trimmed || trimmed.startsWith("#")) {
+    continue;
+  }
   const eqIndex = trimmed.indexOf("=");
-  if (eqIndex === -1) continue;
+  if (eqIndex === -1) {
+    continue;
+  }
   const key = trimmed.slice(0, eqIndex).trim();
   let value = trimmed.slice(eqIndex + 1).trim();
   if (
@@ -78,7 +82,7 @@ async function main() {
   if (sampleResponse.Contents) {
     for (const obj of sampleResponse.Contents) {
       const sizeMB = ((obj.Size || 0) / 1024 / 1024).toFixed(2);
-      console.log("  " + obj.Key + " (" + sizeMB + " MB)");
+      console.log(`  ${obj.Key} (${sizeMB} MB)`);
     }
   }
 

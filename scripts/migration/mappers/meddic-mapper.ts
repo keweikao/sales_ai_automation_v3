@@ -93,13 +93,11 @@ export function extractNextSteps(conv: FirestoreConversation): Array<{
     | undefined;
 
   if (coachData?.next_steps && Array.isArray(coachData.next_steps)) {
-    return (coachData.next_steps as Array<Record<string, unknown>>).map(
-      (step) => ({
-        action: String(step.action || step.description || ""),
-        priority: String(step.priority || "medium"),
-        owner: step.owner ? String(step.owner) : undefined,
-      })
-    );
+    return (coachData.next_steps as Record<string, unknown>[]).map((step) => ({
+      action: String(step.action || step.description || ""),
+      priority: String(step.priority || "medium"),
+      owner: step.owner ? String(step.owner) : undefined,
+    }));
   }
 
   return [];
@@ -118,7 +116,7 @@ export function extractRisks(conv: FirestoreConversation): Array<{
     | undefined;
 
   if (sellerData?.risks && Array.isArray(sellerData.risks)) {
-    return (sellerData.risks as Array<Record<string, unknown>>).map((risk) => ({
+    return (sellerData.risks as Record<string, unknown>[]).map((risk) => ({
       risk: String(risk.description || risk.risk || ""),
       severity: String(risk.severity || "medium"),
       mitigation: risk.mitigation ? String(risk.mitigation) : undefined,
@@ -141,7 +139,9 @@ export function buildDimensions(
     | Record<string, unknown>
     | undefined;
 
-  if (!buyerSignals) return null;
+  if (!buyerSignals) {
+    return null;
+  }
 
   // 嘗試從 buyer_signals 建立 dimensions 結構
   const dimensions: Record<

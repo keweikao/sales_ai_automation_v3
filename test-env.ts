@@ -37,7 +37,7 @@ for (const [key, value] of Object.entries(requiredVars)) {
   }
 }
 
-console.log("\n" + "=".repeat(60));
+console.log(`\n${"=".repeat(60)}`);
 
 if (allSet) {
   console.log("✅ 所有必要環境變數已設定!");

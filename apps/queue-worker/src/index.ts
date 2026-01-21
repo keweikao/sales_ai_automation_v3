@@ -34,8 +34,8 @@ import {
   errors,
   formatErrorForLog,
   isAppError,
-} from "@sales_ai_automation_v3/shared/errors";
-import type { TranscriptionMessage } from "@sales_ai_automation_v3/shared/types";
+} from "@Sales_ai_automation_v3/shared/errors";
+import type { TranscriptionMessage } from "@Sales_ai_automation_v3/shared/types";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 
@@ -315,8 +315,12 @@ export default {
         console.log("[Queue] 💾 Updating conversation status to completed...");
 
         // 提取 Agent 4 的 summary markdown
-        const agent4Summary = analysisResult.agentOutputs?.agent4?.markdown as string | undefined;
-        console.log(`[Queue] Agent 4 Summary: ${agent4Summary ? `${agent4Summary.length} characters` : 'not found'}`);
+        const agent4Summary = analysisResult.agentOutputs?.agent4?.markdown as
+          | string
+          | undefined;
+        console.log(
+          `[Queue] Agent 4 Summary: ${agent4Summary ? `${agent4Summary.length} characters` : "not found"}`
+        );
 
         await db
           .update(conversations)
@@ -438,7 +442,7 @@ export default {
             ) {
               const firstOpportunity = missedOpportunities[0];
               alerts.push(
-                "錯失推進機會 - " + String(firstOpportunity).substring(0, 100)
+                `錯失推進機會 - ${String(firstOpportunity).substring(0, 100)}`
               );
             }
 
@@ -485,7 +489,7 @@ export default {
                 },
               });
               contactPhone = oppResult?.contactPhone ?? undefined;
-            } catch (error) {
+            } catch (_error) {
               console.log(
                 "[Queue] ⚠️  Could not fetch contact phone (non-critical)"
               );
@@ -592,7 +596,7 @@ export default {
                 conversationData?.createdAt?.toISOString() ||
                 new Date().toISOString(),
               transcript: {
-                fullText: transcriptResult.text || "",
+                fullText: transcriptResult.fullText || "",
                 segments: (transcriptResult.segments || []).map((seg) => ({
                   speaker: seg.speaker || "Unknown",
                   text: seg.text,
@@ -601,15 +605,16 @@ export default {
               },
               meddicAnalysis: {
                 overallScore: analysisResult.overallScore ?? 0,
-                dimensions: analysisResult.dimensions || {},
+                dimensions: (analysisResult.meddicScores ||
+                  {}) as unknown as Record<string, unknown>,
                 keyFindings: analysisResult.keyFindings ?? [],
                 nextSteps: (analysisResult.nextSteps ?? []).map((step) => ({
                   action: step.action,
                   priority: "Medium",
                 })),
               },
-              audioUrl: conversationData?.audioUrl,
-              duration: conversationData?.duration,
+              audioUrl: conversationData?.audioUrl ?? undefined,
+              duration: conversationData?.duration ?? undefined,
             };
 
             // 執行快取更新 (Layer 1 寫入 + Layer 2 & 3 失效)

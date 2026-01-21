@@ -15,8 +15,8 @@
     "resolveJsonModule": true,
     "downlevelIteration": true,
     "paths": {
-      "@sales_ai_automation_v3/shared": ["../shared/src"],
-      "@sales_ai_automation_v3/shared/*": ["../shared/src/*"]
+      "@Sales_ai_automation_v3/shared": ["../shared/src"],
+      "@Sales_ai_automation_v3/shared/*": ["../shared/src/*"]
     }
   },
   "include": ["src/**/*"],

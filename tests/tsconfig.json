@@ -6,7 +6,7 @@
     "isolatedModules": true,
     "esModuleInterop": true,
     "paths": {
-      "@sales_ai_automation_v3/*": ["../packages/*/src"]
+      "@Sales_ai_automation_v3/*": ["../packages/*/src"]
     }
   },
   "include": ["./**/*.ts", "./**/*.tsx"],
