@@ -174,20 +174,32 @@ export const uploadConversation = protectedProcedure
 
       console.log(`[${requestId}] ✓ Auth passed, userId: ${userId}`);
 
-      // Step 1: Verify opportunity exists and belongs to user
+      // Step 1: Verify opportunity exists and user has access
       console.log(`[${requestId}] 🔍 Verifying opportunity: ${opportunityId}`);
       const opportunity = await db.query.opportunities.findFirst({
-        where: and(
-          eq(opportunities.id, opportunityId),
-          eq(opportunities.userId, userId)
-        ),
+        where: eq(opportunities.id, opportunityId),
       });
 
       if (!opportunity) {
         console.error(
           `[${requestId}] ❌ Opportunity not found: ${opportunityId}`
         );
-        throw new ORPCError("NOT_FOUND");
+        throw new ORPCError("NOT_FOUND", { message: "商機不存在" });
+      }
+
+      // 檢查權限：擁有者、管理者/主管、或 Slack 建立的商機
+      const userEmail = context.session?.user.email;
+      const userRole = getUserRole(userEmail);
+      const isOwner = opportunity.userId === userId;
+      const hasAdminAccess = userRole === "admin" || userRole === "manager";
+      const isSlackGenerated =
+        !opportunity.userId || opportunity.userId === "service-account";
+
+      if (!(isOwner || hasAdminAccess || isSlackGenerated)) {
+        console.error(
+          `[${requestId}] ❌ Permission denied for opportunity: ${opportunityId}`
+        );
+        throw new ORPCError("FORBIDDEN", { message: "無權存取此商機" });
       }
 
       console.log(
@@ -512,7 +524,15 @@ export const analyzeConversation = protectedProcedure
       }>;
       fullText: string;
       language: string;
-    };
+    } | null;
+
+    if (!transcript?.segments) {
+      console.error("[analyzeConversation] transcript 資料不完整:", {
+        conversationId,
+        hasTranscript: !!conversation.transcript,
+      });
+      throw new ORPCError("BAD_REQUEST", { message: "轉錄資料不完整" });
+    }
 
     const transcriptSegments: ServiceTranscriptSegment[] =
       transcript.segments.map((s) => ({
@@ -851,6 +871,15 @@ export const getConversation = protectedProcedure
 
     if (!conversation) {
       throw new ORPCError("NOT_FOUND");
+    }
+
+    // 檢查 opportunity 是否存在（可能被刪除）
+    if (!conversation.opportunity) {
+      console.error("[getConversation] opportunity 不存在:", {
+        conversationId,
+        opportunityId: conversation.opportunityId,
+      });
+      throw new ORPCError("NOT_FOUND", { message: "關聯的商機資料不存在" });
     }
 
     // 檢查權限
