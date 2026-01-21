@@ -187,7 +187,8 @@ export const uploadConversation = protectedProcedure
         throw new ORPCError("NOT_FOUND", { message: "商機不存在" });
       }
 
-      // 檢查權限：擁有者、管理者/主管、或 Slack 建立的商機
+      // 檢查權限：Service Account、擁有者、管理者/主管、或 Slack 建立的商機
+      const isServiceAccount = context.isServiceAccount === true;
       const userEmail = context.session?.user.email;
       const userRole = getUserRole(userEmail);
       const isOwner = opportunity.userId === userId;
@@ -195,7 +196,7 @@ export const uploadConversation = protectedProcedure
       const isSlackGenerated =
         !opportunity.userId || opportunity.userId === "service-account";
 
-      if (!(isOwner || hasAdminAccess || isSlackGenerated)) {
+      if (!(isServiceAccount || isOwner || hasAdminAccess || isSlackGenerated)) {
         console.error(
           `[${requestId}] ❌ Permission denied for opportunity: ${opportunityId}`
         );
