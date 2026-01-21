@@ -1,6 +1,7 @@
 /**
  * 報告頁面
  * 顯示業務個人報告和經理團隊報告
+ * Precision Analytics Industrial Design
  */
 
 import { useQuery } from "@tanstack/react-query";
@@ -39,9 +40,18 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { client } from "@/utils/orpc";
+
+// Import Playfair Display and JetBrains Mono
+import "@fontsource/playfair-display/600.css";
+import "@fontsource/playfair-display/700.css";
+import "@fontsource/playfair-display/800.css";
+import "@fontsource/jetbrains-mono/400.css";
+import "@fontsource/jetbrains-mono/500.css";
+import "@fontsource/jetbrains-mono/600.css";
+import "@fontsource/jetbrains-mono/700.css";
 
 export const Route = createFileRoute("/reports/")({
   component: ReportsPage,
@@ -754,34 +764,520 @@ function TeamPerformanceReport() {
 // Main Reports Page
 function ReportsPage() {
   return (
-    <main className="container mx-auto space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-bold text-3xl tracking-tight">績效報告</h1>
-          <p className="text-muted-foreground">業務個人報告與經理團隊報告</p>
+    <>
+      <style>
+        {`
+          @keyframes fadeInUp {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 200%; }
+          }
+
+          @keyframes pulse-glow {
+            0%, 100% {
+              box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+            }
+            50% {
+              box-shadow: 0 0 30px rgba(6, 182, 212, 0.4);
+            }
+          }
+
+          .reports-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, rgb(2 6 23) 0%, rgb(15 23 42) 50%, rgb(30 41 59) 100%);
+            position: relative;
+            padding: 2rem;
+          }
+
+          .reports-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+              linear-gradient(to right, rgb(71 85 105 / 0.1) 1px, transparent 1px),
+              linear-gradient(to bottom, rgb(71 85 105 / 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+          }
+
+          .reports-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+          }
+
+          .reports-header {
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.6s ease-out backwards;
+          }
+
+          .reports-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, rgb(226 232 240) 0%, rgb(148 163 184) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+          }
+
+          .reports-subtitle {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: rgb(148 163 184);
+            margin-top: 0.5rem;
+          }
+
+          .stat-card {
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, rgb(15 23 42) 0%, rgb(30 41 59) 100%);
+            border: 1px solid rgb(51 65 85);
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInUp 0.6s ease-out backwards;
+          }
+
+          .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: rgb(6 182 212);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.2), 0 10px 20px rgba(0, 0, 0, 0.3);
+          }
+
+          .stat-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem 0.5rem;
+          }
+
+          .stat-card-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgb(148 163 184);
+          }
+
+          .stat-card-icon {
+            color: rgb(6 182 212);
+          }
+
+          .stat-card-content {
+            padding: 0.5rem 1.25rem 1.25rem;
+          }
+
+          .stat-card-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            color: rgb(226 232 240);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+          }
+
+          .stat-card-description {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: rgb(148 163 184);
+            margin-top: 0.25rem;
+          }
+
+          .change-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.625rem;
+            border-radius: 0.375rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+          }
+
+          .change-badge-positive {
+            background: rgba(16, 185, 129, 0.2);
+            color: rgb(16 185 129);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+          }
+
+          .change-badge-negative {
+            background: rgba(239, 68, 68, 0.2);
+            color: rgb(239 68 68);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+          }
+
+          .change-badge-neutral {
+            background: rgba(148, 163, 184, 0.2);
+            color: rgb(148 163 184);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+          }
+
+          .analytics-card {
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, rgb(15 23 42) 0%, rgb(30 41 59) 100%);
+            border: 1px solid rgb(51 65 85);
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInUp 0.6s ease-out backwards;
+          }
+
+          .analytics-card:hover {
+            border-color: rgb(71 85 105);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.1);
+          }
+
+          .analytics-card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgb(51 65 85);
+          }
+
+          .analytics-card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: rgb(226 232 240);
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+          }
+
+          .analytics-card-description {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8125rem;
+            color: rgb(148 163 184);
+            margin-top: 0.25rem;
+          }
+
+          .analytics-card-content {
+            padding: 1.5rem;
+          }
+
+          .dimension-bar {
+            margin-bottom: 1.5rem;
+          }
+
+          .dimension-bar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+          }
+
+          .dimension-bar-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: rgb(226 232 240);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+          }
+
+          .dimension-bar-score {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: rgb(6 182 212);
+          }
+
+          .custom-progress {
+            height: 0.5rem;
+            border-radius: 9999px;
+            background: rgb(30 41 59);
+            overflow: hidden;
+            position: relative;
+          }
+
+          .custom-progress-fill {
+            height: 100%;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, rgb(6 182 212), rgb(59 130 246));
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+          }
+
+          .custom-progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+          }
+
+          .dimension-gap {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: rgb(148 163 184);
+            margin-top: 0.25rem;
+          }
+
+          .ranking-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background: rgb(2 6 23 / 0.5);
+            border: 1px solid rgb(30 41 59);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 0.75rem;
+          }
+
+          .ranking-item:hover {
+            background: rgb(30 41 59 / 0.5);
+            border-color: rgb(51 65 85);
+            transform: translateX(4px);
+          }
+
+          .ranking-item.needs-attention {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+          }
+
+          .ranking-position {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            font-weight: 700;
+            flex-shrink: 0;
+          }
+
+          .ranking-position-gold {
+            background: linear-gradient(135deg, rgb(251 191 36), rgb(245 158 11));
+            color: rgb(120 53 15);
+          }
+
+          .ranking-position-silver {
+            background: linear-gradient(135deg, rgb(209 213 219), rgb(156 163 175));
+            color: rgb(31 41 55);
+          }
+
+          .ranking-position-bronze {
+            background: linear-gradient(135deg, rgb(251 146 60), rgb(249 115 22));
+            color: rgb(124 45 18);
+          }
+
+          .ranking-position-default {
+            background: rgb(30 41 59);
+            color: rgb(148 163 184);
+            border: 1px solid rgb(51 65 85);
+          }
+
+          .ranking-member-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: rgb(226 232 240);
+          }
+
+          .ranking-member-stats {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: rgb(148 163 184);
+            margin-top: 0.25rem;
+          }
+
+          .ranking-score {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: rgb(6 182 212);
+          }
+
+          .strength-badge {
+            display: inline-flex;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(16, 185, 129, 0.2);
+            color: rgb(16 185 129);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+          }
+
+          .weakness-badge {
+            display: inline-flex;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(239, 68, 68, 0.2);
+            color: rgb(239 68 68);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+          }
+
+          .insight-card {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background: rgb(2 6 23 / 0.5);
+            border: 1px solid rgb(30 41 59);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: rgb(226 232 240);
+            line-height: 1.6;
+          }
+
+          .milestone-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: rgb(16 185 129);
+            margin-bottom: 0.5rem;
+          }
+
+          .tabs-industrial {
+            animation: fadeInUp 0.6s ease-out backwards;
+            animation-delay: 0.2s;
+          }
+
+          .tabs-list-industrial {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            max-width: 32rem;
+            padding: 0.25rem;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, rgb(15 23 42) 0%, rgb(30 41 59) 100%);
+            border: 1px solid rgb(51 65 85);
+          }
+
+          .tabs-trigger-industrial {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: rgb(148 163 184);
+            background: transparent;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+
+          .tabs-trigger-industrial:hover {
+            color: rgb(226 232 240);
+            background: rgb(30 41 59 / 0.5);
+          }
+
+          .tabs-trigger-industrial[data-state="active"] {
+            color: rgb(2 6 23);
+            background: linear-gradient(135deg, rgb(6 182 212) 0%, rgb(59 130 246) 100%);
+            border-color: rgb(6 182 212);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+          }
+        `}
+      </style>
+
+      <div className="reports-container">
+        <div className="reports-content">
+          <div className="reports-header">
+            <h1 className="reports-title">績效報告</h1>
+            <p className="reports-subtitle">業務個人報告與經理團隊報告</p>
+          </div>
+
+          <Tabs className="tabs-industrial" defaultValue="personal">
+            <div className="tabs-list-industrial">
+              <button
+                className="tabs-trigger-industrial"
+                data-state="active"
+                onClick={(e) => {
+                  document
+                    .querySelectorAll(".tabs-trigger-industrial")
+                    .forEach((t) => t.setAttribute("data-state", "inactive"));
+                  e.currentTarget.setAttribute("data-state", "active");
+                  document
+                    .querySelectorAll("[role='tabpanel']")
+                    .forEach((p) => {
+                      (p as HTMLElement).style.display = "none";
+                    });
+                  const panel = document.getElementById("personal-panel");
+                  if (panel) {
+                    panel.style.display = "block";
+                  }
+                }}
+                type="button"
+              >
+                <UserCircle style={{ width: "1rem", height: "1rem" }} />
+                個人報告
+              </button>
+              <button
+                className="tabs-trigger-industrial"
+                data-state="inactive"
+                onClick={(e) => {
+                  document
+                    .querySelectorAll(".tabs-trigger-industrial")
+                    .forEach((t) => t.setAttribute("data-state", "inactive"));
+                  e.currentTarget.setAttribute("data-state", "active");
+                  document
+                    .querySelectorAll("[role='tabpanel']")
+                    .forEach((p) => {
+                      (p as HTMLElement).style.display = "none";
+                    });
+                  const panel = document.getElementById("team-panel");
+                  if (panel) {
+                    panel.style.display = "block";
+                  }
+                }}
+                type="button"
+              >
+                <Users style={{ width: "1rem", height: "1rem" }} />
+                團隊報告
+              </button>
+            </div>
+
+            <div
+              id="personal-panel"
+              role="tabpanel"
+              style={{ marginTop: "2rem" }}
+            >
+              <RepPerformanceReport />
+            </div>
+
+            <div
+              id="team-panel"
+              role="tabpanel"
+              style={{ marginTop: "2rem", display: "none" }}
+            >
+              <TeamPerformanceReport />
+            </div>
+          </Tabs>
         </div>
       </div>
-
-      <Tabs defaultValue="personal">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger className="gap-2" value="personal">
-            <UserCircle className="h-4 w-4" />
-            個人報告
-          </TabsTrigger>
-          <TabsTrigger className="gap-2" value="team">
-            <Users className="h-4 w-4" />
-            團隊報告
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent className="mt-6" value="personal">
-          <RepPerformanceReport />
-        </TabsContent>
-
-        <TabsContent className="mt-6" value="team">
-          <TeamPerformanceReport />
-        </TabsContent>
-      </Tabs>
-    </main>
+    </>
   );
 }
