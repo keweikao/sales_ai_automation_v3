@@ -64,10 +64,10 @@ export default function SignInForm() {
 
           @keyframes pulse-glow {
             0%, 100% {
-              box-shadow: 0 0 20px rgba(6, 182, 212, 0.3), 0 0 40px rgba(6, 182, 212, 0.1);
+              box-shadow: 0 0 20px rgba(99, 94, 246, 0.3), 0 0 40px rgba(99, 94, 246, 0.1);
             }
             50% {
-              box-shadow: 0 0 30px rgba(6, 182, 212, 0.5), 0 0 60px rgba(6, 182, 212, 0.2);
+              box-shadow: 0 0 30px rgba(99, 94, 246, 0.5), 0 0 60px rgba(99, 94, 246, 0.2);
             }
           }
 
@@ -110,7 +110,7 @@ export default function SignInForm() {
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(6, 182, 212, 0.03) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(99, 94, 246, 0.03) 0%, transparent 70%);
             animation: rotate 30s linear infinite;
             pointer-events: none;
           }
@@ -136,7 +136,7 @@ export default function SignInForm() {
             inset: -1px;
             border-radius: 1rem;
             padding: 1px;
-            background: linear-gradient(135deg, rgb(6 182 212), rgb(59 130 246), rgb(6 182 212));
+            background: linear-gradient(135deg, rgb(99 94 246), rgb(139 92 246), rgb(99 94 246));
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
@@ -151,7 +151,7 @@ export default function SignInForm() {
             left: 0;
             right: 0;
             height: 2px;
-            background: linear-gradient(90deg, transparent, rgb(6 182 212), transparent);
+            background: linear-gradient(90deg, transparent, rgb(99 94 246), transparent);
             animation: shimmer 3s infinite;
             pointer-events: none;
           }
@@ -192,8 +192,8 @@ export default function SignInForm() {
             margin-bottom: 2rem;
             padding: 0.75rem 1.25rem;
             border-radius: 0.5rem;
-            background: rgba(6, 182, 212, 0.1);
-            border: 1px solid rgba(6, 182, 212, 0.3);
+            background: rgba(99, 94, 246, 0.1);
+            border: 1px solid rgba(99, 94, 246, 0.3);
             animation: fadeInUp 0.8s ease-out backwards, pulse-glow 3s ease-in-out infinite;
             animation-delay: 0.6s;
           }
@@ -201,7 +201,7 @@ export default function SignInForm() {
           .security-badge-icon {
             width: 1rem;
             height: 1rem;
-            color: rgb(6 182 212);
+            color: rgb(99 94 246);
           }
 
           .security-badge-text {
@@ -210,7 +210,7 @@ export default function SignInForm() {
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            color: rgb(6 182 212);
+            color: rgb(99 94 246);
           }
 
           .google-signin-button {
@@ -226,7 +226,7 @@ export default function SignInForm() {
             font-size: 0.9375rem;
             font-weight: 600;
             color: rgb(2 6 23);
-            background: linear-gradient(135deg, rgb(6 182 212) 0%, rgb(59 130 246) 100%);
+            background: linear-gradient(135deg, rgb(99 94 246) 0%, rgb(139 92 246) 100%);
             border: none;
             cursor: pointer;
             overflow: hidden;
@@ -248,7 +248,7 @@ export default function SignInForm() {
 
           .google-signin-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 0 40px rgba(6, 182, 212, 0.6), 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 40px rgba(99, 94, 246, 0.6), 0 10px 30px rgba(0, 0, 0, 0.3);
           }
 
           .google-signin-button:hover::before {
@@ -283,7 +283,7 @@ export default function SignInForm() {
           }
 
           .login-footer-highlight {
-            color: rgb(6 182 212);
+            color: rgb(99 94 246);
             font-weight: 600;
           }
 
@@ -304,7 +304,7 @@ export default function SignInForm() {
             left: 0;
             right: 0;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgb(6 182 212), transparent);
+            background: linear-gradient(90deg, transparent, rgb(99 94 246), transparent);
           }
 
           .decorative-line:nth-child(1) { top: 20%; animation: scanline 8s linear infinite; }

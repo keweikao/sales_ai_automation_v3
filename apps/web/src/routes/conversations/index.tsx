@@ -50,8 +50,8 @@ const statusOptions = [
   {
     value: "transcribing",
     label: "TRANSCRIBING",
-    color: "bg-blue-500",
-    textColor: "text-blue-400",
+    color: "bg-purple-500",
+    textColor: "text-purple-400",
     icon: Loader2,
   },
   {
@@ -159,8 +159,8 @@ function ConversationsPage() {
 
         .grid-pattern {
           background-image:
-            linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+            linear-gradient(rgba(99, 94, 246, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(99, 94, 246, 0.05) 1px, transparent 1px);
           background-size: 20px 20px;
         }
 
@@ -208,20 +208,20 @@ function ConversationsPage() {
         }
 
         .search-glow {
-          box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4);
+          box-shadow: 0 0 0 0 rgba(99, 94, 246, 0.4);
           transition: box-shadow 0.3s ease;
         }
 
         .search-glow:focus-within {
-          box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+          box-shadow: 0 0 0 3px rgba(99, 94, 246, 0.2);
         }
       `}</style>
 
       <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         {/* Background decorative elements */}
         <div className="pointer-events-none fixed inset-0">
-          <div className="absolute top-0 right-0 h-96 w-96 bg-cyan-500/5 blur-[120px]" />
-          <div className="absolute bottom-0 left-0 h-96 w-96 bg-blue-500/5 blur-[120px]" />
+          <div className="absolute top-0 right-0 h-96 w-96 bg-purple-600/5 blur-[120px]" />
+          <div className="absolute bottom-0 left-0 h-96 w-96 bg-purple-500/5 blur-[120px]" />
         </div>
 
         <div className="container relative mx-auto space-y-6 p-6">
@@ -229,11 +229,11 @@ function ConversationsPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 shadow-cyan-500/20 shadow-lg">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-purple-600 to-purple-600 shadow-lg shadow-purple-600/20">
                   <MessageSquare className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="title-font bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text font-bold text-3xl text-transparent tracking-tight">
+                  <h1 className="title-font bg-gradient-to-r from-purple-400 to-purple-400 bg-clip-text font-bold text-3xl text-transparent tracking-tight">
                     Conversations
                   </h1>
                   <p className="data-font text-slate-500 text-xs uppercase tracking-wider">
@@ -244,7 +244,7 @@ function ConversationsPage() {
             </div>
             <Button
               asChild
-              className="border-cyan-500/50 bg-gradient-to-r from-cyan-600 to-blue-600 font-mono text-sm shadow-cyan-500/20 shadow-lg hover:from-cyan-500 hover:to-blue-500"
+              className="border-purple-600/50 bg-gradient-to-r from-purple-700 to-purple-600 font-mono text-sm shadow-lg shadow-purple-600/20 hover:from-purple-600 hover:to-purple-500"
               size="lg"
             >
               <Link to="/conversations/new">
@@ -257,9 +257,9 @@ function ConversationsPage() {
           {/* Search & Filters */}
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div className="search-glow relative flex-1 sm:max-w-md">
-              <Search className="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-cyan-400" />
+              <Search className="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-purple-400" />
               <Input
-                className="data-font h-12 border-slate-700 bg-slate-900/50 pl-11 text-white placeholder:text-slate-500 focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                className="data-font h-12 border-slate-700 bg-slate-900/50 pl-11 text-white placeholder:text-slate-500 focus:border-purple-600/50 focus:ring-purple-600/20"
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search conversations, companies..."
                 value={search}
@@ -267,7 +267,7 @@ function ConversationsPage() {
             </div>
             <div className="data-font flex items-center gap-2 text-slate-400 text-sm">
               <div className="flex h-8 w-8 items-center justify-center rounded bg-slate-800/50 ring-1 ring-slate-700">
-                <BarChart3 className="h-4 w-4 text-cyan-400" />
+                <BarChart3 className="h-4 w-4 text-purple-400" />
               </div>
               <span className="uppercase tracking-wider">
                 {totalCount} RECORDS
@@ -301,7 +301,7 @@ function ConversationsPage() {
                 const StatusIcon = statusInfo.icon;
                 return (
                   <div
-                    className="conversation-card group relative cursor-pointer overflow-hidden rounded-lg border border-slate-800 bg-gradient-to-br from-slate-950 to-slate-900 transition-all duration-300 hover:border-cyan-500/50 hover:shadow-cyan-500/10 hover:shadow-lg"
+                    className="conversation-card group relative cursor-pointer overflow-hidden rounded-lg border border-slate-800 bg-gradient-to-br from-slate-950 to-slate-900 transition-all duration-300 hover:border-purple-600/50 hover:shadow-lg hover:shadow-purple-600/10"
                     key={conversation.id}
                     onClick={() =>
                       navigate({
@@ -342,7 +342,7 @@ function ConversationsPage() {
 
                       {/* Company Info */}
                       <div className="flex items-center gap-2 rounded bg-slate-800/30 px-3 py-2 ring-1 ring-slate-700/50">
-                        <Building2 className="h-4 w-4 shrink-0 text-cyan-400" />
+                        <Building2 className="h-4 w-4 shrink-0 text-purple-400" />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm text-white">
                             {conversation.opportunityCompanyName}
@@ -406,7 +406,7 @@ function ConversationsPage() {
                 </p>
                 <Button
                   asChild
-                  className="border-cyan-500/50 bg-gradient-to-r from-cyan-600 to-blue-600 font-mono shadow-cyan-500/20 shadow-lg hover:from-cyan-500 hover:to-blue-500"
+                  className="border-purple-600/50 bg-gradient-to-r from-purple-700 to-purple-600 font-mono shadow-lg shadow-purple-600/20 hover:from-purple-600 hover:to-purple-500"
                   size="lg"
                 >
                   <Link to="/conversations/new">
@@ -426,7 +426,7 @@ function ConversationsPage() {
               </div>
               <div className="flex items-center gap-3">
                 <Button
-                  className="data-font border-slate-700 bg-slate-900/50 text-slate-300 hover:border-cyan-500/50 hover:bg-slate-800 hover:text-white"
+                  className="data-font border-slate-700 bg-slate-900/50 text-slate-300 hover:border-purple-600/50 hover:bg-slate-800 hover:text-white"
                   disabled={page === 0}
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
                   size="sm"
@@ -436,12 +436,12 @@ function ConversationsPage() {
                   PREV
                 </Button>
                 <div className="data-font flex h-9 items-center rounded border border-slate-700 bg-slate-900/50 px-4 text-sm text-white">
-                  <span className="text-cyan-400">{page + 1}</span>
+                  <span className="text-purple-400">{page + 1}</span>
                   <span className="mx-2 text-slate-600">/</span>
                   <span>{Math.max(1, totalPages)}</span>
                 </div>
                 <Button
-                  className="data-font border-slate-700 bg-slate-900/50 text-slate-300 hover:border-cyan-500/50 hover:bg-slate-800 hover:text-white"
+                  className="data-font border-slate-700 bg-slate-900/50 text-slate-300 hover:border-purple-600/50 hover:bg-slate-800 hover:text-white"
                   disabled={page >= totalPages - 1}
                   onClick={() => setPage((p) => p + 1)}
                   size="sm"

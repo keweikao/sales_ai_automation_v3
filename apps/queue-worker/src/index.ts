@@ -23,7 +23,10 @@ import {
   createSlackNotificationService,
 } from "@Sales_ai_automation_v3/services";
 import { randomUUID } from "node:crypto";
-import type { MessageBatch, ScheduledController } from "@cloudflare/workers-types";
+import type {
+  MessageBatch,
+  ScheduledController,
+} from "@cloudflare/workers-types";
 import { neon, neonConfig } from "@neondatabase/serverless";
 import { WebClient } from "@slack/web-api";
 
@@ -673,8 +676,12 @@ export default {
             // 失效全域統計快取 (因為新增了一筆完成的分析)
             await cacheService.delete("stats:opportunity:global");
             // 失效用戶 dashboard 快取
-            await cacheService.delete(`user:${opportunityData.userId}:dashboard`);
-            console.log("[Queue] ✓ Invalidated global stats and user dashboard cache");
+            await cacheService.delete(
+              `user:${opportunityData.userId}:dashboard`
+            );
+            console.log(
+              "[Queue] ✓ Invalidated global stats and user dashboard cache"
+            );
 
             console.log(
               `[Queue] ✅ Cache updated for user ${opportunityData.userId}`
@@ -813,23 +820,36 @@ async function handleDailyHealthReport(env: Env): Promise<void> {
       WHERE created_at >= ${yesterday.toISOString()}
     `;
 
-    const result = stats[0] || { completed_count: 0, failed_count: 0, total_count: 0, avg_processing_time: 0 };
-    const successRate = result.total_count > 0
-      ? Math.round((Number(result.completed_count) / Number(result.total_count)) * 100)
-      : 100;
+    const result = stats[0] || {
+      completed_count: 0,
+      failed_count: 0,
+      total_count: 0,
+      avg_processing_time: 0,
+    };
+    const successRate =
+      result.total_count > 0
+        ? Math.round(
+            (Number(result.completed_count) / Number(result.total_count)) * 100
+          )
+        : 100;
 
     // 發送健康報告到 Slack
-    const healthEmoji = successRate >= 95 ? "🟢" : successRate >= 80 ? "🟡" : "🔴";
+    const healthEmoji =
+      successRate >= 95 ? "🟢" : successRate >= 80 ? "🟡" : "🔴";
     const message = [
       `${healthEmoji} *每日系統健康報告*`,
       `📅 ${new Date().toLocaleDateString("zh-TW")}`,
-      ``,
-      `*過去 24 小時處理統計*`,
+      "",
+      "*過去 24 小時處理統計*",
       `• 完成: ${result.completed_count} 筆`,
       `• 失敗: ${result.failed_count} 筆`,
       `• 成功率: ${successRate}%`,
-      result.avg_processing_time ? `• 平均處理時間: ${Math.round(Number(result.avg_processing_time))}s` : "",
-    ].filter(Boolean).join("\n");
+      result.avg_processing_time
+        ? `• 平均處理時間: ${Math.round(Number(result.avg_processing_time))}s`
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     await slackClient.chat.postMessage({
       channel: "#ops-alerts",
@@ -861,13 +881,17 @@ async function handleWeeklyReport(env: Env): Promise<void> {
       WHERE c.created_at >= ${weekAgo.toISOString()}
     `;
 
-    const result = stats[0] || { total_uploads: 0, unique_opportunities: 0, avg_meddic_score: 0 };
+    const result = stats[0] || {
+      total_uploads: 0,
+      unique_opportunities: 0,
+      avg_meddic_score: 0,
+    };
 
     const message = [
-      `📊 *週報摘要*`,
+      "📊 *週報摘要*",
       `📅 ${weekAgo.toLocaleDateString("zh-TW")} ~ ${new Date().toLocaleDateString("zh-TW")}`,
-      ``,
-      `*本週統計*`,
+      "",
+      "*本週統計*",
       `• 音檔上傳: ${result.total_uploads} 筆`,
       `• 活躍商機: ${result.unique_opportunities} 個`,
       `• 平均 MEDDIC: ${result.avg_meddic_score ? Math.round(Number(result.avg_meddic_score)) : "N/A"} 分`,

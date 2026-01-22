@@ -54,7 +54,7 @@ function getConversationTypeLabel(type: string): string {
 function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
     completed: "bg-green-500",
-    analyzing: "bg-blue-500",
+    analyzing: "bg-purple-500",
     transcribing: "bg-yellow-500",
     pending: "bg-gray-500",
     failed: "bg-red-500",
@@ -149,10 +149,10 @@ function OpportunityDetailPage() {
 
           @keyframes pulse-ring {
             0%, 100% {
-              box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4);
+              box-shadow: 0 0 0 0 rgba(99, 94, 246, 0.4);
             }
             50% {
-              box-shadow: 0 0 0 8px rgba(6, 182, 212, 0);
+              box-shadow: 0 0 0 8px rgba(99, 94, 246, 0);
             }
           }
 
@@ -207,10 +207,10 @@ function OpportunityDetailPage() {
 
           .back-button:hover {
             background: linear-gradient(135deg, rgb(51 65 85) 0%, rgb(30 41 59) 100%);
-            border-color: rgb(6 182 212);
-            color: rgb(6 182 212);
+            border-color: rgb(99 94 246);
+            color: rgb(99 94 246);
             transform: translateX(-4px);
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+            box-shadow: 0 0 20px rgba(99, 94, 246, 0.3);
           }
 
           .company-header {
@@ -261,20 +261,20 @@ function OpportunityDetailPage() {
 
           .action-button-outline:hover {
             background: linear-gradient(135deg, rgb(51 65 85) 0%, rgb(30 41 59) 100%);
-            border-color: rgb(6 182 212);
-            color: rgb(6 182 212);
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+            border-color: rgb(99 94 246);
+            color: rgb(99 94 246);
+            box-shadow: 0 0 20px rgba(99, 94, 246, 0.2);
           }
 
           .action-button-primary {
-            background: linear-gradient(135deg, rgb(6 182 212) 0%, rgb(59 130 246) 100%);
-            border: 1px solid rgb(6 182 212);
+            background: linear-gradient(135deg, rgb(99 94 246) 0%, rgb(139 92 246) 100%);
+            border: 1px solid rgb(99 94 246);
             color: rgb(2 6 23);
           }
 
           .action-button-primary:hover {
-            background: linear-gradient(135deg, rgb(8 145 178) 0%, rgb(37 99 235) 100%);
-            box-shadow: 0 0 30px rgba(6, 182, 212, 0.5);
+            background: linear-gradient(135deg, rgb(124 58 237) 0%, rgb(109 40 217) 100%);
+            box-shadow: 0 0 30px rgba(99, 94, 246, 0.5);
             transform: translateY(-2px);
           }
 
@@ -314,7 +314,7 @@ function OpportunityDetailPage() {
 
           .detail-card:hover {
             border-color: rgb(71 85 105);
-            box-shadow: 0 0 30px rgba(6, 182, 212, 0.1);
+            box-shadow: 0 0 30px rgba(99, 94, 246, 0.1);
           }
 
           .card-header {
@@ -373,7 +373,7 @@ function OpportunityDetailPage() {
           .info-icon {
             flex-shrink: 0;
             margin-top: 0.125rem;
-            color: rgb(6 182 212);
+            color: rgb(99 94 246);
           }
 
           .info-label {
@@ -413,9 +413,9 @@ function OpportunityDetailPage() {
 
           .conversation-item:hover {
             background: rgb(30 41 59 / 0.5);
-            border-color: rgb(6 182 212);
+            border-color: rgb(99 94 246);
             transform: translateX(4px);
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.1);
+            box-shadow: 0 0 20px rgba(99, 94, 246, 0.1);
           }
 
           .conversation-status-icon {
@@ -434,7 +434,7 @@ function OpportunityDetailPage() {
           }
 
           .conversation-status-icon.status-analyzing {
-            background: linear-gradient(135deg, rgb(59 130 246) 0%, rgb(37 99 235) 100%);
+            background: linear-gradient(135deg, rgb(139 92 246) 0%, rgb(109 40 217) 100%);
             animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
           }
 
@@ -517,7 +517,7 @@ function OpportunityDetailPage() {
 
           .timeline-icon {
             flex-shrink: 0;
-            color: rgb(6 182 212);
+            color: rgb(99 94 246);
           }
 
           .timeline-label {

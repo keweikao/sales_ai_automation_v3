@@ -785,10 +785,10 @@ function ReportsPage() {
 
           @keyframes pulse-glow {
             0%, 100% {
-              box-shadow: 0 0 20px rgba(6, 182, 212, 0.2);
+              box-shadow: 0 0 20px rgba(99, 94, 246, 0.2);
             }
             50% {
-              box-shadow: 0 0 30px rgba(6, 182, 212, 0.4);
+              box-shadow: 0 0 30px rgba(99, 94, 246, 0.4);
             }
           }
 
@@ -852,8 +852,8 @@ function ReportsPage() {
 
           .stat-card:hover {
             transform: translateY(-4px);
-            border-color: rgb(6 182 212);
-            box-shadow: 0 0 30px rgba(6, 182, 212, 0.2), 0 10px 20px rgba(0, 0, 0, 0.3);
+            border-color: rgb(99 94 246);
+            box-shadow: 0 0 30px rgba(99, 94, 246, 0.2), 0 10px 20px rgba(0, 0, 0, 0.3);
           }
 
           .stat-card-header {
@@ -873,7 +873,7 @@ function ReportsPage() {
           }
 
           .stat-card-icon {
-            color: rgb(6 182 212);
+            color: rgb(99 94 246);
           }
 
           .stat-card-content {
@@ -936,7 +936,7 @@ function ReportsPage() {
 
           .analytics-card:hover {
             border-color: rgb(71 85 105);
-            box-shadow: 0 0 30px rgba(6, 182, 212, 0.1);
+            box-shadow: 0 0 30px rgba(99, 94, 246, 0.1);
           }
 
           .analytics-card-header {
@@ -991,7 +991,7 @@ function ReportsPage() {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.875rem;
             font-weight: 700;
-            color: rgb(6 182 212);
+            color: rgb(99 94 246);
           }
 
           .custom-progress {
@@ -1005,7 +1005,7 @@ function ReportsPage() {
           .custom-progress-fill {
             height: 100%;
             border-radius: 9999px;
-            background: linear-gradient(90deg, rgb(6 182 212), rgb(59 130 246));
+            background: linear-gradient(90deg, rgb(99 94 246), rgb(139 92 246));
             transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
@@ -1104,7 +1104,7 @@ function ReportsPage() {
             font-family: 'JetBrains Mono', monospace;
             font-size: 1.25rem;
             font-weight: 700;
-            color: rgb(6 182 212);
+            color: rgb(99 94 246);
           }
 
           .strength-badge {
@@ -1196,9 +1196,9 @@ function ReportsPage() {
 
           .tabs-trigger-industrial[data-state="active"] {
             color: rgb(2 6 23);
-            background: linear-gradient(135deg, rgb(6 182 212) 0%, rgb(59 130 246) 100%);
-            border-color: rgb(6 182 212);
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+            background: linear-gradient(135deg, rgb(99 94 246) 0%, rgb(139 92 246) 100%);
+            border-color: rgb(99 94 246);
+            box-shadow: 0 0 20px rgba(99, 94, 246, 0.3);
           }
         `}
       </style>

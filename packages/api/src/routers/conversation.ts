@@ -210,7 +210,9 @@ export const uploadConversation = protectedProcedure
       const isSlackGenerated =
         !opportunity.userId || opportunity.userId === "service-account";
 
-      if (!(isServiceAccount || isOwner || hasAdminAccess || isSlackGenerated)) {
+      if (
+        !(isServiceAccount || isOwner || hasAdminAccess || isSlackGenerated)
+      ) {
         console.error(
           `[${requestId}] ❌ Permission denied for opportunity: ${opportunityId}`
         );
@@ -362,12 +364,17 @@ export const uploadConversation = protectedProcedure
       let caseNumber: string;
       const conversationId = randomUUID();
       try {
-        caseNumber = await getNextCaseNumber(resolvedProductLine as ProductLine);
+        caseNumber = await getNextCaseNumber(
+          resolvedProductLine as ProductLine
+        );
         console.log(
           `[${requestId}] 🎫 Generated conversationId: ${conversationId}, caseNumber: ${caseNumber} (${resolvedProductLine})`
         );
       } catch (error) {
-        console.error(`[${requestId}] ❌ Failed to generate case number:`, error);
+        console.error(
+          `[${requestId}] ❌ Failed to generate case number:`,
+          error
+        );
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: `案件編號生成失敗: ${error instanceof Error ? error.message : String(error)}`,
         });
@@ -415,7 +422,10 @@ export const uploadConversation = protectedProcedure
         }
       } catch (error) {
         console.error(`[${requestId}] ❌ DB insert failed:`, error);
-        console.error(`[${requestId}] Error stack:`, error instanceof Error ? error.stack : "no stack");
+        console.error(
+          `[${requestId}] Error stack:`,
+          error instanceof Error ? error.stack : "no stack"
+        );
         console.error(`[${requestId}] Error cause:`, (error as any)?.cause);
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: `資料庫寫入失敗: ${error instanceof Error ? error.message : String(error)}`,

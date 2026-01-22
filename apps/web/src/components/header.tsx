@@ -34,10 +34,10 @@ export default function Header() {
         {`
           @keyframes pulse-icon {
             0%, 100% {
-              filter: drop-shadow(0 0 4px rgba(6, 182, 212, 0.5));
+              filter: drop-shadow(0 0 4px rgba(99, 94, 246, 0.5));
             }
             50% {
-              filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.8));
+              filter: drop-shadow(0 0 8px rgba(99, 94, 246, 0.8));
             }
           }
 
@@ -63,7 +63,7 @@ export default function Header() {
             left: 0;
             right: 0;
             height: 2px;
-            background: linear-gradient(90deg, transparent, rgb(6 182 212), rgb(59 130 246), rgb(6 182 212), transparent);
+            background: linear-gradient(90deg, transparent, rgb(99 94 246), rgb(139 92 246), rgb(99 94 246), transparent);
             opacity: 0.6;
           }
 
@@ -98,7 +98,7 @@ export default function Header() {
           .header-logo-icon {
             width: 1.75rem;
             height: 1.75rem;
-            color: rgb(6 182 212);
+            color: rgb(99 94 246);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           }
 
@@ -148,7 +148,7 @@ export default function Header() {
             left: 50%;
             width: 0;
             height: 2px;
-            background: linear-gradient(90deg, rgb(6 182 212), rgb(59 130 246));
+            background: linear-gradient(90deg, rgb(99 94 246), rgb(139 92 246));
             transform: translateX(-50%);
             transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           }
@@ -169,15 +169,15 @@ export default function Header() {
           }
 
           .header-nav-link:hover .header-nav-link-icon {
-            color: rgb(6 182 212);
+            color: rgb(99 94 246);
             transform: translateY(-2px);
           }
 
           .header-nav-link-active {
             color: rgb(2 6 23);
-            background: linear-gradient(135deg, rgb(6 182 212) 0%, rgb(59 130 246) 100%);
+            background: linear-gradient(135deg, rgb(99 94 246) 0%, rgb(139 92 246) 100%);
             font-weight: 600;
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+            box-shadow: 0 0 20px rgba(99, 94, 246, 0.3);
           }
 
           .header-nav-link-active::before {
@@ -189,8 +189,8 @@ export default function Header() {
           }
 
           .header-nav-link-active:hover {
-            background: linear-gradient(135deg, rgb(8 145 178) 0%, rgb(37 99 235) 100%);
-            box-shadow: 0 0 30px rgba(6, 182, 212, 0.5);
+            background: linear-gradient(135deg, rgb(124 58 237) 0%, rgb(109 40 217) 100%);
+            box-shadow: 0 0 30px rgba(99, 94, 246, 0.5);
           }
 
           .header-right {

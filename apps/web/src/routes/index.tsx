@@ -47,19 +47,19 @@ function StatCard({
   trend?: "up" | "down" | "neutral";
 }) {
   return (
-    <div className="stat-card group relative overflow-hidden rounded-lg border border-slate-800 bg-gradient-to-br from-slate-950 to-slate-900 p-6 transition-all duration-300 hover:border-cyan-500/50 hover:shadow-cyan-500/10 hover:shadow-lg">
+    <div className="stat-card group relative overflow-hidden rounded-lg border border-slate-800 bg-gradient-to-br from-slate-950 to-slate-900 p-6 transition-all duration-300 hover:border-purple-600/50 hover:shadow-lg hover:shadow-purple-600/10">
       {/* Background pattern */}
       <div className="pointer-events-none absolute inset-0 opacity-5">
         <div className="grid-pattern h-full w-full" />
       </div>
 
       {/* Accent line */}
-      <div className="absolute top-0 left-0 h-1 w-0 bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500 group-hover:w-full" />
+      <div className="absolute top-0 left-0 h-1 w-0 bg-gradient-to-r from-purple-600 to-purple-500 transition-all duration-500 group-hover:w-full" />
 
       <div className="relative">
         <div className="mb-4 flex items-start justify-between">
-          <div className="rounded-lg bg-slate-800/50 p-2.5 ring-1 ring-cyan-500/20">
-            <Icon className="h-5 w-5 text-cyan-400" />
+          <div className="rounded-lg bg-slate-800/50 p-2.5 ring-1 ring-purple-600/20">
+            <Icon className="h-5 w-5 text-purple-400" />
           </div>
           {trend && (
             <div
@@ -171,8 +171,8 @@ function DashboardPage() {
 
         .grid-pattern {
           background-image:
-            linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px);
+            linear-gradient(rgba(99, 94, 246, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(99, 94, 246, 0.1) 1px, transparent 1px);
           background-size: 20px 20px;
         }
 
@@ -245,7 +245,7 @@ function DashboardPage() {
 
         .brand-title {
           font-family: 'Playfair Display', serif;
-          background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%);
+          background: linear-gradient(135deg, #635EF6 0%, #8b5cf6 50%, #8b5cf6 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -267,7 +267,7 @@ function DashboardPage() {
           left: -100%;
           width: 100%;
           height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.3), transparent);
+          background: linear-gradient(90deg, transparent, rgba(99, 94, 246, 0.3), transparent);
           animation: shimmer 2s infinite;
         }
 
@@ -290,7 +290,7 @@ function DashboardPage() {
           width: 0;
           height: 0;
           border-radius: 50%;
-          background: rgba(6, 182, 212, 0.3);
+          background: rgba(99, 94, 246, 0.3);
           transform: translate(-50%, -50%);
           transition: width 0.6s, height 0.6s;
         }
@@ -304,8 +304,8 @@ function DashboardPage() {
       <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         {/* Background decorative elements */}
         <div className="pointer-events-none fixed inset-0">
-          <div className="absolute top-0 right-0 h-96 w-96 bg-cyan-500/5 blur-[120px]" />
-          <div className="absolute bottom-0 left-0 h-96 w-96 bg-blue-500/5 blur-[120px]" />
+          <div className="absolute top-0 right-0 h-96 w-96 bg-purple-600/5 blur-[120px]" />
+          <div className="absolute bottom-0 left-0 h-96 w-96 bg-purple-500/5 blur-[120px]" />
         </div>
 
         <div className="container relative mx-auto space-y-8 p-6 lg:p-8">
@@ -313,7 +313,7 @@ function DashboardPage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 shadow-cyan-500/20 shadow-lg">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-purple-600 to-purple-600 shadow-lg shadow-purple-600/20">
                   <Target className="h-6 w-6 text-white" />
                 </div>
                 <div>
@@ -329,7 +329,7 @@ function DashboardPage() {
             <div className="flex flex-wrap gap-3">
               <Button
                 asChild
-                className="action-button border-slate-700 bg-slate-800/50 font-mono text-sm backdrop-blur-sm hover:border-cyan-500/50 hover:bg-slate-800"
+                className="action-button border-slate-700 bg-slate-800/50 font-mono text-sm backdrop-blur-sm hover:border-purple-600/50 hover:bg-slate-800"
                 size="lg"
                 variant="outline"
               >
@@ -340,7 +340,7 @@ function DashboardPage() {
               </Button>
               <Button
                 asChild
-                className="action-button border-cyan-500/50 bg-gradient-to-r from-cyan-600 to-blue-600 font-mono text-sm shadow-cyan-500/20 shadow-lg hover:from-cyan-500 hover:to-blue-500"
+                className="action-button border-purple-600/50 bg-gradient-to-r from-purple-700 to-purple-600 font-mono text-sm shadow-lg shadow-purple-600/20 hover:from-purple-600 hover:to-purple-500"
                 size="lg"
               >
                 <Link to="/conversations">
@@ -396,8 +396,8 @@ function DashboardPage() {
             <Card className="section-card border-slate-800 bg-slate-950/50 backdrop-blur-sm">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-cyan-500/10 p-2 ring-1 ring-cyan-500/30">
-                    <Activity className="h-5 w-5 text-cyan-400" />
+                  <div className="rounded-lg bg-purple-600/10 p-2 ring-1 ring-purple-600/30">
+                    <Activity className="h-5 w-5 text-purple-400" />
                   </div>
                   <div>
                     <CardTitle className="data-font text-white">
@@ -480,8 +480,8 @@ function DashboardPage() {
             <Card className="section-card border-slate-800 bg-slate-950/50 backdrop-blur-sm">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-blue-500/10 p-2 ring-1 ring-blue-500/30">
-                    <Zap className="h-5 w-5 text-blue-400" />
+                  <div className="rounded-lg bg-purple-500/10 p-2 ring-1 ring-purple-500/30">
+                    <Zap className="h-5 w-5 text-purple-400" />
                   </div>
                   <div>
                     <CardTitle className="data-font text-white">
@@ -494,7 +494,7 @@ function DashboardPage() {
                 </div>
                 <Button
                   asChild
-                  className="data-font border-slate-700 text-cyan-400 hover:border-cyan-500/50 hover:bg-slate-800 hover:text-cyan-300"
+                  className="data-font border-slate-700 text-purple-400 hover:border-purple-600/50 hover:bg-slate-800 hover:text-cyan-300"
                   size="sm"
                   variant="ghost"
                 >
@@ -518,7 +518,7 @@ function DashboardPage() {
                       const colors = getStatusColor(analysis.status);
                       return (
                         <div
-                          className="group rounded-lg border border-slate-800 bg-slate-900/50 p-4 transition-all hover:border-cyan-500/30 hover:bg-slate-900"
+                          className="group rounded-lg border border-slate-800 bg-slate-900/50 p-4 transition-all hover:border-purple-600/30 hover:bg-slate-900"
                           key={analysis.id}
                         >
                           <div className="flex items-start justify-between gap-4">
@@ -585,11 +585,11 @@ function DashboardPage() {
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Button
                   asChild
-                  className="action-button h-auto border-slate-700 bg-slate-900/50 py-6 backdrop-blur-sm hover:border-cyan-500/50 hover:bg-slate-800"
+                  className="action-button h-auto border-slate-700 bg-slate-900/50 py-6 backdrop-blur-sm hover:border-purple-600/50 hover:bg-slate-800"
                   variant="outline"
                 >
                   <Link className="flex flex-col gap-3" to="/opportunities/new">
-                    <Building2 className="h-8 w-8 text-cyan-400" />
+                    <Building2 className="h-8 w-8 text-purple-400" />
                     <span className="data-font text-sm uppercase tracking-wider">
                       New Opportunity
                     </span>
@@ -597,11 +597,11 @@ function DashboardPage() {
                 </Button>
                 <Button
                   asChild
-                  className="action-button h-auto border-slate-700 bg-slate-900/50 py-6 backdrop-blur-sm hover:border-blue-500/50 hover:bg-slate-800"
+                  className="action-button h-auto border-slate-700 bg-slate-900/50 py-6 backdrop-blur-sm hover:border-purple-500/50 hover:bg-slate-800"
                   variant="outline"
                 >
                   <Link className="flex flex-col gap-3" to="/conversations/new">
-                    <MessageSquare className="h-8 w-8 text-blue-400" />
+                    <MessageSquare className="h-8 w-8 text-purple-400" />
                     <span className="data-font text-sm uppercase tracking-wider">
                       Upload Audio
                     </span>

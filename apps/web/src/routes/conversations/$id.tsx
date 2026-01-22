@@ -73,9 +73,9 @@ const statusConfig: Record<
   },
   transcribing: {
     label: "TRANSCRIBING",
-    color: "bg-blue-500",
-    bgColor: "bg-blue-500/10",
-    textColor: "text-blue-400",
+    color: "bg-purple-500",
+    bgColor: "bg-purple-500/10",
+    textColor: "text-purple-400",
   },
   transcribed: {
     label: "TRANSCRIBED",
@@ -314,8 +314,8 @@ function ConversationDetailPage() {
           .grid-pattern {
             background-color: rgb(2 6 23);
             background-image:
-              linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+              linear-gradient(rgba(99, 94, 246, 0.05) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(99, 94, 246, 0.05) 1px, transparent 1px);
             background-size: 24px 24px;
           }
 
@@ -341,10 +341,10 @@ function ConversationDetailPage() {
 
           @keyframes pulse-glow {
             0%, 100% {
-              box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+              box-shadow: 0 0 20px rgba(99, 94, 246, 0.3);
             }
             50% {
-              box-shadow: 0 0 30px rgba(6, 182, 212, 0.5);
+              box-shadow: 0 0 30px rgba(99, 94, 246, 0.5);
             }
           }
 
@@ -363,7 +363,7 @@ function ConversationDetailPage() {
             left: 0;
             right: 0;
             height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.5), transparent);
+            background: linear-gradient(90deg, transparent, rgba(99, 94, 246, 0.5), transparent);
             opacity: 0;
             transition: opacity 0.3s;
           }
@@ -374,7 +374,7 @@ function ConversationDetailPage() {
 
           .detail-card:hover {
             border-color: rgb(6 182 212 / 0.3);
-            box-shadow: 0 8px 32px rgba(6, 182, 212, 0.1);
+            box-shadow: 0 8px 32px rgba(99, 94, 246, 0.1);
           }
 
           .status-badge {
@@ -431,7 +431,7 @@ function ConversationDetailPage() {
           }
 
           .btn-primary {
-            background: linear-gradient(135deg, rgb(6 182 212) 0%, rgb(8 145 178) 100%);
+            background: linear-gradient(135deg, rgb(99 94 246) 0%, rgb(124 58 237) 100%);
             border: 1px solid rgb(6 182 212 / 0.3);
             transition: all 0.3s;
             position: relative;
@@ -457,7 +457,7 @@ function ConversationDetailPage() {
           }
 
           .btn-primary:hover {
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+            box-shadow: 0 0 20px rgba(99, 94, 246, 0.4);
             border-color: rgb(6 182 212 / 0.6);
           }
 
@@ -470,7 +470,7 @@ function ConversationDetailPage() {
           .btn-secondary:hover {
             border-color: rgb(6 182 212 / 0.5);
             background: rgb(30 41 59);
-            box-shadow: 0 0 16px rgba(6, 182, 212, 0.2);
+            box-shadow: 0 0 16px rgba(99, 94, 246, 0.2);
           }
 
           .info-grid-item {
@@ -487,7 +487,7 @@ function ConversationDetailPage() {
           .info-grid-item:hover {
             border-color: rgb(6 182 212 / 0.3);
             transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(6, 182, 212, 0.1);
+            box-shadow: 0 4px 16px rgba(99, 94, 246, 0.1);
           }
 
           .summary-section {
@@ -505,7 +505,7 @@ function ConversationDetailPage() {
             top: 0;
             bottom: 0;
             width: 3px;
-            background: linear-gradient(180deg, rgb(6 182 212), rgb(59 130 246));
+            background: linear-gradient(180deg, rgb(99 94 246), rgb(139 92 246));
             border-radius: 3px 0 0 3px;
           }
 
@@ -520,7 +520,7 @@ function ConversationDetailPage() {
           .transcript-segment:hover {
             border-color: rgb(6 182 212 / 0.3);
             background: rgb(30 41 59);
-            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.15);
+            box-shadow: 0 4px 12px rgba(99, 94, 246, 0.15);
           }
 
           .speaker-badge {
@@ -550,7 +550,7 @@ function ConversationDetailPage() {
           }
 
           .priority-badge-medium {
-            background: linear-gradient(135deg, rgb(59 130 246) 0%, rgb(37 99 235) 100%);
+            background: linear-gradient(135deg, rgb(139 92 246) 0%, rgb(109 40 217) 100%);
             border: 1px solid rgb(59 130 246 / 0.3);
             font-family: 'JetBrains Mono', monospace;
             font-weight: 600;
@@ -605,7 +605,7 @@ function ConversationDetailPage() {
             content: '▸';
             position: absolute;
             left: 0;
-            color: rgb(6 182 212);
+            color: rgb(99 94 246);
             font-weight: 700;
           }
 
@@ -655,12 +655,12 @@ function ConversationDetailPage() {
           }
 
           .custom-tab:hover {
-            color: rgb(6 182 212);
+            color: rgb(99 94 246);
           }
 
           .custom-tab[data-state="active"] {
-            color: rgb(6 182 212);
-            border-bottom-color: rgb(6 182 212);
+            color: rgb(99 94 246);
+            border-bottom-color: rgb(99 94 246);
             background: linear-gradient(180deg, transparent 0%, rgb(6 182 212 / 0.05) 100%);
           }
 
@@ -679,7 +679,7 @@ function ConversationDetailPage() {
 
           .modal-textarea:focus {
             border-color: rgb(6 182 212 / 0.5);
-            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+            box-shadow: 0 0 0 3px rgba(99, 94, 246, 0.1);
           }
 
           .back-button {
@@ -693,7 +693,7 @@ function ConversationDetailPage() {
           .back-button:hover {
             border-color: rgb(6 182 212 / 0.5);
             background: rgb(30 41 59);
-            box-shadow: 0 0 16px rgba(6, 182, 212, 0.2);
+            box-shadow: 0 0 16px rgba(99, 94, 246, 0.2);
           }
         `}
       </style>
@@ -710,7 +710,7 @@ function ConversationDetailPage() {
               onClick={() => navigate({ to: "/conversations" })}
               type="button"
             >
-              <ArrowLeft className="h-5 w-5 text-cyan-400" />
+              <ArrowLeft className="h-5 w-5 text-purple-400" />
             </button>
             <div>
               <div className="mb-2 flex items-center gap-3">
@@ -757,11 +757,11 @@ function ConversationDetailPage() {
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="info-grid-item">
-                    <Building2 className="h-5 w-5 shrink-0 text-cyan-400" />
+                    <Building2 className="h-5 w-5 shrink-0 text-purple-400" />
                     <div>
                       <p className="data-label mb-1">商機</p>
                       <Link
-                        className="data-value hover:text-cyan-400 hover:underline"
+                        className="data-value hover:text-purple-400 hover:underline"
                         params={{ id: conversation.opportunityId }}
                         to="/opportunities/$id"
                       >
@@ -770,7 +770,7 @@ function ConversationDetailPage() {
                     </div>
                   </div>
                   <div className="info-grid-item">
-                    <MessageSquare className="h-5 w-5 shrink-0 text-blue-400" />
+                    <MessageSquare className="h-5 w-5 shrink-0 text-purple-400" />
                     <div>
                       <p className="data-label mb-1">對話類型</p>
                       <p className="data-value">
@@ -888,10 +888,10 @@ function ConversationDetailPage() {
                     {/* Key Findings */}
                     {conversation.analysis.keyFindings &&
                       conversation.analysis.keyFindings.length > 0 && (
-                        <Card className="detail-card border-cyan-500/20">
+                        <Card className="detail-card border-purple-600/20">
                           <CardHeader>
                             <CardTitle className="section-title flex items-center gap-2 text-lg">
-                              <Lightbulb className="h-5 w-5 text-cyan-400" />
+                              <Lightbulb className="h-5 w-5 text-purple-400" />
                               關鍵發現
                             </CardTitle>
                           </CardHeader>
@@ -912,10 +912,10 @@ function ConversationDetailPage() {
                     {/* Next Steps */}
                     {conversation.analysis.nextSteps &&
                       conversation.analysis.nextSteps.length > 0 && (
-                        <Card className="detail-card border-blue-500/20">
+                        <Card className="detail-card border-purple-500/20">
                           <CardHeader>
                             <CardTitle className="section-title flex items-center gap-2 text-lg">
-                              <TrendingUp className="h-5 w-5 text-blue-400" />
+                              <TrendingUp className="h-5 w-5 text-purple-400" />
                               下一步行動
                             </CardTitle>
                           </CardHeader>
@@ -1161,7 +1161,7 @@ function ConversationDetailPage() {
                   </div>
                   {conversation.analyzedAt && (
                     <div className="timeline-item">
-                      <BarChart3 className="h-5 w-5 shrink-0 text-cyan-400" />
+                      <BarChart3 className="h-5 w-5 shrink-0 text-purple-400" />
                       <div>
                         <p className="data-label mb-1">分析完成</p>
                         <p className="data-value text-xs">
@@ -1204,7 +1204,7 @@ function ConversationDetailPage() {
                 value={editedSummary}
               />
               <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-3">
-                <p className="mb-2 font-semibold text-cyan-400 text-sm">
+                <p className="mb-2 font-semibold text-purple-400 text-sm">
                   💡 提示:
                 </p>
                 <ul className="ml-4 list-disc space-y-1 text-slate-400 text-xs">
