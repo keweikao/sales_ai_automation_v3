@@ -6,12 +6,13 @@ import {
   CheckCircle2,
   ClipboardList,
   Lightbulb,
+  Phone,
   Target,
   User,
   XCircle,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getConsultantDisplayName } from "@/lib/consultant-names";
+import { getConsultantDisplayName, getConsultantInfo } from "@/lib/consultant-names";
 import { parseSummaryMarkdown } from "@/lib/summary-parser";
 import { client } from "@/utils/orpc";
 
@@ -78,7 +79,8 @@ function PublicSharePage() {
   // 解析摘要內容
   const parsedSummary = parseSummaryMarkdown(conversation.summary);
 
-  // 取得顧問顯示名稱
+  // 取得顧問資訊
+  const consultantInfo = getConsultantInfo(conversation.slackUser?.slackUserId);
   const consultantName = getConsultantDisplayName(
     conversation.slackUser?.slackUserId,
     conversation.slackUser?.slackUsername
@@ -220,13 +222,22 @@ function PublicSharePage() {
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-orange-400 to-red-500 shadow-md">
               <User className="h-6 w-6 text-white" />
             </div>
-            <div>
+            <div className="flex-1">
               <div className="font-medium text-gray-500 text-xs uppercase tracking-wider">
                 您的專屬顧問
               </div>
               <div className="font-bold text-gray-900 text-lg">
                 {consultantName}
               </div>
+              {consultantInfo?.phone && (
+                <a
+                  className="mt-1 flex items-center gap-1.5 text-orange-600 text-sm hover:text-orange-700"
+                  href={`tel:${consultantInfo.phone.replace(/-/g, "")}`}
+                >
+                  <Phone className="h-3.5 w-3.5" />
+                  {consultantInfo.phone}
+                </a>
+              )}
             </div>
           </div>
         </div>
