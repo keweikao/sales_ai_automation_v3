@@ -543,6 +543,71 @@ export default {
               );
             }
 
+            // ====================================
+            // 提取簡要版報告欄位 (新增)
+            // ====================================
+
+            // 1. PDCM 快速診斷 (從 Agent 2 提取)
+            const agent2Data = agentOutputs.agent2 as Record<string, unknown> | undefined;
+            const pdcmScores = agent2Data?.pdcm_scores as Record<string, unknown> | undefined;
+
+            const pdcmQuickDiagnosis = pdcmScores ? {
+              pain: Number((pdcmScores.pain as Record<string, unknown>)?.score ?? 0),
+              decision: Number((pdcmScores.decision as Record<string, unknown>)?.score ?? 0),
+              champion: Number((pdcmScores.champion as Record<string, unknown>)?.score ?? 0),
+              metrics: Number((pdcmScores.metrics as Record<string, unknown>)?.score ?? 0),
+              totalScore: Number(pdcmScores.total_score ?? 0),
+              dealProbability: (pdcmScores.deal_probability as "high" | "medium" | "low") ?? "low",
+            } : undefined;
+
+            // 2. 關鍵痛點 (從 Agent 2 提取，優先使用 key_pain_points)
+            const agent2PainPoints = (agent2Data?.pcm_state as Record<string, unknown>)?.pain as Record<string, unknown> | undefined;
+            const keyPainPoints: string[] = [];
+            if (agent2PainPoints?.primary_pain) {
+              keyPainPoints.push(String(agent2PainPoints.primary_pain));
+            }
+            // 補充從 Agent 4 markdown 提取的痛點
+            keyPainPoints.push(...painPoints.filter(p => !keyPainPoints.includes(p)));
+
+            // 3. 建議策略與理由 (從 Agent 3 提取)
+            const agent3Data = agentOutputs.agent3 as Record<string, unknown> | undefined;
+            const recommendedStrategy = agent3Data?.recommended_strategy as "CloseNow" | "SmallStep" | "MaintainRelationship" | undefined;
+            const strategyReason = agent3Data?.strategy_reason as string | undefined;
+
+            // 4. 下一步行動 (從 Agent 3 提取)
+            const agent3NextAction = agent3Data?.next_action as Record<string, unknown> | undefined;
+            const nextAction = agent3NextAction ? {
+              action: String(agent3NextAction.action ?? ""),
+              suggestedScript: String(agent3NextAction.suggested_script ?? ""),
+              deadline: String(agent3NextAction.deadline ?? "24小時內"),
+            } : undefined;
+
+            // 5. 戰術建議 (從 Agent 6 提取，只取第一個)
+            const agent6Data = agentOutputs.agent6 as Record<string, unknown> | undefined;
+            const tacticalSuggestions = agent6Data?.tactical_suggestions as Array<Record<string, unknown>> | undefined;
+            const topTacticalSuggestion = tacticalSuggestions?.[0] ? {
+              trigger: String(tacticalSuggestions[0].trigger ?? ""),
+              suggestion: String(tacticalSuggestions[0].suggestion ?? ""),
+              talkTrack: String(tacticalSuggestions[0].talk_track ?? ""),
+            } : undefined;
+
+            // 6. PDCM+SPIN 綜合警示 (從 Agent 6 提取)
+            const agent6Alerts = agent6Data?.pdcm_spin_alerts as Record<string, Record<string, unknown>> | undefined;
+            const pdcmSpinAlerts = agent6Alerts ? {
+              noMetrics: {
+                triggered: Boolean(agent6Alerts.no_metrics?.triggered ?? false),
+                message: String(agent6Alerts.no_metrics?.message ?? ""),
+              },
+              shallowDiscovery: {
+                triggered: Boolean(agent6Alerts.shallow_discovery?.triggered ?? false),
+                message: String(agent6Alerts.shallow_discovery?.message ?? ""),
+              },
+              noUrgency: {
+                triggered: Boolean(agent6Alerts.no_urgency?.triggered ?? false),
+                message: String(agent6Alerts.no_urgency?.message ?? ""),
+              },
+            } : undefined;
+
             await slackService.notifyProcessingCompleted({
               userId: slackUser.id,
               conversationId,
@@ -571,6 +636,15 @@ export default {
                 summary, // 會議摘要 (markdown 格式)
                 smsText, // SMS 簡訊內容
                 contactPhone, // 客戶電話
+
+                // ========= 新增：簡要版報告欄位 =========
+                pdcmQuickDiagnosis,
+                keyPainPoints: keyPainPoints.length > 0 ? keyPainPoints : undefined,
+                recommendedStrategy,
+                strategyReason,
+                nextAction,
+                topTacticalSuggestion,
+                pdcmSpinAlerts,
               },
               processingTimeMs,
               threadTs, // 傳遞 thread_ts 以在同一個 thread 內回覆

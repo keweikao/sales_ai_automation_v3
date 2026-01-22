@@ -71,40 +71,75 @@ export function buildProcessingStartedBlocks(
 }
 
 /**
- * 構建處理完成通知 Blocks
+ * 構建處理完成通知 Blocks (簡要版)
+ * 專為 Slack 推播設計，聚焦關鍵資訊：
+ * - PDCM 快速診斷（4 維度分數）
+ * - 關鍵痛點
+ * - 建議策略與下一步行動
+ * - 戰術建議話術
+ * - PDCM+SPIN 警示
  */
 export function buildProcessingCompletedBlocks(
   caseNumber: string,
   conversationId: string,
   analysisResult: MEDDICAnalysisResult,
   processingTimeMs: number,
-  shareToken?: string // 新增: 公開分享 token
+  shareToken?: string
 ): KnownBlock[] {
   const processingTimeSec = (processingTimeMs / 1000).toFixed(1);
+  const webAppUrl = process.env.WEB_APP_URL || "https://sales-ai-web.pages.dev";
 
   const blocks: KnownBlock[] = [
     {
       type: "header",
       text: {
         type: "plain_text",
-        text: "✅ 音檔處理完成",
+        text: "✅ 分析完成",
         emoji: true,
       },
     },
     {
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: `📋 案件編號: *${caseNumber}* | ⏱️ 處理時間: ${processingTimeSec}秒`,
+        },
+      ],
+    },
+  ];
+
+  // ==========================================
+  // Block: PDCM 快速診斷 (核心區塊)
+  // ==========================================
+  if (analysisResult.pdcmQuickDiagnosis) {
+    const pdcm = analysisResult.pdcmQuickDiagnosis;
+    const probabilityEmoji = getDealProbabilityEmoji(pdcm.dealProbability);
+    const probabilityText = getDealProbabilityText(pdcm.dealProbability);
+
+    blocks.push({ type: "divider" });
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text:
+          `*📊 PDCM 快速診斷*\n` +
+          `${probabilityEmoji} *成交機率: ${probabilityText}* (總分 ${pdcm.totalScore}/100)\n\n` +
+          `${getScoreBar(pdcm.pain)} *P 痛點* ${pdcm.pain}/100\n` +
+          `${getScoreBar(pdcm.decision)} *D 決策* ${pdcm.decision}/100\n` +
+          `${getScoreBar(pdcm.champion)} *C 支持* ${pdcm.champion}/100\n` +
+          `${getScoreBar(pdcm.metrics)} *M 量化* ${pdcm.metrics}/100`,
+      },
+    });
+  } else {
+    // 向下相容：使用舊的 overallScore
+    blocks.push({ type: "divider" });
+    blocks.push({
       type: "section",
       fields: [
         {
           type: "mrkdwn",
-          text: `*案件編號:*\n${caseNumber}`,
-        },
-        {
-          type: "mrkdwn",
-          text: `*處理時間:*\n${processingTimeSec} 秒`,
-        },
-        {
-          type: "mrkdwn",
-          text: `*MEDDIC 分數:*\n*${analysisResult.overallScore}/100*`,
+          text: `*📊 MEDDIC 分數:*\n*${analysisResult.overallScore}/100*`,
         },
         {
           type: "mrkdwn",
@@ -115,31 +150,61 @@ export function buildProcessingCompletedBlocks(
             analysisResult.qualificationStatus,
         },
       ],
-    },
-  ];
+    });
+  }
 
-  // Block 2: 分隔線
-  blocks.push({ type: "divider" });
+  // ==========================================
+  // Block: PDCM+SPIN 警示 (高優先級顯示)
+  // ==========================================
+  if (analysisResult.pdcmSpinAlerts) {
+    const alerts = analysisResult.pdcmSpinAlerts;
+    const triggeredAlerts: string[] = [];
 
-  // Block 3: 高優先級警報 (僅當有 alerts 時)
-  if (analysisResult.alerts && analysisResult.alerts.length > 0) {
+    if (alerts.noMetrics.triggered) {
+      triggeredAlerts.push(`⚠️ *Metrics 不足*: ${alerts.noMetrics.message}`);
+    }
+    if (alerts.shallowDiscovery.triggered) {
+      triggeredAlerts.push(
+        `⚠️ *挖掘不足*: ${alerts.shallowDiscovery.message}`
+      );
+    }
+    if (alerts.noUrgency.triggered) {
+      triggeredAlerts.push(`⚠️ *痛點不痛*: ${alerts.noUrgency.message}`);
+    }
+
+    if (triggeredAlerts.length > 0) {
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: triggeredAlerts.join("\n"),
+        },
+      });
+    }
+  } else if (analysisResult.alerts && analysisResult.alerts.length > 0) {
+    // 向下相容：使用舊的 alerts
     const alertsText = analysisResult.alerts
-      .map((alert) => `• ${alert}`)
+      .map((alert) => `⚠️ ${alert}`)
       .join("\n");
 
     blocks.push({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `⚠️ *需要注意:*\n${alertsText}`,
+        text: alertsText,
       },
     });
-    blocks.push({ type: "divider" });
   }
 
-  // Block 4: 客戶痛點 (從 painPoints 提取)
-  if (analysisResult.painPoints && analysisResult.painPoints.length > 0) {
-    const painPointsText = analysisResult.painPoints
+  // ==========================================
+  // Block: 關鍵痛點
+  // ==========================================
+  const painPoints =
+    analysisResult.keyPainPoints || analysisResult.painPoints || [];
+  if (painPoints.length > 0) {
+    blocks.push({ type: "divider" });
+    const painPointsText = painPoints
+      .slice(0, 3) // 最多顯示 3 個
       .map((point) => `• ${point}`)
       .join("\n");
 
@@ -147,58 +212,97 @@ export function buildProcessingCompletedBlocks(
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `💡 *客戶痛點*\n${painPointsText}`,
+        text: `*😟 關鍵痛點*\n${painPointsText}`,
       },
     });
-    blocks.push({ type: "divider" });
   }
 
-  // Block 5: 風險與緩解措施 (從 risks 提取)
-  if (analysisResult.risks && analysisResult.risks.length > 0) {
-    const risksText = analysisResult.risks
-      .map((risk) => {
-        const emoji = getSeverityEmoji(risk.severity);
-        let text = `${emoji} *${risk.risk}*`;
-        if (risk.mitigation) {
-          text += `\n_緩解措施:_ ${risk.mitigation}`;
-        }
-        return text;
-      })
-      .join("\n\n");
+  // ==========================================
+  // Block: 建議策略與下一步行動
+  // ==========================================
+  if (analysisResult.recommendedStrategy || analysisResult.nextAction) {
+    blocks.push({ type: "divider" });
+
+    let strategyText = "*🎯 建議策略*\n";
+
+    if (analysisResult.recommendedStrategy) {
+      const strategyEmoji = getStrategyEmoji(analysisResult.recommendedStrategy);
+      const strategyLabel = getStrategyLabel(analysisResult.recommendedStrategy);
+      strategyText += `${strategyEmoji} *${strategyLabel}*`;
+
+      if (analysisResult.strategyReason) {
+        strategyText += `\n_${analysisResult.strategyReason}_`;
+      }
+    }
 
     blocks.push({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: risksText,
+        text: strategyText,
       },
     });
-    blocks.push({ type: "divider" });
+
+    if (analysisResult.nextAction) {
+      const action = analysisResult.nextAction;
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text:
+            `*✅ 下一步行動*\n` +
+            `*${action.action}*\n` +
+            `⏰ 時效: ${action.deadline}\n\n` +
+            `💬 建議話術:\n>${action.suggestedScript}`,
+        },
+      });
+    }
   }
 
-  // Block 6: 建議 SMS 跟進訊息 (顯示完整內容)
-  if (analysisResult.smsText) {
+  // ==========================================
+  // Block: 戰術建議 (最重要的一個)
+  // ==========================================
+  if (analysisResult.topTacticalSuggestion) {
+    const tactic = analysisResult.topTacticalSuggestion;
+    blocks.push({ type: "divider" });
     blocks.push({
       type: "section",
       text: {
         type: "mrkdwn",
         text:
-          "📱 *建議 SMS 跟進訊息*\n" +
-          analysisResult.smsText +
-          "\n\n_點擊下方「編輯會議摘要與簡訊」可修改內容並發送_",
+          `*💡 戰術建議*\n` +
+          `當客戶說「${tactic.trigger}」時:\n` +
+          `*${tactic.suggestion}*\n\n` +
+          `💬 話術:\n>${tactic.talkTrack}`,
       },
     });
-    blocks.push({ type: "divider" });
   }
 
-  // Block 7: 操作按鈕 (完整分析 + 編輯摘要與簡訊)
-  const webAppUrl = process.env.WEB_APP_URL || "https://sales-ai-web.pages.dev";
+  // ==========================================
+  // Block: 建議 SMS 跟進訊息
+  // ==========================================
+  if (analysisResult.smsText) {
+    blocks.push({ type: "divider" });
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `📱 *SMS 跟進訊息*\n>${analysisResult.smsText}`,
+      },
+    });
+  }
+
+  // ==========================================
+  // Block: 操作按鈕
+  // ==========================================
+  blocks.push({ type: "divider" });
+
   const actionButtons: any[] = [
     {
       type: "button",
       text: {
         type: "plain_text",
-        text: "查看完整分析",
+        text: "📊 查看完整分析",
         emoji: true,
       },
       url: `${webAppUrl}/conversations/${conversationId}`,
@@ -206,13 +310,13 @@ export function buildProcessingCompletedBlocks(
     },
   ];
 
-  // 如果有客戶電話和分享 token,新增「發送 SMS」按鈕
+  // 如果有客戶電話和分享 token，新增「發送 SMS」按鈕
   if (analysisResult.contactPhone && shareToken) {
     actionButtons.push({
       type: "button",
       text: {
         type: "plain_text",
-        text: "📱 發送 SMS 給客戶",
+        text: "📱 發送 SMS",
         emoji: true,
       },
       action_id: "send_customer_sms",
@@ -221,20 +325,19 @@ export function buildProcessingCompletedBlocks(
         phoneNumber: analysisResult.contactPhone,
         shareToken,
       }),
-      style: "primary",
     });
   }
 
-  // 如果有會議摘要或 SMS,新增編輯按鈕
-  if (analysisResult.summary || analysisResult.smsText) {
+  // 分享連結按鈕
+  if (shareToken) {
     actionButtons.push({
       type: "button",
       text: {
         type: "plain_text",
-        text: "編輯會議摘要與簡訊",
+        text: "🔗 分享連結",
         emoji: true,
       },
-      url: `${webAppUrl}/conversations/${conversationId}`,
+      url: `${webAppUrl}/share/${shareToken}`,
     });
   }
 
@@ -244,6 +347,70 @@ export function buildProcessingCompletedBlocks(
   });
 
   return blocks;
+}
+
+/**
+ * 生成分數進度條視覺化
+ */
+function getScoreBar(score: number): string {
+  if (score >= 80) return "🟢";
+  if (score >= 60) return "🟡";
+  if (score >= 40) return "🟠";
+  return "🔴";
+}
+
+/**
+ * 取得成交機率對應的 emoji
+ */
+function getDealProbabilityEmoji(
+  probability: "high" | "medium" | "low"
+): string {
+  const emojiMap: Record<string, string> = {
+    high: "🔥",
+    medium: "🤔",
+    low: "❄️",
+  };
+  return emojiMap[probability] || "❓";
+}
+
+/**
+ * 取得成交機率對應的文字
+ */
+function getDealProbabilityText(probability: "high" | "medium" | "low"): string {
+  const textMap: Record<string, string> = {
+    high: "高",
+    medium: "中",
+    low: "低",
+  };
+  return textMap[probability] || "未知";
+}
+
+/**
+ * 取得建議策略對應的 emoji
+ */
+function getStrategyEmoji(
+  strategy: "CloseNow" | "SmallStep" | "MaintainRelationship" | string
+): string {
+  const emojiMap: Record<string, string> = {
+    CloseNow: "🔥",
+    SmallStep: "👆",
+    MaintainRelationship: "🤝",
+  };
+  return emojiMap[strategy] || "📋";
+}
+
+/**
+ * 取得建議策略對應的標籤
+ */
+function getStrategyLabel(
+  strategy: "CloseNow" | "SmallStep" | "MaintainRelationship" | string
+): string {
+  const labelMap: Record<string, string> = {
+    CloseNow: "立即成交",
+    SmallStep: "小步前進",
+    MaintainRelationship: "維持關係",
+  };
+  return labelMap[strategy] || strategy;
 }
 
 /**
@@ -329,15 +496,3 @@ function getStatusEmoji(status: string): string {
   return statusMap[status.toLowerCase()] || "⚪";
 }
 
-/**
- * 根據風險嚴重程度返回對應的 emoji
- */
-function getSeverityEmoji(severity: string): string {
-  const severityMap: Record<string, string> = {
-    high: "🔴",
-    medium: "🟡",
-    low: "🟢",
-  };
-
-  return severityMap[severity.toLowerCase()] || "🟡";
-}
