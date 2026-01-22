@@ -6,6 +6,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
@@ -39,6 +40,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs } from "@/components/ui/tabs";
 import { TermTooltip } from "@/components/ui/term-tooltip";
@@ -169,15 +177,27 @@ function DimensionScoreBar({
 
 // Rep Performance Report Component
 function RepPerformanceReport() {
+  const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
+
+  // 獲取可查看的用戶列表（經理/admin 才會有）
+  const viewableUsersQuery = useQuery({
+    queryKey: ["team", "viewableUsers"],
+    queryFn: () => client.team.getViewableUsers(),
+  });
+
   const reportQuery = useQuery({
-    queryKey: ["analytics", "repPerformance", {}],
+    queryKey: ["analytics", "repPerformance", { userId: selectedUserId }],
     queryFn: async () => {
-      return await client.analytics.repPerformance({});
+      return await client.analytics.repPerformance({
+        userId: selectedUserId,
+      });
     },
   });
 
   const report = reportQuery.data;
   const isLoading = reportQuery.isLoading;
+  const canSelectUser = viewableUsersQuery.data?.canSelectUser ?? false;
+  const viewableUsers = viewableUsersQuery.data?.users ?? [];
 
   if (isLoading) {
     return (
@@ -215,6 +235,29 @@ function RepPerformanceReport() {
 
   return (
     <div className="space-y-6">
+      {/* 用戶選擇器（僅經理/admin 可見） */}
+      {canSelectUser && (
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground">查看報告：</span>
+          <Select
+            value={selectedUserId || ""}
+            onValueChange={(v) => setSelectedUserId(v || undefined)}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="自己" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">自己</SelectItem>
+              {viewableUsers.map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.name || u.email}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       {/* Summary Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <StatCard

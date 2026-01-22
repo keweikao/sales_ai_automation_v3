@@ -14,7 +14,7 @@ import {
   userProfiles,
 } from "@Sales_ai_automation_v3/db/schema";
 import { ORPCError } from "@orpc/server";
-import { eq, or } from "drizzle-orm";
+import { eq, inArray, or } from "drizzle-orm";
 import { z } from "zod";
 import { protectedProcedure } from "../index";
 
@@ -289,8 +289,80 @@ const deleteUser = protectedProcedure
     }
   });
 
+/**
+ * 取得當前用戶可查看的用戶列表（用於報告頁面選擇器）
+ * - 一般業務：不能選擇（只能看自己）
+ * - 經理：可選擇同部門的用戶
+ * - Admin 或 department=all 的經理：可選擇所有用戶
+ */
+const getViewableUsers = protectedProcedure.handler(async ({ context }) => {
+  const currentUserId = context.session?.user.id;
+
+  if (!currentUserId) {
+    throw new ORPCError("UNAUTHORIZED");
+  }
+
+  // 取得當前用戶的角色和部門
+  const currentUserProfile = await db.query.userProfiles.findFirst({
+    where: eq(userProfiles.userId, currentUserId),
+  });
+
+  const role = currentUserProfile?.role;
+  const department = currentUserProfile?.department;
+
+  // 一般業務只能看自己，不顯示選擇器
+  if (role !== "admin" && role !== "manager") {
+    return { users: [], canSelectUser: false };
+  }
+
+  // 查詢可查看的用戶列表
+  let users: { id: string; name: string | null; email: string }[];
+
+  if (role === "admin" || department === "all") {
+    // Admin 或 department=all 的經理可看全部用戶
+    users = await db.query.user.findMany({
+      columns: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+  } else if (department) {
+    // 經理只能看同部門的用戶
+    const departmentProfiles = await db.query.userProfiles.findMany({
+      where: eq(userProfiles.department, department),
+    });
+    const userIds = departmentProfiles.map((p) => p.userId);
+
+    if (userIds.length > 0) {
+      users = await db.query.user.findMany({
+        where: inArray(user.id, userIds),
+        columns: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      });
+    } else {
+      users = [];
+    }
+  } else {
+    // 沒有設定部門的經理，只能看自己
+    users = [];
+  }
+
+  // 過濾掉當前用戶自己（選擇器中「自己」會單獨顯示）
+  const filteredUsers = users.filter((u) => u.id !== currentUserId);
+
+  return {
+    users: filteredUsers,
+    canSelectUser: true,
+  };
+});
+
 export const teamRouter = {
   listUsers,
   updateUserRole,
   deleteUser,
+  getViewableUsers,
 };
