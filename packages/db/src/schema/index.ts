@@ -7,6 +7,7 @@ export * from "./lead-source";
 export * from "./meddic";
 export * from "./opportunity";
 export * from "./rep-skills";
+export * from "./sales-todo";
 export * from "./share-token";
 export * from "./sms-log";
 export * from "./talk-tracks";
