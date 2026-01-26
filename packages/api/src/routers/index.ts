@@ -8,6 +8,7 @@ import { analyticsRouter } from "./analytics";
 import { conversationRouter } from "./conversation";
 import { leadSourceRouter } from "./lead-source";
 import { opportunityRouter } from "./opportunity";
+import { salesTodoRouter } from "./sales-todo";
 import { shareRouter } from "./share";
 import { smsRouter } from "./sms";
 import { teamRouter } from "./team";
@@ -48,6 +49,9 @@ export const appRouter = {
 
   // Team management (Admin only)
   team: teamRouter,
+
+  // Sales Todo management
+  salesTodo: salesTodoRouter,
 
   // TODO: Sales Coach Agent 開發中，暫時停用
   // agent: agentRouter,
