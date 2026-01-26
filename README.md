@@ -1,188 +1,271 @@
 # Sales AI Automation V3
 
-> AI 驅動的 B2B 銷售自動化系統，使用 MEDDIC 方法論分析銷售對話，提供即時洞察與教練建議
+> AI 驅動的 B2B 銷售自動化系統，使用 MEDDIC 方法論分析銷售對話，支援多產品線（iCHEF 餐飲 + Beauty 美業）
 
-這是從 [V2 Python 版本](https://github.com/keweikao/sales-ai-automation-V2) 遷移到 V3 TypeScript 全端的系統架構重組專案。採用 [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack) 現代化技術棧，實現端對端類型安全與零冷啟動部署。
+從 [V2 Python 版本](https://github.com/keweikao/sales-ai-automation-V2) 遷移至 TypeScript 全端架構。採用 Cloudflare Workers 邊緣部署，實現端對端類型安全與零冷啟動。
 
-## 專案概述
+## 核心功能
 
-**核心功能**：
-- 🎯 **MEDDIC 六維度分析**：Metrics、Economic Buyer、Decision Criteria、Decision Process、Identify Pain、Champion
-- 🎙️ **語音轉文字**：Groq Whisper Large v3 Turbo（228x 實時速度）
-- 🤖 **Multi-Agent 系統**：6 個專門 AI Agent 協作分析（Context、Buyer、Seller、Summary、CRM、Coach）
-- 💬 **Slack Bot 整合**：即時警示、Thread 對話、Manager 通知
-- 📊 **CRM 自動萃取**：Salesforce 欄位自動提取
-- 📈 **Analytics Dashboard**：Lead 管理、趨勢分析、評分追蹤
+- **Multi-Agent MEDDIC 分析** - 6 個專門 AI Agent 協作（Context、Buyer、Seller、Summary、CRM、Coach）
+- **語音轉文字** - Groq Whisper Large v3 Turbo（228x 實時速度，$0.04/hr）
+- **Slack Bot 整合** - 即時警示、Thread 對話、Manager 通知、音檔上傳
+- **多產品線支援** - iCHEF 餐飲 + Beauty 美業，獨立配置與 Prompts
+- **CRM 自動萃取** - Salesforce 欄位自動提取
+- **待辦管理** - Follow-up 設定、每日 Slack 提醒
 
-**V2 → V3 遷移目標**：
-- ✅ **開發效率**：TypeScript 全端類型安全，減少 runtime 錯誤
-- ✅ **部署速度**：Cloudflare Workers 邊緣部署，0ms 冷啟動
-- ✅ **維護成本**：統一技術棧，從雙語言（Python + TypeScript）簡化為單一 TypeScript
-- ✅ **擴展性**：Monorepo 架構，更好的程式碼重用與類型共享
+## 系統架構
 
-**生產環境指標**（V2）：
-- 📊 處理量：~300 cases/月
-- ⚡ 效能：端對端 <2 分鐘（37.5 分鐘音檔）
-- 💰 成本：月成本 $15 USD → V3 預估 $13.50（降低 13%）
+```text
+sales_ai_automation_v3/
+├── apps/
+│   ├── web/                     # React 前端 Dashboard
+│   ├── server/                  # Hono API 後端
+│   ├── slack-bot/               # iCHEF Slack Bot
+│   ├── slack-bot-beauty/        # Beauty Slack Bot
+│   ├── queue-worker/            # 異步轉錄處理
+│   └── lambda-audio-compressor/ # AWS Lambda 音檔壓縮
+├── packages/
+│   ├── api/                     # API 層 + 業務邏輯
+│   ├── db/                      # Drizzle ORM Schema
+│   ├── services/                # 外部服務整合（LLM、轉錄、儲存）
+│   ├── shared/                  # 共享類型與 Zod Schemas
+│   ├── auth/                    # Better-Auth 認證
+│   ├── env/                     # 環境變數管理
+│   ├── config/                  # 共享配置（Biome）
+│   └── infra/                   # 基礎設施配置
+├── scripts/                     # 工具腳本（資料遷移等）
+├── tests/                       # Vitest + Playwright 測試
+└── .doc/                        # 專案文件
+```
 
 ## 技術棧
 
+### 核心技術
+
+| 類別 | 技術 | 版本 |
+|------|------|------|
+| Runtime | Bun | 1.3.5 |
+| Monorepo | Turborepo | 2.6.3 |
+| 語言 | TypeScript | 5.x |
+
 ### 前端
-- **React 19** - 使用最新 React features（ref as prop）
-- **TanStack Router** - 檔案式路由，完整類型安全
-- **TailwindCSS** - Utility-first CSS 快速開發
-- **shadcn/ui** - 可重用的 UI 元件庫
-- **Recharts** - MEDDIC 雷達圖視覺化
+
+| 技術 | 版本 | 用途 |
+|------|------|------|
+| React | 19.2.3 | UI 框架 |
+| TanStack Router | 1.141.1 | 檔案式路由 |
+| TanStack Query | 5.90 | 資料同步 |
+| TailwindCSS | 4.0.15 | 樣式框架 |
+| Recharts | 3.6 | MEDDIC 雷達圖 |
+| shadcn/ui | - | UI 元件庫 |
 
 ### 後端
-- **Hono** - 輕量高效的 server framework
-- **oRPC** - 端對端類型安全 API + OpenAPI 整合
-- **Cloudflare Workers** - 邊緣運算，0ms 冷啟動
-- **Drizzle ORM** - TypeScript-first ORM
-- **Neon PostgreSQL** - Serverless 資料庫
 
-### AI & External Services
-- **Google Gemini 2.0 Flash** - LLM 分析引擎
-- **Groq Whisper Large v3 Turbo** - 語音轉文字（$0.04/hr）
-- **Cloudflare R2** - 音檔儲存（S3 相容）
-- **Slack SDK** - Bot 整合
+| 技術 | 版本 | 用途 |
+|------|------|------|
+| Hono | 4.8.2 | HTTP 框架 |
+| oRPC | 1.12.2 | 端對端類型安全 API |
+| Drizzle ORM | 0.45.1 | TypeScript-first ORM |
+| Better-Auth | 1.4.9 | 認證系統 |
+
+### 雲端服務
+
+| 服務 | 用途 |
+|------|------|
+| Cloudflare Workers | API 後端、Slack Bot、Queue Worker |
+| Cloudflare Pages | Web 前端靜態部署 |
+| Cloudflare R2 | 音檔儲存（S3 相容） |
+| Cloudflare Queues | 異步轉錄任務隊列 |
+| Cloudflare KV | 快取層 |
+| Neon PostgreSQL | Serverless 資料庫 |
+| AWS Lambda | 音檔壓縮（FFmpeg） |
+
+### AI 服務
+
+| 服務 | 用途 | 成本 |
+|------|------|------|
+| Google Gemini 2.0 Flash | MEDDIC 分析引擎 | - |
+| Groq Whisper Large v3 Turbo | 語音轉文字 | $0.04/hr |
 
 ### 開發工具
-- **Bun** - 快速的 JavaScript runtime & package manager
-- **Turborepo** - Monorepo 建置系統
-- **Ultracite (Biome)** - 程式碼格式化與 linting
-- **Better-Auth** - 認證系統
+
+| 工具 | 版本 | 用途 |
+|------|------|------|
+| Biome (Ultracite) | 2.3.11 | Linting & Formatting |
+| Vitest | 3.1 | 單元/整合測試 |
+| Playwright | 1.50 | E2E 測試 |
+| Wrangler | 4.59 | Cloudflare CLI |
+| Lefthook | 2.0 | Git Hooks |
+
+## 應用程式
+
+| 應用 | 說明 | 部署目標 |
+|------|------|----------|
+| **web** | React 前端 Dashboard，MEDDIC 視覺化、機會管理 | Cloudflare Pages |
+| **server** | Hono + oRPC API，認證、業務邏輯、隊列生產者 | Cloudflare Workers |
+| **slack-bot** | iCHEF 產線 Slack Bot，音檔上傳、警示管理 | Cloudflare Workers |
+| **slack-bot-beauty** | Beauty 產線 Slack Bot | Cloudflare Workers |
+| **queue-worker** | 異步轉錄與 MEDDIC 分析處理 | Cloudflare Workers |
+| **lambda-audio-compressor** | FFmpeg 音檔壓縮，支援 Base64/S3 輸出 | AWS Lambda |
 
 ## Getting Started
 
-First, install the dependencies:
+### 安裝依賴
 
 ```bash
 bun install
 ```
 
-## Database Setup
+### 資料庫設定
 
-This project uses PostgreSQL with Drizzle ORM.
-
-1. Make sure you have a PostgreSQL database set up.
-2. Update your `apps/server/.env` file with your PostgreSQL connection details.
-
-3. Apply the schema to your database:
+1. 設定 PostgreSQL 連線（Neon 或本地）
+2. 更新 `apps/server/.env` 的 `DATABASE_URL`
+3. 推送 Schema：
 
 ```bash
 bun run db:push
 ```
 
-Then, run the development server:
+### 啟動開發伺服器
 
 ```bash
 bun run dev
 ```
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
-The API is running at [http://localhost:3000](http://localhost:3000).
+- Web：<http://localhost:3001>
+- API：<http://localhost:3000>
 
-## Deployment (Cloudflare via Alchemy)
-
-- Dev: bun run dev
-- Deploy: bun run deploy
-- Destroy: bun run destroy
-
-For more details, see the guide on [Deploying to Cloudflare with Alchemy](https://www.better-t-stack.dev/docs/guides/cloudflare-alchemy).
-
-## 專案結構
-
-```
-Sales_ai_automation_v3/
-├── apps/
-│   ├── web/              # 前端應用（React + TanStack Router）
-│   ├── server/           # 後端 API（Hono + oRPC）
-│   └── slack-bot/        # Slack Bot（Cloudflare Workers）[待開發]
-├── packages/
-│   ├── api/              # API 層 / 業務邏輯
-│   ├── auth/             # 認證設定與邏輯（Better-Auth）
-│   ├── db/               # 資料庫 schema & queries（Drizzle）
-│   └── services/         # 外部服務整合 [待開發]
-│       ├── llm/          # Gemini SDK + Multi-Agent Orchestrator
-│       ├── transcription/# Groq Whisper 轉錄服務
-│       ├── storage/      # Cloudflare R2 檔案儲存
-│       └── prompts/      # MEDDIC Prompts（從 V2 遷移）
-├── scripts/              # 工具腳本
-│   └── migrate-firestore-to-postgres.ts  # V2 資料遷移 [待開發]
-└── .doc/                 # 專案文件
-    └── v3-parallel-development-strategy.md  # 平行開發策略
-```
-
-## 可用指令
+## 常用指令
 
 ### 開發
-- `bun run dev` - 啟動所有應用（web + server）
-- `bun run dev:web` - 僅啟動前端（port 3001）
-- `bun run dev:server` - 僅啟動後端 API（port 3000）
-- `bun run build` - 建置所有應用
+
+```bash
+bun run dev           # 啟動所有應用（web + server）
+bun run dev:web       # 僅啟動前端（port 3001）
+bun run dev:server    # 僅啟動後端（port 3000）
+bun run build         # 建置所有應用
+```
 
 ### 資料庫
-- `bun run db:push` - 推送 schema 變更到資料庫
-- `bun run db:generate` - 產生 migration 檔案
-- `bun run db:studio` - 開啟 Drizzle Studio UI
+
+```bash
+bun run db:push       # 推送 Schema 變更
+bun run db:generate   # 產生 Migration 檔案
+bun run db:migrate    # 執行 Migration
+bun run db:studio     # 開啟 Drizzle Studio UI
+bun run db:seed       # 執行種子資料
+```
+
+### 測試
+
+```bash
+bun run test          # 執行所有測試
+bun run test:watch    # 監控模式
+bun run test:unit     # 單元測試
+bun run test:integration  # 整合測試
+bun run test:e2e      # E2E 測試
+bun run test:e2e:ui   # E2E UI 模式
+```
 
 ### 程式碼品質
-- `bun run check-types` - 檢查 TypeScript 類型
-- `bun x ultracite check` - 檢查程式碼品質（linting + formatting）
-- `bun x ultracite fix` - 自動修正程式碼問題
 
-### 部署（Cloudflare）
-- `bun run deploy` - 部署到 Cloudflare
-- `bun run destroy` - 銷毀 Cloudflare 部署
+```bash
+bun run check-types       # TypeScript 類型檢查
+bun x ultracite check     # Linting 檢查
+bun x ultracite fix       # 自動修正
+```
 
-## 開發狀態
+## 部署
 
-### ✅ 已完成（Better-T-Stack 基礎）
-- [x] 專案初始化（Turborepo monorepo）
-- [x] Better-Auth 認證系統設定
-- [x] 基礎前端架構（React + TanStack Router）
-- [x] 基礎後端架構（Hono + oRPC）
-- [x] Drizzle ORM 設定
-- [x] Ultracite 程式碼標準設定
+### Web 前端
 
-### 🚧 進行中（Phase 1: 基礎建設）
-- [ ] **Workflow A**: Database Schema（Lead, Conversation, MEDDIC）
-- [ ] **Workflow B**: UI Components（13 個 React 元件）
-- [ ] **Workflow C**: External Services（Groq Whisper, Gemini, R2）+ V2 Prompts 遷移
+> **重要**：確保 `apps/web/.env.production` 存在且正確設定 `VITE_SERVER_URL`
 
-### 📋 待開發（Phase 2-5）
-- [ ] **Phase 2**: 核心功能（API Routes, Frontend Pages, Slack Bot）
-- [ ] **Phase 3**: 整合測試
-- [ ] **Phase 4**: 資料遷移（Firestore → PostgreSQL）
-- [ ] **Phase 5**: 生產部署
+```bash
+cd apps/web
+bun run build
+bunx wrangler pages deploy dist --project-name=sales-ai-web --branch=main
+```
 
-詳細開發策略請參考：[.doc/v3-parallel-development-strategy.md](.doc/v3-parallel-development-strategy.md)
+### Server API
 
-## V2 遷移重點
+```bash
+cd apps/server
+bunx wrangler deploy
+```
 
-### 必須保留的核心邏輯
-- ✅ **Multi-Agent Orchestrator**：七階段執行流程（並行 + 序列混合）
-- ✅ **品質迴圈（Quality Loop）**：最多 2 次 refine
-- ✅ **MEDDIC Prompts**：7 個生產驗證的 prompt（逐字複製）
-- ✅ **Groq Whisper Pipeline**：228x 實時速度，自動分塊邏輯
+### Slack Bot
 
-### 技術決策變更
-| 項目 | V2 | V3 | 原因 |
-|------|----|----|------|
-| 語言 | Python + TypeScript | TypeScript | 統一技術棧 |
-| 資料庫 | Firestore | PostgreSQL (Neon) | 更好的關聯查詢 |
-| 運算平台 | Cloud Run | Cloudflare Workers | 0ms 冷啟動 |
-| 儲存 | Google Cloud Storage | Cloudflare R2 | 無出站流量費用 |
-| 轉錄 | Groq Whisper | Groq Whisper | 保留（已驗證） |
+```bash
+cd apps/slack-bot
+bunx wrangler deploy
+
+# Beauty 產線
+cd apps/slack-bot-beauty
+bunx wrangler deploy
+```
+
+### Queue Worker
+
+```bash
+cd apps/queue-worker
+bunx wrangler deploy
+```
+
+## 環境變數
+
+### Server 必要變數
+
+```env
+DATABASE_URL=postgresql://...
+DATABASE_URL_DIRECT=postgresql://...
+BETTER_AUTH_SECRET=...
+GEMINI_API_KEY=...
+GROQ_API_KEY=...
+SLACK_BOT_TOKEN=...
+```
+
+### Web 必要變數
+
+```env
+# .env.production
+VITE_SERVER_URL=https://sales-ai-server.salesaiautomationv3.workers.dev
+```
+
+### Slack Bot 必要變數
+
+```env
+SLACK_BOT_TOKEN=...
+SLACK_SIGNING_SECRET=...
+API_BASE_URL=...
+API_TOKEN=...
+```
+
+## 專案狀態
+
+### ✅ 已完成
+
+- Multi-Agent MEDDIC 分析系統（6 個 Agent）
+- 多產品線支援（iCHEF + Beauty）
+- Web Dashboard 部署
+- Slack Bot 基礎設施
+- Queue Worker 異步處理
+- KV 快取系統
+- 待辦管理與提醒
+
+### 🚧 進行中
+
+- 監控體系建立
+- 話術知識庫
+- 競品追蹤系統
 
 ## 相關連結
 
-- **V2 專案**: [sales-ai-automation-V2](https://github.com/keweikao/sales-ai-automation-V2)
-- **開發策略**: [平行開發策略文件](.doc/v3-parallel-development-strategy.md)
-- **Better-T-Stack**: [官方文件](https://www.better-t-stack.dev/)
-- **Groq API**: [Groq Console](https://console.groq.com/docs/)
-- **Gemini API**: [Google AI Studio](https://ai.google.dev/gemini-api/docs)
+- [V2 專案](https://github.com/keweikao/sales-ai-automation-V2)
+- [Groq API](https://console.groq.com/docs/)
+- [Gemini API](https://ai.google.dev/gemini-api/docs)
+- [Cloudflare Workers](https://developers.cloudflare.com/workers/)
+- [Drizzle ORM](https://orm.drizzle.team/)
 
 ## 授權
 
@@ -191,5 +274,3 @@ MIT License
 ---
 
 **開發團隊**：iCHEF Sales Engineering Team
-**專案狀態**：🚧 開發中（Phase 1）
-**預計完成**：3-4 週（5 人團隊並行開發）
