@@ -79,7 +79,8 @@ export type {
 // ============================================================
 
 export { createR2Service, R2StorageService } from "./storage/r2.js";
-
+export type { S3Config } from "./storage/s3.js";
+export { createS3Service, S3StorageService } from "./storage/s3.js";
 export type {
   AudioFileMetadata,
   StorageConfig,
@@ -93,7 +94,11 @@ export { generateAudioKey, generateTranscriptKey } from "./storage/types.js";
 // Compression Services
 // ============================================================
 
-export type { CompressionResult } from "./compression/lambda-compressor.js";
+export type {
+  CompressionRequestOptions,
+  CompressionResult,
+  OutputMode,
+} from "./compression/lambda-compressor.js";
 export {
   createLambdaCompressor,
   LambdaAudioCompressor,

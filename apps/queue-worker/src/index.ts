@@ -15,10 +15,13 @@ import {
   conversations,
   meddicAnalyses,
   opportunities,
+  salesTodos,
+  userProfiles,
 } from "@Sales_ai_automation_v3/db/schema";
 import {
   createGeminiClient,
   createGroqWhisperService,
+  createLambdaCompressor,
   createOrchestrator,
   createR2Service,
   createSlackNotificationService,
@@ -41,7 +44,7 @@ import {
   isAppError,
 } from "@Sales_ai_automation_v3/shared/errors";
 import type { TranscriptionMessage } from "@Sales_ai_automation_v3/shared/types";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 
 // ============================================================
@@ -76,6 +79,15 @@ export interface Env {
 
   // Web App
   WEB_APP_URL: string;
+
+  // Lambda Compressor (備援壓縮)
+  LAMBDA_COMPRESSOR_URL?: string;
+
+  // AWS S3 (壓縮音檔暫存)
+  AWS_S3_ACCESS_KEY?: string;
+  AWS_S3_SECRET_KEY?: string;
+  AWS_S3_REGION?: string;
+  AWS_S3_BUCKET?: string;
 
   // Environment
   ENVIRONMENT: string;
@@ -158,6 +170,28 @@ export default {
       // 優先順序: message payload -> DB conversation record -> 預設 'ichef'
       const resolvedProductLine = productLine || "ichef";
 
+      // 解析 opportunityId (如果沒有從 message body 取得,則從 DB 取得)
+      let resolvedOpportunityId: string | undefined = opportunityId;
+      if (!resolvedOpportunityId) {
+        console.log(
+          "[Queue] ⚠️ opportunityId not in message, fetching from conversation..."
+        );
+        const conversation = await db.query.conversations.findFirst({
+          where: (convs, { eq }) => eq(convs.id, conversationId),
+          columns: { opportunityId: true },
+        });
+        resolvedOpportunityId = conversation?.opportunityId;
+        if (resolvedOpportunityId) {
+          console.log(
+            `[Queue] ✓ Resolved opportunityId from conversation: ${resolvedOpportunityId}`
+          );
+        } else {
+          console.log(
+            `[Queue] ⚠️ No opportunityId found for conversation ${conversationId}`
+          );
+        }
+      }
+
       // 根據 productLine 初始化對應的 Slack 通知服務
       const slackService = createSlackNotificationService({
         token: getSlackToken(resolvedProductLine),
@@ -212,8 +246,146 @@ export default {
 
         // Extract key from URL
         const audioKey = new URL(audioUrl).pathname.substring(1);
-        const audioBuffer = await r2Service.downloadAudio(audioKey);
+        let audioBuffer = await r2Service.downloadAudio(audioKey);
         console.log(`[Queue] ✓ Downloaded ${audioBuffer.length} bytes`);
+
+        // ========================================
+        // Step 1.5: 檢查檔案大小，必要時壓縮 (備援機制)
+        // ========================================
+        const GROQ_SIZE_LIMIT_MB = 25;
+        const fileSizeMB = audioBuffer.length / 1024 / 1024;
+
+        // 判斷是否使用 S3 輸出模式
+        const useS3Mode = !!(
+          env.AWS_S3_ACCESS_KEY &&
+          env.AWS_S3_SECRET_KEY &&
+          env.AWS_S3_REGION &&
+          env.AWS_S3_BUCKET
+        );
+
+        if (fileSizeMB > GROQ_SIZE_LIMIT_MB && env.LAMBDA_COMPRESSOR_URL) {
+          console.log(
+            `[Queue] ⚠️  File size ${fileSizeMB.toFixed(2)}MB exceeds Groq limit (${GROQ_SIZE_LIMIT_MB}MB)`
+          );
+          console.log(
+            `[Queue] 🗜️  Starting fallback compression via Lambda... (outputMode: ${useS3Mode ? "s3" : "base64"})`
+          );
+
+          try {
+            const compressor = createLambdaCompressor(
+              env.LAMBDA_COMPRESSOR_URL,
+              {
+                timeout: 180_000, // 3 分鐘超時 (Lambda 需要下載和壓縮大檔案)
+              }
+            );
+
+            // 生成預簽名 URL 讓 Lambda 能夠下載 R2 中的音檔
+            const presignedUrl = await r2Service.getSignedUrl(audioKey, 600); // 10 分鐘有效
+            console.log(
+              `[Queue] 📤 Sending presigned URL to Lambda (key: ${audioKey})`
+            );
+
+            const compressionResult = await compressor.compressFromUrl(
+              presignedUrl,
+              {
+                outputMode: useS3Mode ? "s3" : "base64",
+                fileName: metadata.fileName,
+              }
+            );
+
+            if (compressionResult.success) {
+              console.log(
+                `[Queue] ✓ Compression successful: ${compressionResult.originalSize} -> ${compressionResult.compressedSize} bytes`
+              );
+              console.log(
+                `[Queue]   Reduction: ${compressionResult.compressionRatio}%, outputMode: ${compressionResult.outputMode}`
+              );
+
+              let compressedBuffer: Buffer;
+
+              if (
+                compressionResult.outputMode === "s3" &&
+                compressionResult.s3Key
+              ) {
+                // S3 模式：從 S3 下載壓縮後音檔
+                console.log(
+                  `[Queue] 📥 Downloading compressed audio from S3: ${compressionResult.s3Key}`
+                );
+
+                const { createS3Service } = await import(
+                  "@Sales_ai_automation_v3/services"
+                );
+
+                const s3Service = createS3Service({
+                  accessKeyId: env.AWS_S3_ACCESS_KEY!,
+                  secretAccessKey: env.AWS_S3_SECRET_KEY!,
+                  region: env.AWS_S3_REGION!,
+                  bucket: env.AWS_S3_BUCKET!,
+                });
+
+                compressedBuffer = await s3Service.download(
+                  compressionResult.s3Key
+                );
+
+                // 下載完成後刪除 S3 檔案（可選，S3 Lifecycle 也會自動刪除）
+                try {
+                  await s3Service.delete(compressionResult.s3Key);
+                  console.log(
+                    `[Queue] 🗑️  Deleted S3 file: ${compressionResult.s3Key}`
+                  );
+                } catch (deleteError) {
+                  console.warn(
+                    `[Queue] ⚠️  Failed to delete S3 file (non-critical): ${compressionResult.s3Key}`
+                  );
+                }
+              } else if (compressionResult.compressedAudioBase64) {
+                // Base64 模式：將 base64 轉回 Buffer（向後兼容）
+                compressedBuffer = Buffer.from(
+                  compressionResult.compressedAudioBase64,
+                  "base64"
+                );
+              } else {
+                throw new Error(
+                  "Compression succeeded but no output data available"
+                );
+              }
+
+              // 檢查壓縮後是否符合 Groq 限制
+              const compressedSizeMB = compressedBuffer.length / 1024 / 1024;
+              if (compressedSizeMB <= GROQ_SIZE_LIMIT_MB) {
+                audioBuffer = compressedBuffer;
+                console.log(
+                  `[Queue] ✓ Using compressed audio: ${compressedSizeMB.toFixed(2)}MB`
+                );
+              } else {
+                console.warn(
+                  `[Queue] ⚠️  Compressed size ${compressedSizeMB.toFixed(2)}MB still exceeds limit, proceeding anyway...`
+                );
+                audioBuffer = compressedBuffer;
+              }
+            } else {
+              console.error(
+                `[Queue] ❌ Compression failed: ${compressionResult.error}`
+              );
+              throw new Error(
+                `音檔過大 (${fileSizeMB.toFixed(1)}MB) 且壓縮失敗: ${compressionResult.error}`
+              );
+            }
+          } catch (compressionError) {
+            console.error("[Queue] ❌ Compression error:", compressionError);
+            throw new Error(
+              `音檔過大 (${fileSizeMB.toFixed(1)}MB)，超過 Groq ${GROQ_SIZE_LIMIT_MB}MB 限制，壓縮也失敗`
+            );
+          }
+        } else if (fileSizeMB > GROQ_SIZE_LIMIT_MB) {
+          // 沒有配置 Lambda URL，但檔案過大
+          console.error(
+            `[Queue] ❌ File size ${fileSizeMB.toFixed(2)}MB exceeds limit and LAMBDA_COMPRESSOR_URL not configured`
+          );
+          throw new Error(
+            `音檔過大 (${fileSizeMB.toFixed(1)}MB)，超過 Groq ${GROQ_SIZE_LIMIT_MB}MB 限制，且未配置壓縮服務`
+          );
+        }
 
         // ========================================
         // Step 2: Whisper 轉錄
@@ -305,7 +477,7 @@ export default {
             end: seg.end,
           })) || [],
           {
-            leadId: opportunityId,
+            leadId: resolvedOpportunityId || "",
             conversationId,
             salesRep: slackUser?.username || "Unknown",
             conversationDate: new Date(),
@@ -319,72 +491,81 @@ export default {
         // ========================================
         // Step 5: 保存分析結果到 meddicAnalyses 表
         // ========================================
-        console.log(
-          "[Queue] 💾 Saving analysis results to meddicAnalyses table..."
-        );
-        await db.insert(meddicAnalyses).values({
-          id: randomUUID(),
-          conversationId,
-          opportunityId,
-          metricsScore: analysisResult.meddicScores?.metrics || 0,
-          economicBuyerScore: analysisResult.meddicScores?.economicBuyer || 0,
-          decisionCriteriaScore:
-            analysisResult.meddicScores?.decisionCriteria || 0,
-          decisionProcessScore:
-            analysisResult.meddicScores?.decisionProcess || 0,
-          identifyPainScore: analysisResult.meddicScores?.identifyPain || 0,
-          championScore: analysisResult.meddicScores?.champion || 0,
-          overallScore: analysisResult.overallScore,
-          status: analysisResult.qualificationStatus,
-          dimensions: analysisResult.dimensions as unknown as Record<
-            string,
-            { evidence: string[]; gaps: string[]; recommendations: string[] }
-          >,
-          keyFindings: analysisResult.keyFindings || [],
-          nextSteps: (analysisResult.nextSteps || []).map((step: any) => ({
-            action: step.action || step,
-            priority: "Medium",
-            owner: step.owner || "unknown",
-          })),
-          risks: analysisResult.risks || [],
-          agentOutputs: analysisResult.agentOutputs as unknown as {
-            agent1?: Record<string, unknown>;
-            agent2?: Record<string, unknown>;
-            agent3?: Record<string, unknown>;
-            agent4?: Record<string, unknown>;
-            agent5?: Record<string, unknown>;
-            agent6?: Record<string, unknown>;
-          },
-        });
-        console.log("[Queue] ✓ MEDDIC analysis saved to meddicAnalyses table");
-
-        // ========================================
-        // Step 5.1: 更新 opportunity 的分數欄位
-        // ========================================
-        console.log("[Queue] 💾 Updating opportunity scores...");
-        await db
-          .update(opportunities)
-          .set({
-            opportunityScore: analysisResult.overallScore,
-            meddicScore: {
-              overall: analysisResult.overallScore ?? 0,
-              dimensions: {
-                metrics: analysisResult.meddicScores?.metrics || 0,
-                economicBuyer: analysisResult.meddicScores?.economicBuyer || 0,
-                decisionCriteria:
-                  analysisResult.meddicScores?.decisionCriteria || 0,
-                decisionProcess:
-                  analysisResult.meddicScores?.decisionProcess || 0,
-                identifyPain: analysisResult.meddicScores?.identifyPain || 0,
-                champion: analysisResult.meddicScores?.champion || 0,
-              },
+        if (resolvedOpportunityId) {
+          console.log(
+            "[Queue] 💾 Saving analysis results to meddicAnalyses table..."
+          );
+          await db.insert(meddicAnalyses).values({
+            id: randomUUID(),
+            conversationId,
+            opportunityId: resolvedOpportunityId,
+            metricsScore: analysisResult.meddicScores?.metrics || 0,
+            economicBuyerScore: analysisResult.meddicScores?.economicBuyer || 0,
+            decisionCriteriaScore:
+              analysisResult.meddicScores?.decisionCriteria || 0,
+            decisionProcessScore:
+              analysisResult.meddicScores?.decisionProcess || 0,
+            identifyPainScore: analysisResult.meddicScores?.identifyPain || 0,
+            championScore: analysisResult.meddicScores?.champion || 0,
+            overallScore: analysisResult.overallScore,
+            status: analysisResult.qualificationStatus,
+            dimensions: analysisResult.dimensions as unknown as Record<
+              string,
+              { evidence: string[]; gaps: string[]; recommendations: string[] }
+            >,
+            keyFindings: analysisResult.keyFindings || [],
+            nextSteps: (analysisResult.nextSteps || []).map((step: any) => ({
+              action: step.action || step,
+              priority: "Medium",
+              owner: step.owner || "unknown",
+            })),
+            risks: analysisResult.risks || [],
+            agentOutputs: analysisResult.agentOutputs as unknown as {
+              agent1?: Record<string, unknown>;
+              agent2?: Record<string, unknown>;
+              agent3?: Record<string, unknown>;
+              agent4?: Record<string, unknown>;
+              agent5?: Record<string, unknown>;
+              agent6?: Record<string, unknown>;
             },
-            updatedAt: new Date(),
-          })
-          .where(eq(opportunities.id, opportunityId));
-        console.log(
-          `[Queue] ✓ Opportunity scores updated: ${analysisResult.overallScore}/100`
-        );
+          });
+          console.log(
+            "[Queue] ✓ MEDDIC analysis saved to meddicAnalyses table"
+          );
+
+          // ========================================
+          // Step 5.1: 更新 opportunity 的分數欄位
+          // ========================================
+          console.log("[Queue] 💾 Updating opportunity scores...");
+          await db
+            .update(opportunities)
+            .set({
+              opportunityScore: analysisResult.overallScore,
+              meddicScore: {
+                overall: analysisResult.overallScore ?? 0,
+                dimensions: {
+                  metrics: analysisResult.meddicScores?.metrics || 0,
+                  economicBuyer:
+                    analysisResult.meddicScores?.economicBuyer || 0,
+                  decisionCriteria:
+                    analysisResult.meddicScores?.decisionCriteria || 0,
+                  decisionProcess:
+                    analysisResult.meddicScores?.decisionProcess || 0,
+                  identifyPain: analysisResult.meddicScores?.identifyPain || 0,
+                  champion: analysisResult.meddicScores?.champion || 0,
+                },
+              },
+              updatedAt: new Date(),
+            })
+            .where(eq(opportunities.id, resolvedOpportunityId));
+          console.log(
+            `[Queue] ✓ Opportunity scores updated: ${analysisResult.overallScore}/100`
+          );
+        } else {
+          console.log(
+            "[Queue] ⚠️ Skipping meddicAnalyses insert: no opportunityId available"
+          );
+        }
 
         // ========================================
         // Step 6: 更新 conversation 狀態為 completed
@@ -652,7 +833,7 @@ export default {
               | Record<string, unknown>
               | undefined;
             const tacticalSuggestions = agent6Data?.tactical_suggestions as
-              | Array<Record<string, unknown>>
+              | Record<string, unknown>[]
               | undefined;
             const topTacticalSuggestion = tacticalSuggestions?.[0]
               ? {
@@ -753,14 +934,16 @@ export default {
 
           // 查詢 opportunity 和 conversation 資料
           const [opportunityData, conversationData] = await Promise.all([
-            db.query.opportunities.findFirst({
-              where: (opportunities, { eq }) =>
-                eq(opportunities.id, opportunityId),
-              columns: {
-                userId: true,
-                companyName: true,
-              },
-            }),
+            resolvedOpportunityId
+              ? db.query.opportunities.findFirst({
+                  where: (opportunities, { eq }) =>
+                    eq(opportunities.id, resolvedOpportunityId),
+                  columns: {
+                    userId: true,
+                    companyName: true,
+                  },
+                })
+              : Promise.resolve(undefined),
             db.query.conversations.findFirst({
               where: (conversations, { eq }) =>
                 eq(conversations.id, conversationId),
@@ -951,6 +1134,10 @@ export default {
       // 每日 - 健康報告
       console.log("[Scheduled] Running daily health report...");
       await handleDailyHealthReport(env);
+    } else if (trigger === "0 1 * * *") {
+      // 每日 09:00 (UTC+8) - Todo 提醒
+      console.log("[Scheduled] Running daily todo reminder...");
+      await handleDailyTodoReminder(env);
     }
   },
 };
@@ -1010,7 +1197,7 @@ async function handleDailyHealthReport(env: Env): Promise<void> {
       .join("\n");
 
     await slackClient.chat.postMessage({
-      channel: "#ops-alerts",
+      channel: "C0A7C2HUXRR",
       text: message,
     });
 
@@ -1025,38 +1212,73 @@ async function handleWeeklyReport(env: Env): Promise<void> {
     const sql = neon(env.DATABASE_URL);
     const slackClient = new WebClient(env.SLACK_BOT_TOKEN);
 
-    // 統計過去 7 天的數據
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
 
-    const stats = await sql`
+    // MTD 開始日期（本月1號）
+    const mtdStart = new Date(year, month - 1, 1);
+
+    // 本週開始日期（週日）
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - now.getDay());
+    weekStart.setHours(0, 0, 0, 0);
+
+    // 本週結束日期（週六）
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+
+    // 查詢各業務上傳統計
+    const repStats = await sql`
       SELECT
-        COUNT(*) as total_uploads,
-        COUNT(DISTINCT opportunity_id) as unique_opportunities,
-        AVG(CASE WHEN ma.overall_score IS NOT NULL THEN ma.overall_score END) as avg_meddic_score
+        u.name as user_name,
+        COUNT(*) FILTER (WHERE c.created_at >= ${mtdStart.toISOString()}) as mtd_count,
+        COUNT(*) FILTER (WHERE c.created_at >= ${weekStart.toISOString()}) as week_count
       FROM conversations c
-      LEFT JOIN meddic_analyses ma ON c.id = ma.conversation_id
-      WHERE c.created_at >= ${weekAgo.toISOString()}
+      JOIN "user" u ON c.created_by = u.id
+      WHERE c.created_at >= ${mtdStart.toISOString()}
+        AND c.status = 'completed'
+      GROUP BY u.id, u.name
+      ORDER BY mtd_count DESC, week_count DESC
     `;
 
-    const result = stats[0] || {
-      total_uploads: 0,
-      unique_opportunities: 0,
-      avg_meddic_score: 0,
-    };
+    // 總計
+    const totals = await sql`
+      SELECT
+        COUNT(*) FILTER (WHERE created_at >= ${mtdStart.toISOString()}) as mtd_total,
+        COUNT(*) FILTER (WHERE created_at >= ${weekStart.toISOString()}) as week_total
+      FROM conversations
+      WHERE created_at >= ${mtdStart.toISOString()}
+        AND status = 'completed'
+    `;
+
+    const totalResult = totals[0] || { mtd_total: 0, week_total: 0 };
+
+    // 格式化日期
+    const weekStartStr = `${String(weekStart.getMonth() + 1).padStart(2, "0")}/${String(weekStart.getDate()).padStart(2, "0")}`;
+    const weekEndStr = `${String(weekEnd.getMonth() + 1).padStart(2, "0")}/${String(weekEnd.getDate()).padStart(2, "0")}`;
+
+    // 組裝訊息
+    const rankEmojis = ["🥇", "🥈", "🥉"];
+    const repLines = repStats.map((rep, index) => {
+      const rank = index < 3 ? rankEmojis[index] : `${index + 1}.`;
+      return `${rank} ${rep.user_name}: MTD ${rep.mtd_count} / 本週 ${rep.week_count}`;
+    });
 
     const message = [
-      "📊 *週報摘要*",
-      `📅 ${weekAgo.toLocaleDateString("zh-TW")} ~ ${new Date().toLocaleDateString("zh-TW")}`,
+      `📊 *音檔上傳週報 (${year}/${String(month).padStart(2, "0")})*`,
       "",
-      "*本週統計*",
-      `• 音檔上傳: ${result.total_uploads} 筆`,
-      `• 活躍商機: ${result.unique_opportunities} 個`,
-      `• 平均 MEDDIC: ${result.avg_meddic_score ? Math.round(Number(result.avg_meddic_score)) : "N/A"} 分`,
+      `📅 MTD 上傳總數: ${totalResult.mtd_total} 筆`,
+      `📆 本週上傳 (${weekStartStr}-${weekEndStr}): ${totalResult.week_total} 筆`,
+      "",
+      "👥 *各業務上傳統計*",
+      ...repLines,
+      "",
+      `🔗 <${env.WEB_APP_URL}/reports/mtd-uploads|查看詳細列表>`,
     ].join("\n");
 
     await slackClient.chat.postMessage({
-      channel: "#sales-team",
+      channel: "C0A7C2HUXRR",
       text: message,
     });
 
@@ -1064,4 +1286,366 @@ async function handleWeeklyReport(env: Env): Promise<void> {
   } catch (error) {
     console.error("[Scheduled] Failed to send weekly report:", error);
   }
+}
+
+// ============================================================
+// Daily Todo Reminder Handler
+// ============================================================
+
+interface TodoWithOpportunity {
+  id: string;
+  userId: string;
+  title: string;
+  description: string | null;
+  dueDate: Date;
+  opportunityId: string | null;
+  companyName: string | null;
+  customerNumber: string | null;
+}
+
+/**
+ * 每日待辦提醒 Handler
+ * 查詢今日 + 逾期的 pending 待辦，發送 Slack DM 給各用戶
+ */
+async function handleDailyTodoReminder(env: Env): Promise<void> {
+  try {
+    const sql = neon(env.DATABASE_URL);
+    const db = drizzle(sql, { schema });
+    const slackClient = new WebClient(env.SLACK_BOT_TOKEN);
+
+    // 取得今天結束時間 (UTC+8)
+    const now = new Date();
+    const todayEnd = new Date(now);
+    todayEnd.setHours(23, 59, 59, 999);
+
+    console.log(
+      `[DailyTodoReminder] Querying pending todos due before: ${todayEnd.toISOString()}`
+    );
+
+    // 1. 從資料庫查詢今日 + 逾期的 pending 待辦
+    const pendingTodos = await db
+      .select({
+        id: salesTodos.id,
+        userId: salesTodos.userId,
+        title: salesTodos.title,
+        description: salesTodos.description,
+        dueDate: salesTodos.dueDate,
+        opportunityId: salesTodos.opportunityId,
+        companyName: opportunities.companyName,
+        customerNumber: opportunities.customerNumber,
+      })
+      .from(salesTodos)
+      .leftJoin(opportunities, eq(salesTodos.opportunityId, opportunities.id))
+      .where(
+        and(eq(salesTodos.status, "pending"), lte(salesTodos.dueDate, todayEnd))
+      );
+
+    console.log(
+      `[DailyTodoReminder] Found ${pendingTodos.length} pending todos`
+    );
+
+    if (pendingTodos.length === 0) {
+      console.log("[DailyTodoReminder] No pending todos to remind");
+      return;
+    }
+
+    // 2. 查詢 userProfiles 取得 slackUserId 映射
+    const userIds = [...new Set(pendingTodos.map((t) => t.userId))];
+    const profiles = await db
+      .select({
+        userId: userProfiles.userId,
+        slackUserId: userProfiles.slackUserId,
+      })
+      .from(userProfiles)
+      .where(inArray(userProfiles.userId, userIds));
+
+    const userSlackMap = new Map<string, string>();
+    for (const profile of profiles) {
+      if (profile.slackUserId) {
+        userSlackMap.set(profile.userId, profile.slackUserId);
+      }
+    }
+
+    console.log(
+      `[DailyTodoReminder] Found ${userSlackMap.size} users with Slack IDs`
+    );
+
+    // 3. 按用戶分組
+    const todosByUser = new Map<string, TodoWithOpportunity[]>();
+    for (const todo of pendingTodos) {
+      const slackUserId = userSlackMap.get(todo.userId);
+      if (!slackUserId) {
+        console.log(
+          `[DailyTodoReminder] User ${todo.userId} has no Slack ID, skipping`
+        );
+        continue;
+      }
+
+      if (!todosByUser.has(slackUserId)) {
+        todosByUser.set(slackUserId, []);
+      }
+      todosByUser.get(slackUserId)!.push(todo as TodoWithOpportunity);
+    }
+
+    // 4. 對每個用戶發送 Slack DM
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+
+    const todoIdsToUpdate: string[] = [];
+
+    for (const [slackUserId, todos] of todosByUser) {
+      try {
+        // 分類待辦：逾期 vs 今日
+        const overdueTodos: TodoWithOpportunity[] = [];
+        const todayTodos: TodoWithOpportunity[] = [];
+
+        for (const todo of todos) {
+          if (todo.dueDate < todayStart) {
+            overdueTodos.push(todo);
+          } else {
+            todayTodos.push(todo);
+          }
+        }
+
+        // 建立 Slack blocks
+        const blocks = buildDailyReminderBlocks(
+          overdueTodos,
+          todayTodos,
+          env.WEB_APP_URL
+        );
+
+        const totalCount = overdueTodos.length + todayTodos.length;
+        const fallbackText = `📋 今日待辦提醒 - 您有 ${totalCount} 項待處理事項`;
+
+        // 發送 Slack DM
+        const result = await slackClient.chat.postMessage({
+          channel: slackUserId,
+          blocks,
+          text: fallbackText,
+        });
+
+        console.log(
+          `[DailyTodoReminder] Sent reminder to ${slackUserId}: ${totalCount} todos`
+        );
+
+        // 收集需要更新的 todo IDs
+        todoIdsToUpdate.push(...todos.map((t) => t.id));
+
+        // 更新 slackMessageTs (用於後續互動)
+        if (result.ts) {
+          for (const todo of todos) {
+            await db
+              .update(salesTodos)
+              .set({
+                slackMessageTs: result.ts,
+                updatedAt: new Date(),
+              })
+              .where(eq(salesTodos.id, todo.id));
+          }
+        }
+      } catch (sendError) {
+        console.error(
+          `[DailyTodoReminder] Failed to send reminder to ${slackUserId}:`,
+          sendError
+        );
+      }
+    }
+
+    // 5. 批次更新 reminderSent 和 reminderSentAt
+    if (todoIdsToUpdate.length > 0) {
+      await db
+        .update(salesTodos)
+        .set({
+          reminderSent: true,
+          reminderSentAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(inArray(salesTodos.id, todoIdsToUpdate));
+
+      console.log(
+        `[DailyTodoReminder] Updated ${todoIdsToUpdate.length} todos with reminder status`
+      );
+    }
+
+    console.log("[DailyTodoReminder] Daily todo reminder completed");
+  } catch (error) {
+    console.error(
+      "[DailyTodoReminder] Failed to send daily todo reminder:",
+      error
+    );
+  }
+}
+
+/**
+ * 建構每日待辦提醒 Slack Blocks
+ */
+function buildDailyReminderBlocks(
+  overdueTodos: TodoWithOpportunity[],
+  todayTodos: TodoWithOpportunity[],
+  webAppUrl: string
+): any[] {
+  const blocks: any[] = [];
+
+  // Header
+  blocks.push({
+    type: "header",
+    text: {
+      type: "plain_text",
+      text: "📋 今日待辦提醒",
+      emoji: true,
+    },
+  });
+
+  // 統計摘要
+  const totalCount = overdueTodos.length + todayTodos.length;
+  blocks.push({
+    type: "context",
+    elements: [
+      {
+        type: "mrkdwn",
+        text: `📅 ${new Date().toLocaleDateString("zh-TW")} | 共 ${totalCount} 項待處理`,
+      },
+    ],
+  });
+
+  // 逾期待辦 (高優先級)
+  if (overdueTodos.length > 0) {
+    blocks.push({ type: "divider" });
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `🚨 *逾期待辦 (${overdueTodos.length} 項)*`,
+      },
+    });
+
+    for (const todo of overdueTodos.slice(0, 5)) {
+      // 最多顯示 5 項
+      const daysOverdue = Math.ceil(
+        (Date.now() - todo.dueDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      const companyInfo = todo.companyName
+        ? ` - _${todo.companyName}_`
+        : todo.customerNumber
+          ? ` - _${todo.customerNumber}_`
+          : "";
+
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `• *${todo.title}*${companyInfo}\n   ⚠️ 逾期 ${daysOverdue} 天`,
+        },
+        accessory: {
+          type: "overflow",
+          action_id: `todo_action_${todo.id}`,
+          options: [
+            {
+              text: { type: "plain_text", text: "✅ 完成", emoji: true },
+              value: `complete_${todo.id}`,
+            },
+            {
+              text: { type: "plain_text", text: "📅 改期", emoji: true },
+              value: `postpone_${todo.id}`,
+            },
+            {
+              text: { type: "plain_text", text: "❌ 取消", emoji: true },
+              value: `cancel_${todo.id}`,
+            },
+          ],
+        },
+      });
+    }
+
+    if (overdueTodos.length > 5) {
+      blocks.push({
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: `_還有 ${overdueTodos.length - 5} 項逾期待辦..._`,
+          },
+        ],
+      });
+    }
+  }
+
+  // 今日待辦
+  if (todayTodos.length > 0) {
+    blocks.push({ type: "divider" });
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `📌 *今日待辦 (${todayTodos.length} 項)*`,
+      },
+    });
+
+    for (const todo of todayTodos.slice(0, 5)) {
+      // 最多顯示 5 項
+      const companyInfo = todo.companyName
+        ? ` - _${todo.companyName}_`
+        : todo.customerNumber
+          ? ` - _${todo.customerNumber}_`
+          : "";
+
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `• *${todo.title}*${companyInfo}`,
+        },
+        accessory: {
+          type: "overflow",
+          action_id: `todo_action_${todo.id}`,
+          options: [
+            {
+              text: { type: "plain_text", text: "✅ 完成", emoji: true },
+              value: `complete_${todo.id}`,
+            },
+            {
+              text: { type: "plain_text", text: "📅 改期", emoji: true },
+              value: `postpone_${todo.id}`,
+            },
+            {
+              text: { type: "plain_text", text: "❌ 取消", emoji: true },
+              value: `cancel_${todo.id}`,
+            },
+          ],
+        },
+      });
+    }
+
+    if (todayTodos.length > 5) {
+      blocks.push({
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: `_還有 ${todayTodos.length - 5} 項今日待辦..._`,
+          },
+        ],
+      });
+    }
+  }
+
+  // 操作按鈕
+  blocks.push({ type: "divider" });
+  blocks.push({
+    type: "actions",
+    elements: [
+      {
+        type: "button",
+        text: {
+          type: "plain_text",
+          text: "📊 查看所有待辦",
+          emoji: true,
+        },
+        url: `${webAppUrl}/todos`,
+        style: "primary",
+      },
+    ],
+  });
+
+  return blocks;
 }

@@ -60,6 +60,12 @@ const teamPerformanceSchema = z.object({
   dateTo: z.string().optional(),
 });
 
+// Schema for MTD uploads list
+const mtdUploadsSchema = z.object({
+  year: z.number().optional(),
+  month: z.number().optional(),
+});
+
 // ============================================================
 // Utility Functions
 // ============================================================
@@ -1594,6 +1600,87 @@ export const getTeamPerformance = protectedProcedure
   });
 
 // ============================================================
+// MTD Uploads List
+// ============================================================
+
+/**
+ * 取得 MTD 上傳列表
+ * 只有 manager 和 admin 可以存取
+ */
+export const getMtdUploads = protectedProcedure
+  .input(mtdUploadsSchema)
+  .handler(async ({ input, context }) => {
+    const userId = context.session?.user.id;
+
+    if (!userId) {
+      throw new ORPCError("UNAUTHORIZED");
+    }
+
+    // 檢查權限：只有 manager 和 admin 可以存取
+    const profile = await db.query.userProfiles.findFirst({
+      where: eq(userProfiles.userId, userId),
+    });
+
+    const role = profile?.role || "sales_rep";
+    if (role !== "admin" && role !== "manager") {
+      throw new ORPCError("FORBIDDEN", {
+        message: "只有經理或管理員可以查看此報告",
+      });
+    }
+
+    // 計算 MTD 日期範圍
+    const now = new Date();
+    const year = input.year || now.getFullYear();
+    const month = input.month || now.getMonth() + 1;
+    const mtdStart = new Date(year, month - 1, 1);
+    const mtdEnd = new Date(year, month, 0, 23, 59, 59, 999);
+
+    // 查詢 MTD 上傳列表
+    const uploads = await db
+      .select({
+        id: conversations.id,
+        salesRep: user.name,
+        salesEmail: user.email,
+        customerNumber: opportunities.customerNumber,
+        caseNumber: conversations.caseNumber,
+        storeName: opportunities.companyName,
+        createdAt: conversations.createdAt,
+        status: conversations.status,
+      })
+      .from(conversations)
+      .leftJoin(user, eq(conversations.createdBy, user.id))
+      .leftJoin(
+        opportunities,
+        eq(conversations.opportunityId, opportunities.id)
+      )
+      .where(
+        and(
+          gte(conversations.createdAt, mtdStart),
+          lte(conversations.createdAt, mtdEnd)
+        )
+      )
+      .orderBy(desc(conversations.createdAt));
+
+    return {
+      year,
+      month,
+      mtdStart: mtdStart.toISOString(),
+      mtdEnd: mtdEnd.toISOString(),
+      totalCount: uploads.length,
+      uploads: uploads.map((u) => ({
+        id: u.id,
+        salesRep: u.salesRep || "未知",
+        salesEmail: u.salesEmail || "",
+        customerNumber: u.customerNumber || "-",
+        caseNumber: u.caseNumber || "-",
+        storeName: u.storeName || "未設定",
+        createdAt: u.createdAt?.toISOString() || "",
+        status: u.status || "unknown",
+      })),
+    };
+  });
+
+// ============================================================
 // Router Export
 // ============================================================
 
@@ -1604,4 +1691,5 @@ export const analyticsRouter = {
   meddicTrends: getMeddicTrends,
   repPerformance: getRepPerformance,
   teamPerformance: getTeamPerformance,
+  mtdUploads: getMtdUploads,
 };
