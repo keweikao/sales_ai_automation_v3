@@ -26,7 +26,9 @@ export interface SummaryItem {
 export function parseSummaryMarkdown(
   markdown: string | null
 ): ParsedSummary | null {
-  if (!markdown) return null;
+  if (!markdown) {
+    return null;
+  }
 
   const result: ParsedSummary = {
     challenges: [],
@@ -57,7 +59,9 @@ export function parseSummaryMarkdown(
   const sections = content.split(/##\s*/);
 
   for (const section of sections) {
-    if (!section.trim()) continue;
+    if (!section.trim()) {
+      continue;
+    }
 
     // 解析挑戰/痛點區塊
     if (

@@ -18,7 +18,6 @@ import {
 } from "@Sales_ai_automation_v3/db/schema";
 import {
   createAllServices,
-  createLambdaCompressor,
   createR2Service,
   evaluateAndCreateAlerts,
   generateAudioKey,
@@ -378,61 +377,9 @@ export const uploadConversation = protectedProcedure
         throw new ORPCError("BAD_REQUEST");
       }
 
-      // Step 2.5: Compress audio if enabled and file is large
-      if (
-        envRecord.ENABLE_AUDIO_COMPRESSION === "true" &&
-        envRecord.LAMBDA_COMPRESSOR_URL
-      ) {
-        const fileSizeMB = audioBuffer.length / 1024 / 1024;
-        const threshold = Number(envRecord.COMPRESSION_THRESHOLD_MB) || 10;
-
-        if (fileSizeMB > threshold) {
-          console.log(
-            `[${requestId}] 🗜️  Audio file is ${fileSizeMB.toFixed(2)} MB, compressing...`
-          );
-
-          const compressor = createLambdaCompressor(
-            envRecord.LAMBDA_COMPRESSOR_URL as string,
-            {
-              timeout: 60_000, // 60 秒
-            }
-          );
-
-          const compressionStartTime = Date.now();
-          try {
-            const result = await compressor.compressFromBuffer(audioBuffer);
-
-            if (result.success && result.compressedAudioBase64) {
-              const compressedBuffer = Buffer.from(
-                result.compressedAudioBase64,
-                "base64"
-              );
-              const compressionTime = Date.now() - compressionStartTime;
-
-              console.log(
-                `[${requestId}] ✓ Compressed in ${compressionTime}ms: ${(result.originalSize! / 1024 / 1024).toFixed(2)} MB → ${(result.compressedSize! / 1024 / 1024).toFixed(2)} MB (${result.compressionRatio}% reduction)`
-              );
-
-              audioBuffer = compressedBuffer;
-            } else {
-              console.warn(
-                `[${requestId}] ⚠️  Compression failed: ${result.error}, using original audio`
-              );
-              // 繼續使用原始音檔
-            }
-          } catch (error) {
-            console.error(`[${requestId}] ❌ Compression error:`, error);
-            console.warn(`[${requestId}] ⚠️  Continuing with original audio`);
-            // 繼續使用原始音檔,不中斷流程
-          }
-        } else {
-          console.log(
-            `[${requestId}] ℹ️  Audio file is ${fileSizeMB.toFixed(2)} MB (< ${threshold} MB), skipping compression`
-          );
-        }
-      }
-
       // Step 3: Upload to R2
+      // 注意：音檔壓縮已移至 Queue Worker 處理，使用 AWS Lambda S3 模式
+      // 這樣可以避免 Lambda Function URL 6MB 回應限制的問題
       const r2 = createR2Service({
         accessKeyId: envRecord.CLOUDFLARE_R2_ACCESS_KEY as string,
         secretAccessKey: envRecord.CLOUDFLARE_R2_SECRET_KEY as string,
@@ -1137,6 +1084,146 @@ export const updateSummary = protectedProcedure
   });
 
 // ============================================================
+// Retry Failed Conversation Endpoint
+// ============================================================
+
+const retryConversationSchema = z
+  .object({
+    conversationId: z.string().optional(),
+    caseNumber: z.string().optional(),
+  })
+  .refine(
+    (data) => data.conversationId || data.caseNumber,
+    "必須提供 conversationId 或 caseNumber 其中之一"
+  );
+
+export const retryConversation = protectedProcedure
+  .input(retryConversationSchema)
+  .handler(async ({ input, context }) => {
+    const userId = context.session?.user.id;
+    const userEmail = context.session?.user.email;
+    const isServiceAccount = context.isServiceAccount === true;
+
+    // Service Account 可以直接重試（用於自動化腳本）
+    if (!isServiceAccount) {
+      if (!userId) {
+        throw new ORPCError("UNAUTHORIZED");
+      }
+
+      // 檢查權限（只有管理者可以重試）
+      const userRole = getUserRole(userEmail);
+      if (userRole !== "admin" && userRole !== "manager") {
+        throw new ORPCError("FORBIDDEN", {
+          message: "只有管理者可以重試失敗的對話",
+        });
+      }
+    }
+
+    // 查詢對話
+    let conversation;
+    if (input.conversationId) {
+      conversation = await db.query.conversations.findFirst({
+        where: eq(conversations.id, input.conversationId),
+        with: { opportunity: true },
+      });
+    } else if (input.caseNumber) {
+      conversation = await db.query.conversations.findFirst({
+        where: eq(conversations.caseNumber, input.caseNumber),
+        with: { opportunity: true },
+      });
+    }
+
+    if (!conversation) {
+      throw new ORPCError("NOT_FOUND", { message: "找不到對話記錄" });
+    }
+
+    // 只能重試 failed 或 pending 狀態的對話
+    if (!["failed", "pending"].includes(conversation.status)) {
+      throw new ORPCError("BAD_REQUEST", {
+        message: `無法重試狀態為 ${conversation.status} 的對話`,
+      });
+    }
+
+    // 確保有音檔 URL
+    if (!conversation.audioUrl) {
+      throw new ORPCError("BAD_REQUEST", { message: "對話缺少音檔 URL" });
+    }
+
+    // 獲取環境變數
+    const honoEnv = context.honoContext?.env || {};
+    const envRecord = honoEnv as Record<string, unknown>;
+
+    // 重置狀態
+    await db
+      .update(conversations)
+      .set({
+        status: "pending",
+        errorMessage: null,
+        errorDetails: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(conversations.id, conversation.id));
+
+    // 推送到 Queue
+    try {
+      if (!envRecord.TRANSCRIPTION_QUEUE) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Queue binding not configured",
+        });
+      }
+
+      const queueBinding = envRecord.TRANSCRIPTION_QUEUE as {
+        send: (message: unknown) => Promise<void>;
+      };
+
+      await queueBinding.send({
+        conversationId: conversation.id,
+        opportunityId: conversation.opportunityId,
+        audioUrl: conversation.audioUrl,
+        caseNumber: conversation.caseNumber,
+        productLine: conversation.productLine || "ichef",
+        metadata: {
+          fileName: conversation.title || "retry-audio",
+          fileSize: 0,
+          format: "mp3",
+        },
+        slackUser: conversation.slackUserId
+          ? {
+              id: conversation.slackUserId,
+              username: conversation.slackUsername || "unknown",
+            }
+          : undefined,
+      });
+
+      console.log(
+        `[Retry] ✓ Conversation ${conversation.caseNumber} pushed to queue`
+      );
+
+      return {
+        success: true,
+        conversationId: conversation.id,
+        caseNumber: conversation.caseNumber,
+        message: "對話已重新排入處理佇列",
+      };
+    } catch (queueError) {
+      console.error("[Retry] ❌ Failed to push to queue:", queueError);
+
+      // 恢復錯誤狀態
+      await db
+        .update(conversations)
+        .set({
+          status: "failed",
+          errorMessage: "重試失敗：無法推送到佇列",
+        })
+        .where(eq(conversations.id, conversation.id));
+
+      throw new ORPCError("INTERNAL_SERVER_ERROR", {
+        message: `重試失敗: ${queueError instanceof Error ? queueError.message : String(queueError)}`,
+      });
+    }
+  });
+
+// ============================================================
 // Router Export
 // ============================================================
 
@@ -1146,4 +1233,5 @@ export const conversationRouter = {
   list: listConversations,
   get: getConversation,
   updateSummary,
+  retry: retryConversation,
 };

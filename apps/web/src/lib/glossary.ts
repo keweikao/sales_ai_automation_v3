@@ -45,7 +45,8 @@ export const glossary: Record<string, TermDefinition> = {
   metrics: {
     term: "Metrics（量化）",
     definition: "客戶預期透過解決方案達成的量化商業目標或 KPI。",
-    calculation: "根據對話中提及的具體數字目標、ROI 預期、成本節省等進行評分，權重 15%。",
+    calculation:
+      "根據對話中提及的具體數字目標、ROI 預期、成本節省等進行評分，權重 15%。",
   },
 
   // SPIN 相關術語

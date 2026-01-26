@@ -106,7 +106,9 @@ export function getConsultantDisplayName(
 export function getConsultantInfo(
   slackUserId: string | null | undefined
 ): ConsultantInfo | undefined {
-  if (!slackUserId) return undefined;
+  if (!slackUserId) {
+    return undefined;
+  }
   return consultantInfoMap[slackUserId];
 }
 
@@ -116,7 +118,9 @@ export function getConsultantInfo(
 export function hasConsultantMapping(
   slackUserId: string | null | undefined
 ): boolean {
-  if (!slackUserId) return false;
+  if (!slackUserId) {
+    return false;
+  }
   return slackUserId in consultantInfoMap;
 }
 
@@ -145,12 +149,18 @@ export function getDisplayNameByEmail(
 ): string {
   if (email) {
     const name = emailToNameMap[email.toLowerCase()];
-    if (name) return name;
+    if (name) {
+      return name;
+    }
   }
 
   // 使用備用名稱或從 email 提取
-  if (fallbackName) return fallbackName;
-  if (email) return email.split("@")[0];
+  if (fallbackName) {
+    return fallbackName;
+  }
+  if (email) {
+    return email.split("@")[0];
+  }
 
   return "未知用戶";
 }

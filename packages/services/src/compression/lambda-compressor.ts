@@ -4,9 +4,17 @@
  * 用於呼叫 AWS Lambda 音檔壓縮服務
  */
 
+export type OutputMode = "base64" | "s3";
+
 export interface CompressionResult {
   success: boolean;
+  outputMode?: OutputMode;
+  // Base64 模式回傳
   compressedAudioBase64?: string;
+  // S3 模式回傳
+  s3Key?: string;
+  s3Bucket?: string;
+  // 共用欄位
   originalSize?: number;
   compressedSize?: number;
   compressionRatio?: number;
@@ -18,6 +26,13 @@ export interface CompressionResult {
 export interface CompressionOptions {
   lambdaUrl: string;
   timeout?: number;
+}
+
+export interface CompressionRequestOptions {
+  /** 輸出模式：base64 或 s3 (預設 base64) */
+  outputMode?: OutputMode;
+  /** 原始檔名 (用於 S3 key 生成) */
+  fileName?: string;
 }
 
 export class LambdaAudioCompressor {
@@ -111,10 +126,16 @@ export class LambdaAudioCompressor {
 
   /**
    * 壓縮音檔 (從 URL)
+   * @param audioUrl - 音檔 URL
+   * @param options - 壓縮選項 (outputMode, fileName)
    */
-  async compressFromUrl(audioUrl: string): Promise<CompressionResult> {
+  async compressFromUrl(
+    audioUrl: string,
+    options?: CompressionRequestOptions
+  ): Promise<CompressionResult> {
+    const outputMode = options?.outputMode || "base64";
     console.log(
-      `[LambdaCompressor] Starting compression from URL: ${audioUrl}`
+      `[LambdaCompressor] Starting compression from URL: ${audioUrl}, outputMode: ${outputMode}`
     );
 
     try {
@@ -128,6 +149,8 @@ export class LambdaAudioCompressor {
         },
         body: JSON.stringify({
           audioUrl,
+          outputMode,
+          fileName: options?.fileName,
         }),
         signal: controller.signal,
       });
@@ -146,14 +169,14 @@ export class LambdaAudioCompressor {
       if ("body" in result && result.body) {
         const body = JSON.parse(result.body) as CompressionResult;
         console.log(
-          `[LambdaCompressor] Compression completed: ${body.compressionRatio}% reduction`
+          `[LambdaCompressor] Compression completed: ${body.compressionRatio}% reduction, outputMode: ${body.outputMode}`
         );
         return body;
       }
 
       const typedResult = result as CompressionResult;
       console.log(
-        `[LambdaCompressor] Compression completed: ${typedResult.compressionRatio}% reduction`
+        `[LambdaCompressor] Compression completed: ${typedResult.compressionRatio}% reduction, outputMode: ${typedResult.outputMode}`
       );
       return typedResult;
     } catch (error) {
