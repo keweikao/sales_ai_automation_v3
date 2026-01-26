@@ -102,13 +102,13 @@ export async function handleFileSharedEvent(
   }
 
   console.log(`[FileEvent] File is audio, checking size: ${file.size} bytes`);
-  // 檢查檔案大小（最大 100MB）
-  const maxSize = 100 * 1024 * 1024;
+  // 檢查檔案大小（最大 150MB）
+  const maxSize = 150 * 1024 * 1024;
   if (file.size > maxSize) {
     console.log(`[FileEvent] File too large: ${file.size} bytes`);
     await slackClient.postMessage({
       channel: event.channel,
-      text: `:warning: 檔案「${file.name}」太大（${formatFileSize(file.size)}），請上傳小於 100MB 的音檔。`,
+      text: `:warning: 檔案「${file.name}」太大（${formatFileSize(file.size)}），請上傳小於 150MB 的音檔。`,
       thread_ts: event.event_ts ?? event.ts,
     });
     return;

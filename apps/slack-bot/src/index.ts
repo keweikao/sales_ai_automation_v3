@@ -12,6 +12,18 @@ import {
   buildEditSummaryModal,
   parseEditSummaryValues,
 } from "./blocks/edit-summary-modal";
+import {
+  buildFollowUpModal,
+  parseFollowUpFormValues,
+} from "./blocks/follow-up-modal";
+import {
+  buildCancelTodoModal,
+  buildCompleteTodoModal,
+  buildPostponeTodoModal,
+  parseCancelTodoFormValues,
+  parseCompleteTodoFormValues,
+  parsePostponeTodoFormValues,
+} from "./blocks/todo-reminder";
 import { handleSlackCommand } from "./commands";
 import { handleSlackEvent } from "./events";
 import { processAudioWithMetadata } from "./events/file";
@@ -484,6 +496,84 @@ app.post("/slack/interactions", async (c) => {
               break;
             }
 
+            case "complete_todo": {
+              // 開啟完成 Todo Modal
+              try {
+                const data = JSON.parse(value);
+                const slackClient = new SlackClient(env.SLACK_BOT_TOKEN);
+                const modal = buildCompleteTodoModal(
+                  data.todoId,
+                  data.todoTitle
+                );
+
+                const result = await slackClient.openView(
+                  payload.trigger_id,
+                  modal
+                );
+
+                if (!result.ok) {
+                  console.error(
+                    "Failed to open complete todo modal:",
+                    result.error
+                  );
+                }
+              } catch (error) {
+                console.error("Error opening complete todo modal:", error);
+              }
+              break;
+            }
+
+            case "postpone_todo": {
+              // 開啟改期 Todo Modal
+              try {
+                const data = JSON.parse(value);
+                const slackClient = new SlackClient(env.SLACK_BOT_TOKEN);
+                const modal = buildPostponeTodoModal(
+                  data.todoId,
+                  data.todoTitle
+                );
+
+                const result = await slackClient.openView(
+                  payload.trigger_id,
+                  modal
+                );
+
+                if (!result.ok) {
+                  console.error(
+                    "Failed to open postpone todo modal:",
+                    result.error
+                  );
+                }
+              } catch (error) {
+                console.error("Error opening postpone todo modal:", error);
+              }
+              break;
+            }
+
+            case "cancel_todo": {
+              // 開啟取消 Todo Modal
+              try {
+                const data = JSON.parse(value);
+                const slackClient = new SlackClient(env.SLACK_BOT_TOKEN);
+                const modal = buildCancelTodoModal(data.todoId, data.todoTitle);
+
+                const result = await slackClient.openView(
+                  payload.trigger_id,
+                  modal
+                );
+
+                if (!result.ok) {
+                  console.error(
+                    "Failed to open cancel todo modal:",
+                    result.error
+                  );
+                }
+              } catch (error) {
+                console.error("Error opening cancel todo modal:", error);
+              }
+              break;
+            }
+
             default:
               console.log(`Unhandled action: ${actionId}`);
           }
@@ -606,8 +696,18 @@ app.post("/slack/interactions", async (c) => {
           processAudioWithMetadata(pendingFile, legacyMetadata, env)
         );
 
-        // 返回空回應關閉 Modal
-        return c.json({});
+        // 推送 Follow-up Modal（讓業務設定追蹤提醒）
+        // 注意：此時 conversationId 和 caseNumber 尚未生成，使用 placeholder
+        const followUpModal = buildFollowUpModal({
+          conversationId: "pending", // 將在 follow_up_form 提交時由後端處理
+          caseNumber: `${metadata.customerNumber || "新案件"}`,
+          opportunityName: metadata.customerName,
+        });
+
+        return c.json({
+          response_action: "push",
+          view: followUpModal,
+        });
       } catch (error) {
         console.error("Error processing audio upload form:", error);
         return c.json({
@@ -666,6 +766,261 @@ app.post("/slack/interactions", async (c) => {
           response_action: "errors",
           errors: {
             summary_block:
+              error instanceof Error ? error.message : "處理表單時發生錯誤",
+          },
+        });
+      }
+    }
+
+    if (callbackId === "follow_up_form") {
+      // 處理 Follow-up 表單提交
+      try {
+        const privateMetadata = payload.view?.private_metadata;
+        const modalData = JSON.parse(privateMetadata);
+        const values = payload.view?.state?.values;
+
+        // 解析表單值
+        const { days, title, description } = parseFollowUpFormValues(values);
+
+        // 驗證必填欄位
+        if (!title.trim()) {
+          return c.json({
+            response_action: "errors",
+            errors: {
+              title_block: "請輸入 Follow 事項",
+            },
+          });
+        }
+
+        console.log("[Follow-up] Creating follow-up todo:", {
+          days,
+          title,
+          description,
+          modalData,
+        });
+
+        // 非同步建立 Todo（透過 API）
+        c.executionCtx.waitUntil(
+          (async () => {
+            try {
+              // 計算到期日
+              const dueDate = new Date();
+              dueDate.setDate(dueDate.getDate() + days);
+
+              // TODO: 呼叫後端 API 建立 Todo
+              // 目前 API 尚未實作，先記錄 log
+              console.log("[Follow-up] Would create todo via API:", {
+                apiBaseUrl: env.API_BASE_URL,
+                title,
+                description,
+                dueDate: dueDate.toISOString(),
+                opportunityName: modalData.opportunityName,
+                caseNumber: modalData.caseNumber,
+                slackUserId: payload.user?.id,
+              });
+
+              // 未來 API 呼叫範例：
+              // const apiClient = new ApiClient(env.API_BASE_URL, env.API_TOKEN);
+              // await apiClient.createTodo({
+              //   title,
+              //   description,
+              //   dueDate: dueDate.toISOString(),
+              //   opportunityId: modalData.opportunityId,
+              //   conversationId: modalData.conversationId,
+              //   slackUserId: payload.user?.id,
+              // });
+            } catch (error) {
+              console.error("[Follow-up] Failed to create todo:", error);
+            }
+          })()
+        );
+
+        // 關閉所有 Modal（包括原本的音檔上傳表單）
+        return c.json({
+          response_action: "clear",
+        });
+      } catch (error) {
+        console.error("Error processing follow-up form:", error);
+        return c.json({
+          response_action: "errors",
+          errors: {
+            title_block:
+              error instanceof Error ? error.message : "處理表單時發生錯誤",
+          },
+        });
+      }
+    }
+
+    if (callbackId === "complete_todo_form") {
+      // 處理完成 Todo 表單提交
+      try {
+        const privateMetadata = payload.view?.private_metadata;
+        const modalData = JSON.parse(privateMetadata);
+        const values = payload.view?.state?.values;
+
+        const { completionNote } = parseCompleteTodoFormValues(values);
+
+        console.log("[Todo] Completing todo:", {
+          todoId: modalData.todoId,
+          todoTitle: modalData.todoTitle,
+          completionNote,
+        });
+
+        // 非同步完成 Todo（透過 API）
+        c.executionCtx.waitUntil(
+          (async () => {
+            try {
+              // TODO: 呼叫後端 API 完成 Todo
+              console.log("[Todo] Would complete todo via API:", {
+                apiBaseUrl: env.API_BASE_URL,
+                todoId: modalData.todoId,
+                completionNote,
+              });
+
+              // 未來 API 呼叫範例：
+              // const apiClient = new ApiClient(env.API_BASE_URL, env.API_TOKEN);
+              // await apiClient.completeTodo({
+              //   todoId: modalData.todoId,
+              //   completionNote,
+              // });
+            } catch (error) {
+              console.error("[Todo] Failed to complete todo:", error);
+            }
+          })()
+        );
+
+        return c.json({});
+      } catch (error) {
+        console.error("Error processing complete todo form:", error);
+        return c.json({
+          response_action: "errors",
+          errors: {
+            completion_note_block:
+              error instanceof Error ? error.message : "處理表單時發生錯誤",
+          },
+        });
+      }
+    }
+
+    if (callbackId === "postpone_todo_form") {
+      // 處理改期 Todo 表單提交
+      try {
+        const privateMetadata = payload.view?.private_metadata;
+        const modalData = JSON.parse(privateMetadata);
+        const values = payload.view?.state?.values;
+
+        const { newDate, reason } = parsePostponeTodoFormValues(values);
+
+        // 驗證日期
+        if (!newDate) {
+          return c.json({
+            response_action: "errors",
+            errors: {
+              new_date_block: "請選擇新的到期日",
+            },
+          });
+        }
+
+        console.log("[Todo] Postponing todo:", {
+          todoId: modalData.todoId,
+          todoTitle: modalData.todoTitle,
+          newDate,
+          reason,
+        });
+
+        // 非同步改期 Todo（透過 API）
+        c.executionCtx.waitUntil(
+          (async () => {
+            try {
+              // TODO: 呼叫後端 API 改期 Todo
+              console.log("[Todo] Would postpone todo via API:", {
+                apiBaseUrl: env.API_BASE_URL,
+                todoId: modalData.todoId,
+                newDate,
+                reason,
+              });
+
+              // 未來 API 呼叫範例：
+              // const apiClient = new ApiClient(env.API_BASE_URL, env.API_TOKEN);
+              // await apiClient.postponeTodo({
+              //   todoId: modalData.todoId,
+              //   newDate,
+              //   reason,
+              // });
+            } catch (error) {
+              console.error("[Todo] Failed to postpone todo:", error);
+            }
+          })()
+        );
+
+        return c.json({});
+      } catch (error) {
+        console.error("Error processing postpone todo form:", error);
+        return c.json({
+          response_action: "errors",
+          errors: {
+            new_date_block:
+              error instanceof Error ? error.message : "處理表單時發生錯誤",
+          },
+        });
+      }
+    }
+
+    if (callbackId === "cancel_todo_form") {
+      // 處理取消 Todo 表單提交
+      try {
+        const privateMetadata = payload.view?.private_metadata;
+        const modalData = JSON.parse(privateMetadata);
+        const values = payload.view?.state?.values;
+
+        const { reason } = parseCancelTodoFormValues(values);
+
+        // 驗證原因
+        if (!reason.trim()) {
+          return c.json({
+            response_action: "errors",
+            errors: {
+              cancel_reason_block: "請輸入取消原因",
+            },
+          });
+        }
+
+        console.log("[Todo] Cancelling todo:", {
+          todoId: modalData.todoId,
+          todoTitle: modalData.todoTitle,
+          reason,
+        });
+
+        // 非同步取消 Todo（透過 API）
+        c.executionCtx.waitUntil(
+          (async () => {
+            try {
+              // TODO: 呼叫後端 API 取消 Todo
+              console.log("[Todo] Would cancel todo via API:", {
+                apiBaseUrl: env.API_BASE_URL,
+                todoId: modalData.todoId,
+                reason,
+              });
+
+              // 未來 API 呼叫範例：
+              // const apiClient = new ApiClient(env.API_BASE_URL, env.API_TOKEN);
+              // await apiClient.cancelTodo({
+              //   todoId: modalData.todoId,
+              //   reason,
+              // });
+            } catch (error) {
+              console.error("[Todo] Failed to cancel todo:", error);
+            }
+          })()
+        );
+
+        return c.json({});
+      } catch (error) {
+        console.error("Error processing cancel todo form:", error);
+        return c.json({
+          response_action: "errors",
+          errors: {
+            cancel_reason_block:
               error instanceof Error ? error.message : "處理表單時發生錯誤",
           },
         });
