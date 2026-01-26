@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 
 const DATABASE_URL =
-  "postgresql://neondb_owner:npg_ZkASu5qnc9vB@ep-sparkling-band-a130c5ks-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+  "postgresql://neondb_owner:npg_2XSWsKNxeU3w@ep-sparkling-band-a130c5ks-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
 
 async function checkAgent4Summary() {
   const sql = neon(DATABASE_URL);

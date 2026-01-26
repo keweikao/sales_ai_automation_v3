@@ -10,7 +10,7 @@ import { conversations } from "./packages/db/src/schema/index.js";
 
 const DATABASE_URL =
   process.env.DATABASE_URL ||
-  "postgresql://neondb_owner:npg_ZkASu5qnc9vB@ep-sparkling-band-a130c5ks-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+  "postgresql://neondb_owner:npg_2XSWsKNxeU3w@ep-sparkling-band-a130c5ks-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
 
 const sql = neon(DATABASE_URL);
 const db = drizzle(sql);
