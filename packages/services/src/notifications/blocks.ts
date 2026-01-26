@@ -123,7 +123,7 @@ export function buildProcessingCompletedBlocks(
       text: {
         type: "mrkdwn",
         text:
-          `*📊 PDCM 快速診斷*\n` +
+          "*📊 PDCM 快速診斷*\n" +
           `${probabilityEmoji} *成交機率: ${probabilityText}* (總分 ${pdcm.totalScore}/100)\n\n` +
           `${getScoreBar(pdcm.pain)} *P 痛點* ${pdcm.pain}/100\n` +
           `${getScoreBar(pdcm.decision)} *D 決策* ${pdcm.decision}/100\n` +
@@ -164,9 +164,7 @@ export function buildProcessingCompletedBlocks(
       triggeredAlerts.push(`⚠️ *Metrics 不足*: ${alerts.noMetrics.message}`);
     }
     if (alerts.shallowDiscovery.triggered) {
-      triggeredAlerts.push(
-        `⚠️ *挖掘不足*: ${alerts.shallowDiscovery.message}`
-      );
+      triggeredAlerts.push(`⚠️ *挖掘不足*: ${alerts.shallowDiscovery.message}`);
     }
     if (alerts.noUrgency.triggered) {
       triggeredAlerts.push(`⚠️ *痛點不痛*: ${alerts.noUrgency.message}`);
@@ -226,8 +224,12 @@ export function buildProcessingCompletedBlocks(
     let strategyText = "*🎯 建議策略*\n";
 
     if (analysisResult.recommendedStrategy) {
-      const strategyEmoji = getStrategyEmoji(analysisResult.recommendedStrategy);
-      const strategyLabel = getStrategyLabel(analysisResult.recommendedStrategy);
+      const strategyEmoji = getStrategyEmoji(
+        analysisResult.recommendedStrategy
+      );
+      const strategyLabel = getStrategyLabel(
+        analysisResult.recommendedStrategy
+      );
       strategyText += `${strategyEmoji} *${strategyLabel}*`;
 
       if (analysisResult.strategyReason) {
@@ -250,7 +252,7 @@ export function buildProcessingCompletedBlocks(
         text: {
           type: "mrkdwn",
           text:
-            `*✅ 下一步行動*\n` +
+            "*✅ 下一步行動*\n" +
             `*${action.action}*\n` +
             `⏰ 時效: ${action.deadline}\n\n` +
             `💬 建議話術:\n>${action.suggestedScript}`,
@@ -270,7 +272,7 @@ export function buildProcessingCompletedBlocks(
       text: {
         type: "mrkdwn",
         text:
-          `*💡 戰術建議*\n` +
+          "*💡 戰術建議*\n" +
           `當客戶說「${tactic.trigger}」時:\n` +
           `*${tactic.suggestion}*\n\n` +
           `💬 話術:\n>${tactic.talkTrack}`,
@@ -376,7 +378,9 @@ function getDealProbabilityEmoji(
 /**
  * 取得成交機率對應的文字
  */
-function getDealProbabilityText(probability: "high" | "medium" | "low"): string {
+function getDealProbabilityText(
+  probability: "high" | "medium" | "low"
+): string {
   const textMap: Record<string, string> = {
     high: "高",
     medium: "中",
@@ -495,4 +499,3 @@ function getStatusEmoji(status: string): string {
 
   return statusMap[status.toLowerCase()] || "⚪";
 }
-
