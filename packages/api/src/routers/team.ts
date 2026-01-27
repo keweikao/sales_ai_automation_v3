@@ -158,16 +158,10 @@ const updateUserRole = protectedProcedure
         .set(updateData)
         .where(eq(userProfiles.userId, userId));
     } else {
-      // 建立 - role 必須提供
-      if (!role) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "建立新用戶時必須提供角色",
-        });
-      }
-
+      // 建立新 profile - 如果沒有提供 role，預設為 sales_rep
       await db.insert(userProfiles).values({
         userId,
-        role,
+        role: role || "sales_rep",
         department: department || null,
         createdAt: new Date(),
         updatedAt: new Date(),
