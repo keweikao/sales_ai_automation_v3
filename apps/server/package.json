@@ -4,8 +4,8 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "tsdown",
-    "check-types": "tsc -b",
-    "typecheck": "tsc -b",
+    "check-types": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server"
   },
   "dependencies": {

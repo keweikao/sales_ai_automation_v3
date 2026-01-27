@@ -73,6 +73,10 @@ export const conversations = pgTable("conversations", {
   smsSent: boolean("sms_sent").default(false), // SMS 是否已發送給客戶
   smsSentAt: timestamp("sms_sent_at"), // SMS 發送時間
 
+  // Follow-up tracking
+  followUpStatus: text("follow_up_status").$type<"pending" | "created" | "rejected">(), // 追蹤 follow-up 設定狀態
+  followUpSetAt: timestamp("follow_up_set_at"), // 設定 follow-up 的時間
+
   // Time
   duration: integer("duration"), // seconds
   conversationDate: timestamp("conversation_date"),
@@ -106,3 +110,6 @@ export const conversationsRelations = relations(
 
 export type Conversation = typeof conversations.$inferSelect;
 export type NewConversation = typeof conversations.$inferInsert;
+
+/** Conversation Follow-up 設定狀態 */
+export type ConversationFollowUpStatus = "pending" | "created" | "rejected";

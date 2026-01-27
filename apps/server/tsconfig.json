@@ -1,7 +1,6 @@
 {
   "extends": "@Sales_ai_automation_v3/config/tsconfig.base.json",
   "compilerOptions": {
-    "composite": true,
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {
@@ -9,6 +8,9 @@
     },
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
-    "strictNullChecks": true
-  }
+    "strictNullChecks": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

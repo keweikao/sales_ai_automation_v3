@@ -15,6 +15,7 @@ import {
   Plus,
   Search,
   TrendingUp,
+  User,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -152,9 +153,14 @@ function OpportunitiesPage() {
                   公司名稱
                 </div>
               </TableHead>
-              <TableHead>案件編號</TableHead>
               <TableHead>客戶編號</TableHead>
               <TableHead>聯絡人</TableHead>
+              <TableHead>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  業務
+                </div>
+              </TableHead>
               <TableHead>
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
@@ -179,10 +185,10 @@ function OpportunitiesPage() {
                     <Skeleton className="h-4 w-24" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-28" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-4 w-20" />
                   </TableCell>
                   <TableCell>
                     <Skeleton className="h-4 w-20" />
@@ -209,9 +215,6 @@ function OpportunitiesPage() {
                     {opportunity.companyName}
                   </TableCell>
                   <TableCell className="font-mono text-muted-foreground text-sm">
-                    {opportunity.latestCaseNumber || "-"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
                     {opportunity.customerNumber}
                   </TableCell>
                   <TableCell>
@@ -230,6 +233,9 @@ function OpportunitiesPage() {
                         </div>
                       )}
                     </div>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {opportunity.ownerName || "-"}
                   </TableCell>
                   <TableCell>
                     {opportunity.spinScore !== null ? (
@@ -315,7 +321,7 @@ function OpportunitiesPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell className="h-24 text-center" colSpan={7}>
+                <TableCell className="h-24 text-center" colSpan={8}>
                   沒有找到資料
                 </TableCell>
               </TableRow>
