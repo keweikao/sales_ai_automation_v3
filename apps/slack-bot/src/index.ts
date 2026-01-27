@@ -704,6 +704,10 @@ app.post("/slack/interactions", async (c) => {
           staffCount: metadata.staffCount,
           currentSystem: metadata.currentSystem,
           decisionMakerPresent: metadata.decisionMakerPresent,
+          // 聯絡人資訊
+          contactName: metadata.contactName,
+          contactPhone: metadata.contactPhone,
+          contactEmail: metadata.contactEmail,
         };
 
         // 非同步處理音檔
