@@ -74,7 +74,9 @@ export const conversations = pgTable("conversations", {
   smsSentAt: timestamp("sms_sent_at"), // SMS 發送時間
 
   // Follow-up tracking
-  followUpStatus: text("follow_up_status").$type<"pending" | "created" | "rejected">(), // 追蹤 follow-up 設定狀態
+  followUpStatus: text("follow_up_status").$type<
+    "pending" | "created" | "rejected"
+  >(), // 追蹤 follow-up 設定狀態
   followUpSetAt: timestamp("follow_up_set_at"), // 設定 follow-up 的時間
 
   // Time

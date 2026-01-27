@@ -177,6 +177,15 @@ export class ApiClient {
     });
   }
 
+  async updateFollowUpStatus(
+    conversationId: string,
+    status: "pending" | "created" | "rejected"
+  ): Promise<void> {
+    await this.request("/rpc/conversations/updateFollowUpStatus", {
+      body: JSON.stringify({ conversationId, status }),
+    });
+  }
+
   // Analytics 相關 API
   async getDashboard(): Promise<DashboardStatsResponse> {
     return this.request<DashboardStatsResponse>("/rpc/analytics/dashboard");
