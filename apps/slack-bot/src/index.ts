@@ -704,6 +704,10 @@ app.post("/slack/interactions", async (c) => {
           staffCount: metadata.staffCount,
           currentSystem: metadata.currentSystem,
           decisionMakerPresent: metadata.decisionMakerPresent,
+          // 聯絡人資訊
+          contactName: metadata.contactName,
+          contactPhone: metadata.contactPhone,
+          contactEmail: metadata.contactEmail,
         };
 
         // 非同步處理音檔
@@ -847,6 +851,28 @@ app.post("/slack/interactions", async (c) => {
                   title,
                   dueDate: dueDate.toISOString(),
                 });
+
+                // 更新 conversation 的 followUpStatus 為 "created"
+                // 注意：只有在 conversationId 是有效 UUID 時才更新（非 "pending" 佔位符）
+                const isValidUuid =
+                  modalData.conversationId &&
+                  modalData.conversationId !== "pending" &&
+                  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                    modalData.conversationId
+                  );
+                if (isValidUuid) {
+                  await apiClient.updateFollowUpStatus(
+                    modalData.conversationId,
+                    "created"
+                  );
+                  console.log(
+                    "[Follow-up] Updated conversation followUpStatus to 'created'"
+                  );
+                } else {
+                  console.log(
+                    "[Follow-up] Skipped followUpStatus update - conversationId not yet available"
+                  );
+                }
               } catch (error) {
                 console.error("[Follow-up] Failed to create todo:", error);
               }
@@ -897,6 +923,28 @@ app.post("/slack/interactions", async (c) => {
                   rejectReason,
                   competitor,
                 });
+
+                // 更新 conversation 的 followUpStatus 為 "rejected"
+                // 注意：只有在 conversationId 是有效 UUID 時才更新（非 "pending" 佔位符）
+                const isValidUuid =
+                  modalData.conversationId &&
+                  modalData.conversationId !== "pending" &&
+                  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                    modalData.conversationId
+                  );
+                if (isValidUuid) {
+                  await apiClient.updateFollowUpStatus(
+                    modalData.conversationId,
+                    "rejected"
+                  );
+                  console.log(
+                    "[Follow-up] Updated conversation followUpStatus to 'rejected'"
+                  );
+                } else {
+                  console.log(
+                    "[Follow-up] Skipped followUpStatus update - conversationId not yet available"
+                  );
+                }
               } catch (error) {
                 console.error("[Follow-up] Failed to record rejection:", error);
               }

@@ -458,6 +458,8 @@ export const uploadConversation = protectedProcedure
             slackUsername: slackUser?.username,
             // 產品線
             productLine: resolvedProductLine,
+            // Follow-up 追蹤狀態 (強制業務設定 follow-up 或標記拒絕)
+            followUpStatus: "pending",
           })
           .returning();
 
@@ -1227,6 +1229,46 @@ export const retryConversation = protectedProcedure
   });
 
 // ============================================================
+// Update Follow-up Status
+// ============================================================
+
+const updateFollowUpStatusSchema = z.object({
+  conversationId: z.string().uuid(),
+  status: z.enum(["pending", "created", "rejected"]),
+});
+
+export const updateFollowUpStatus = protectedProcedure
+  .input(updateFollowUpStatusSchema)
+  .handler(async ({ input }) => {
+    const { conversationId, status } = input;
+
+    const [updatedConversation] = await db
+      .update(conversations)
+      .set({
+        followUpStatus: status,
+        followUpSetAt: status !== "pending" ? new Date() : null,
+        updatedAt: new Date(),
+      })
+      .where(eq(conversations.id, conversationId))
+      .returning();
+
+    if (!updatedConversation) {
+      throw new ORPCError("NOT_FOUND", {
+        message: `找不到對話記錄: ${conversationId}`,
+      });
+    }
+
+    return {
+      success: true,
+      conversation: {
+        id: updatedConversation.id,
+        followUpStatus: updatedConversation.followUpStatus,
+        followUpSetAt: updatedConversation.followUpSetAt,
+      },
+    };
+  });
+
+// ============================================================
 // Router Export
 // ============================================================
 
@@ -1237,4 +1279,5 @@ export const conversationRouter = {
   get: getConversation,
   updateSummary,
   retry: retryConversation,
+  updateFollowUpStatus,
 };

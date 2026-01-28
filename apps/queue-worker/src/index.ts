@@ -44,7 +44,7 @@ import {
   isAppError,
 } from "@Sales_ai_automation_v3/shared/errors";
 import type { TranscriptionMessage } from "@Sales_ai_automation_v3/shared/types";
-import { and, eq, inArray, lte } from "drizzle-orm";
+import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 
 // ============================================================
@@ -1135,9 +1135,11 @@ export default {
       console.log("[Scheduled] Running daily health report...");
       await handleDailyHealthReport(env);
     } else if (trigger === "0 1 * * *") {
-      // 每日 09:00 (UTC+8) - Todo 提醒
+      // 每日 09:00 (UTC+8) - Todo 提醒 + Pending Follow-up 提醒
       console.log("[Scheduled] Running daily todo reminder...");
       await handleDailyTodoReminder(env);
+      console.log("[Scheduled] Running pending follow-up reminder...");
+      await handlePendingFollowUpReminder(env);
     }
   },
 };
@@ -1719,6 +1721,195 @@ function buildDailyReminderBlocks(
         },
         url: `${webAppUrl}/todos`,
         style: "primary",
+      },
+    ],
+  });
+
+  return blocks;
+}
+
+// ============================================================
+// Pending Follow-up Reminder
+// ============================================================
+
+/**
+ * 提醒業務設定 Follow-up
+ * 查詢 24-72 小時內完成但未設定 follow-up 的對話
+ */
+async function handlePendingFollowUpReminder(env: Env): Promise<void> {
+  try {
+    const sql = neon(env.DATABASE_URL);
+    const db = drizzle(sql, { schema });
+    const slackClient = new WebClient(env.SLACK_BOT_TOKEN);
+
+    // 時間範圍：24-72 小時前完成的對話
+    const now = new Date();
+    const hoursAgo24 = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const hoursAgo72 = new Date(now.getTime() - 72 * 60 * 60 * 1000);
+
+    console.log(
+      `[PendingFollowUp] Querying conversations between ${hoursAgo72.toISOString()} and ${hoursAgo24.toISOString()}`
+    );
+
+    // 查詢未設定 follow-up 的已完成對話
+    const pendingConversations = await db
+      .select({
+        id: conversations.id,
+        caseNumber: conversations.caseNumber,
+        title: conversations.title,
+        slackUserId: conversations.slackUserId,
+        slackUsername: conversations.slackUsername,
+        createdAt: conversations.createdAt,
+        opportunityId: conversations.opportunityId,
+        companyName: opportunities.companyName,
+      })
+      .from(conversations)
+      .leftJoin(
+        opportunities,
+        eq(conversations.opportunityId, opportunities.id)
+      )
+      .where(
+        and(
+          eq(conversations.status, "completed"),
+          eq(conversations.followUpStatus, "pending"),
+          gte(conversations.createdAt, hoursAgo72),
+          lte(conversations.createdAt, hoursAgo24)
+        )
+      );
+
+    console.log(
+      `[PendingFollowUp] Found ${pendingConversations.length} conversations without follow-up`
+    );
+
+    if (pendingConversations.length === 0) {
+      console.log("[PendingFollowUp] No pending follow-ups to remind");
+      return;
+    }
+
+    // 按 slackUserId 分組
+    const byUser = new Map<string, typeof pendingConversations>();
+    for (const conv of pendingConversations) {
+      if (!conv.slackUserId) {
+        console.log(
+          `[PendingFollowUp] Conversation ${conv.caseNumber} has no slackUserId, skipping`
+        );
+        continue;
+      }
+
+      if (!byUser.has(conv.slackUserId)) {
+        byUser.set(conv.slackUserId, []);
+      }
+      byUser.get(conv.slackUserId)!.push(conv);
+    }
+
+    console.log(`[PendingFollowUp] Sending reminders to ${byUser.size} users`);
+
+    // 發送提醒給每個用戶
+    for (const [slackUserId, convs] of byUser) {
+      try {
+        const blocks = buildPendingFollowUpBlocks(convs);
+
+        await slackClient.chat.postMessage({
+          channel: slackUserId,
+          blocks,
+          text: `⚠️ 您有 ${convs.length} 件案件尚未設定後續追蹤`,
+        });
+
+        console.log(
+          `[PendingFollowUp] Sent reminder to ${slackUserId}: ${convs.length} conversations`
+        );
+      } catch (sendError) {
+        console.error(
+          `[PendingFollowUp] Failed to send reminder to ${slackUserId}:`,
+          sendError
+        );
+      }
+    }
+
+    console.log("[PendingFollowUp] Pending follow-up reminder completed");
+  } catch (error) {
+    console.error(
+      "[PendingFollowUp] Failed to send pending follow-up reminder:",
+      error
+    );
+  }
+}
+
+/**
+ * 建構 Pending Follow-up 提醒 Slack Blocks
+ */
+function buildPendingFollowUpBlocks(
+  convs: Array<{
+    id: string;
+    caseNumber: string | null;
+    title: string | null;
+    createdAt: Date | null;
+    companyName: string | null;
+  }>
+): any[] {
+  const blocks: any[] = [];
+
+  // Header
+  blocks.push({
+    type: "header",
+    text: {
+      type: "plain_text",
+      text: "⚠️ 案件尚未設定後續追蹤",
+      emoji: true,
+    },
+  });
+
+  // 說明
+  blocks.push({
+    type: "section",
+    text: {
+      type: "mrkdwn",
+      text: `您有 *${convs.length}* 件已完成分析的案件尚未設定 Follow-up 或標記為拒絕：`,
+    },
+  });
+
+  blocks.push({ type: "divider" });
+
+  // 列出每個案件
+  for (const conv of convs.slice(0, 10)) {
+    // 最多顯示 10 項
+    const hoursAgo = conv.createdAt
+      ? Math.round((Date.now() - conv.createdAt.getTime()) / (1000 * 60 * 60))
+      : 0;
+
+    const displayName = conv.companyName || conv.title || "未命名案件";
+    const caseInfo = conv.caseNumber ? `\`${conv.caseNumber}\`` : "";
+
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `• ${caseInfo} *${displayName}*\n   _已過 ${hoursAgo} 小時_`,
+      },
+    });
+  }
+
+  if (convs.length > 10) {
+    blocks.push({
+      type: "context",
+      elements: [
+        {
+          type: "mrkdwn",
+          text: `_還有 ${convs.length - 10} 件案件..._`,
+        },
+      ],
+    });
+  }
+
+  blocks.push({ type: "divider" });
+
+  // 提示
+  blocks.push({
+    type: "context",
+    elements: [
+      {
+        type: "mrkdwn",
+        text: "💡 請上傳音檔時設定 Follow-up 待辦，或標記客戶已拒絕，以利追蹤案件進度。",
       },
     ],
   });

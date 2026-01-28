@@ -5,6 +5,7 @@
 
 import { AlertCircle, CheckCircle2, Lightbulb, XCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TermTooltip } from "@/components/ui/term-tooltip";
 import { type SpinStage, spinStageLabels } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
@@ -205,9 +206,11 @@ export function SpinProgressCard({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {getAchievementIcon(data.achieved, data.score)}
-                    <span className="font-medium text-slate-300 text-sm">
-                      {spinStageLabels[key]}
-                    </span>
+                    <TermTooltip termKey={key}>
+                      <span className="font-medium text-slate-300 text-sm">
+                        {spinStageLabels[key]}
+                      </span>
+                    </TermTooltip>
                     {isKeyGap && (
                       <span className="rounded bg-red-500/20 px-1.5 py-0.5 font-mono text-red-400 text-xs">
                         關鍵缺口

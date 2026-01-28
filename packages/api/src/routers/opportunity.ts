@@ -10,6 +10,7 @@ import {
   opportunities,
   salesTodos,
   todoLogs,
+  user,
   userProfiles,
 } from "@Sales_ai_automation_v3/db/schema";
 import { randomUUID } from "node:crypto";
@@ -362,14 +363,14 @@ export const listOpportunities = protectedProcedure
       .limit(limit)
       .offset(offset);
 
-    // 獲取每個 opportunity 的最新案件編號和 SPIN 分數
+    // 獲取每個 opportunity 的 SPIN 分數和業務名稱
     const opportunitiesWithExtras = await Promise.all(
       results.map(async (opportunity) => {
-        // 獲取最新的 conversation
+        // 獲取最新的 conversation（用於 SPIN 分數和 slack 用戶名 fallback）
         const latestConversation = await db.query.conversations.findFirst({
           where: eq(conversations.opportunityId, opportunity.id),
           orderBy: (conversations, { desc }) => [desc(conversations.createdAt)],
-          columns: { caseNumber: true, id: true },
+          columns: { id: true, slackUsername: true },
         });
 
         // 獲取最新的 MEDDIC 分析（含 SPIN 分數）
@@ -398,6 +399,20 @@ export const listOpportunities = protectedProcedure
           }
         }
 
+        // 獲取業務名稱：優先使用 user.name，fallback 到 slackUsername
+        let ownerName: string | null = null;
+        if (opportunity.userId && opportunity.userId !== "service-account") {
+          const ownerUser = await db.query.user.findFirst({
+            where: eq(user.id, opportunity.userId),
+            columns: { name: true },
+          });
+          ownerName = ownerUser?.name || null;
+        }
+        // Fallback 到 Slack 用戶名
+        if (!ownerName && latestConversation?.slackUsername) {
+          ownerName = latestConversation.slackUsername;
+        }
+
         return {
           id: opportunity.id,
           customerNumber: opportunity.customerNumber,
@@ -414,9 +429,8 @@ export const listOpportunities = protectedProcedure
           meddicScore: opportunity.meddicScore,
           createdAt: opportunity.createdAt,
           updatedAt: opportunity.updatedAt,
-          // 新增欄位
-          latestCaseNumber: latestConversation?.caseNumber || null,
           spinScore,
+          ownerName, // 業務名稱
         };
       })
     );

@@ -6,6 +6,7 @@
 import { AlertTriangle, TrendingDown, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TermTooltip } from "@/components/ui/term-tooltip";
 import {
   calculatePdcmTotal,
   type MetricsLevel,
@@ -267,9 +268,11 @@ export function PdcmScoreCard({
                 <div className="space-y-1.5" key={dimension}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-slate-300 text-sm">
-                        {pdcmDimensionLabels[dimension]}
-                      </span>
+                      <TermTooltip termKey={dimension}>
+                        <span className="font-medium text-slate-300 text-sm">
+                          {pdcmDimensionLabels[dimension]}
+                        </span>
+                      </TermTooltip>
                       {/* Show badges for special dimensions */}
                       {dimension === "metrics" && (
                         <Badge
