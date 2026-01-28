@@ -31,6 +31,10 @@ import {
 import { useState } from "react";
 
 import { LeadStatusBadge } from "@/components/lead/lead-status-badge";
+import {
+  type CompetitorAnalysis,
+  CompetitorAnalysisCard,
+} from "@/components/meddic/competitor-analysis-card";
 import { PdcmScoreCard } from "@/components/meddic/pdcm-score-card";
 import {
   PdcmSpinAlerts,
@@ -987,6 +991,15 @@ function OpportunityDetailPage() {
                                 (conversation.analysis.agentOutputs.agent6
                                   ?.pdcm_spin_alerts as
                                   | PdcmSpinAlertsData
+                                  | undefined) ?? null
+                              }
+                            />
+
+                            {/* Competitor Analysis */}
+                            <CompetitorAnalysisCard
+                              analysis={
+                                (conversation.analysis.competitorAnalysis as
+                                  | CompetitorAnalysis
                                   | undefined) ?? null
                               }
                             />

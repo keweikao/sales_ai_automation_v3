@@ -25,6 +25,10 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import {
+  type CompetitorAnalysis,
+  CompetitorAnalysisCard,
+} from "@/components/meddic/competitor-analysis-card";
 import { PdcmScoreCard } from "@/components/meddic/pdcm-score-card";
 import {
   PdcmSpinAlerts,
@@ -1081,7 +1085,17 @@ function ConversationDetailPage() {
                           }
                         />
 
-                        {/* Competitor Mentions Section */}
+                        {/* Competitor Analysis Card (New) */}
+                        <CompetitorAnalysisCard
+                          analysis={
+                            conversation.analysis.competitorAnalysis as
+                              | CompetitorAnalysis
+                              | null
+                              | undefined
+                          }
+                        />
+
+                        {/* Competitor Mentions Section (Legacy - can be removed later) */}
                         {conversation.analysis.agentOutputs.agent6
                           ?.competitor_mentions &&
                           (

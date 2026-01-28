@@ -293,7 +293,124 @@ function getScoreBar(score: number): string {
 }
 
 /**
- * 建構競品提及與應對評估 Block
+ * 建構競品分析 Block (使用新的 competitorAnalysis 資料結構)
+ */
+export function buildCompetitorAnalysisBlocks(competitorAnalysis: {
+  detectedCompetitors: Array<{
+    name: string;
+    customerQuote: string;
+    attitude: "positive" | "negative" | "neutral";
+    threatLevel: "high" | "medium" | "low";
+    ourAdvantages: string[];
+    suggestedTalkTracks: string[];
+  }>;
+  overallThreatLevel: "high" | "medium" | "low" | "none";
+  handlingScore?: number;
+}): object[] {
+  const blocks: object[] = [];
+
+  // 如果沒有偵測到競品，返回空陣列
+  if (
+    !competitorAnalysis.detectedCompetitors ||
+    competitorAnalysis.detectedCompetitors.length === 0
+  ) {
+    return blocks;
+  }
+
+  // Header
+  blocks.push({
+    type: "header",
+    text: {
+      type: "plain_text",
+      text: "🎯 競品分析",
+      emoji: true,
+    },
+  });
+
+  // 整體威脅等級
+  const threatEmoji = getThreatEmoji(competitorAnalysis.overallThreatLevel);
+  blocks.push({
+    type: "section",
+    text: {
+      type: "mrkdwn",
+      text: `*整體威脅等級*: ${threatEmoji} ${getThreatLabel(competitorAnalysis.overallThreatLevel)}`,
+    },
+  });
+
+  // 業務應對評分
+  if (competitorAnalysis.handlingScore !== undefined) {
+    const scoreStars = getScoreStars(competitorAnalysis.handlingScore);
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*業務應對評分*: ${scoreStars} (${competitorAnalysis.handlingScore}/5)`,
+      },
+    });
+  }
+
+  blocks.push({ type: "divider" });
+
+  // 偵測到的競品詳細資訊
+  for (const competitor of competitorAnalysis.detectedCompetitors) {
+    const attitudeEmoji = getAttitudeEmoji(competitor.attitude);
+    const competitorThreatEmoji = getThreatEmoji(competitor.threatLevel);
+
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*${competitor.name}* | ${attitudeEmoji} ${getAttitudeLabel(competitor.attitude)} | ${competitorThreatEmoji} ${getThreatLabel(competitor.threatLevel)}`,
+      },
+    });
+
+    // 客戶原話
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*客戶原話*:\n> 「${competitor.customerQuote}」`,
+      },
+    });
+
+    // 我方優勢
+    if (competitor.ourAdvantages.length > 0) {
+      const advantagesText = competitor.ourAdvantages
+        .slice(0, 3)
+        .map((adv) => `✅ ${adv}`)
+        .join("\n");
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*我方優勢*:\n${advantagesText}`,
+        },
+      });
+    }
+
+    // 建議話術
+    if (competitor.suggestedTalkTracks.length > 0) {
+      const trackText = competitor.suggestedTalkTracks
+        .slice(0, 2)
+        .map((track, idx) => `${idx + 1}. ${track}`)
+        .join("\n");
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*💡 建議話術*:\n${trackText}`,
+        },
+      });
+    }
+
+    blocks.push({ type: "divider" });
+  }
+
+  return blocks;
+}
+
+/**
+ * 建構競品提及與應對評估 Block (Legacy - 保留向後相容)
  */
 export function buildCompetitorBlocks(data: AnalysisResultData): object[] {
   const blocks: object[] = [];
