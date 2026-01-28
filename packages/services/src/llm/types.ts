@@ -156,6 +156,13 @@ export interface Agent2Output {
     name: string; // 競品名稱
     customer_quote: string; // 客戶原話
     attitude: "positive" | "negative" | "neutral"; // 客戶態度
+    // 【新增】從資料庫查詢的競品詳細資訊
+    details?: {
+      strengths: string[]; // 競品優勢
+      weaknesses: string[]; // 競品弱點
+      ourAdvantages: string[]; // 我方優勢
+      counterTalkTracks: string[]; // 反制話術
+    } | null;
   }>;
 }
 
@@ -375,6 +382,20 @@ export interface AnalysisResult {
 
   // CRM data
   crmData: Agent5Output;
+
+  // 【新增】競品分析
+  competitorAnalysis?: {
+    detectedCompetitors: Array<{
+      name: string;
+      customerQuote: string;
+      attitude: "positive" | "negative" | "neutral";
+      threatLevel: "high" | "medium" | "low";
+      ourAdvantages: string[];
+      suggestedTalkTracks: string[];
+    }>;
+    overallThreatLevel: "high" | "medium" | "low" | "none";
+    handlingScore?: number;
+  };
 
   // V2 compatibility: preserve all raw agent outputs
   agentOutputs: {

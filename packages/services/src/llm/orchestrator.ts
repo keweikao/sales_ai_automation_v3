@@ -478,6 +478,9 @@ export class MeddicOrchestrator {
       // Risk assessment - 使用新邏輯
       risks: this.extractRisksV3(state),
 
+      // 【新增】競品分析 - 從 Agent2 和 Agent6 的資料構建
+      competitorAnalysis: this.buildCompetitorAnalysis(state),
+
       // Coaching - 從新的 Agent6Output
       coachingNotes: state.coachData.coaching_notes,
       alerts: state.coachData.alert_triggered
@@ -751,6 +754,113 @@ export class MeddicOrchestrator {
     }
 
     return risks;
+  }
+
+  /**
+   * 【新增】從 Agent2 和 Agent6 構建競品分析物件
+   */
+  private buildCompetitorAnalysis(state: AnalysisState) {
+    const competitors = state.buyerData?.detected_competitors || [];
+
+    // 如果沒有偵測到競品，返回 undefined
+    if (competitors.length === 0) {
+      return undefined;
+    }
+
+    console.log(`[Orchestrator] 構建競品分析，共 ${competitors.length} 個競品`);
+
+    // 將 Agent2 偵測到的競品資訊轉換為報告格式
+    const detectedCompetitors = competitors.map((comp) => {
+      const details = comp.details;
+
+      return {
+        name: comp.name,
+        customerQuote: comp.customer_quote,
+        attitude: comp.attitude,
+        // 根據客戶態度評估威脅等級
+        threatLevel: this.assessThreatLevel(comp.attitude),
+        // 如果有詳細資訊，使用資料庫中的我方優勢和話術
+        ourAdvantages: details?.ourAdvantages || [],
+        suggestedTalkTracks: details?.counterTalkTracks || [],
+      };
+    });
+
+    // 計算整體威脅等級
+    const overallThreatLevel = this.calculateOverallThreatLevel(
+      detectedCompetitors
+    );
+
+    // 從 Agent6 提取業務應對評分（如果有 competitor_handling_evaluation）
+    const handlingEvaluation =
+      state.coachData?.competitor_handling_evaluation;
+    const handlingScore = handlingEvaluation
+      ? this.calculateAverageHandlingScore(handlingEvaluation)
+      : undefined;
+
+    return {
+      detectedCompetitors,
+      overallThreatLevel,
+      handlingScore,
+    };
+  }
+
+  /**
+   * 根據客戶態度評估單個競品的威脅等級
+   */
+  private assessThreatLevel(
+    attitude: "positive" | "negative" | "neutral"
+  ): "high" | "medium" | "low" {
+    switch (attitude) {
+      case "positive": // 客戶對競品有好感 = 高威脅
+        return "high";
+      case "neutral": // 中性提及 = 中等威脅
+        return "medium";
+      case "negative": // 客戶對競品不滿 = 低威脅（轉換機會）
+        return "low";
+    }
+  }
+
+  /**
+   * 計算整體競品威脅等級
+   */
+  private calculateOverallThreatLevel(
+    competitors: Array<{ threatLevel: "high" | "medium" | "low" }>
+  ): "high" | "medium" | "low" | "none" {
+    if (competitors.length === 0) {
+      return "none";
+    }
+
+    const highCount = competitors.filter((c) => c.threatLevel === "high").length;
+    const mediumCount = competitors.filter(
+      (c) => c.threatLevel === "medium"
+    ).length;
+
+    // 如果有任何 high 威脅，整體就是 high
+    if (highCount > 0) {
+      return "high";
+    }
+
+    // 如果有 medium 威脅，整體就是 medium
+    if (mediumCount > 0) {
+      return "medium";
+    }
+
+    // 否則是 low（全部都是 negative 態度，表示客戶對競品不滿）
+    return "low";
+  }
+
+  /**
+   * 計算業務應對競品的平均分數
+   */
+  private calculateAverageHandlingScore(
+    evaluations: Array<{ score: number }>
+  ): number {
+    if (!evaluations || evaluations.length === 0) {
+      return 3; // 默認中等分數
+    }
+
+    const totalScore = evaluations.reduce((sum, ev) => sum + ev.score, 0);
+    return Math.round(totalScore / evaluations.length);
   }
 }
 

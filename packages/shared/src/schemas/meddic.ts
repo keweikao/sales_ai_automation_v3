@@ -88,6 +88,23 @@ export const meddicAnalysisResultSchema = z.object({
   keyFindings: z.array(z.string()),
   nextSteps: z.array(nextStepSchema),
   risks: z.array(riskSchema),
+  // 【新增】競品分析
+  competitorAnalysis: z
+    .object({
+      detectedCompetitors: z.array(
+        z.object({
+          name: z.string(),
+          customerQuote: z.string(),
+          attitude: z.enum(["positive", "negative", "neutral"]),
+          threatLevel: z.enum(["high", "medium", "low"]),
+          ourAdvantages: z.array(z.string()),
+          suggestedTalkTracks: z.array(z.string()),
+        })
+      ),
+      overallThreatLevel: z.enum(["high", "medium", "low", "none"]),
+      handlingScore: z.number().min(1).max(5).optional(),
+    })
+    .optional(),
   agentOutputs: z
     .object({
       agent1: z.record(z.string(), z.unknown()).optional(),

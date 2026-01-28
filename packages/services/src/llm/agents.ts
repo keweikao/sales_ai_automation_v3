@@ -5,6 +5,7 @@
 
 import type { BaseAgent } from "./base-agent.js";
 import type { GeminiClient } from "./gemini.js";
+import { getCompetitorInfo } from "../mcp/tools/get-competitor-info.js";
 import {
   AGENT1_PROMPT,
   AGENT2_PROMPT,
@@ -113,6 +114,48 @@ export class BuyerAgent implements BaseAgent {
       prompt,
       { model: AGENT_MODEL_CONFIG.buyer.model }
     );
+
+    // 【新增】如果偵測到競品，查詢詳細資訊
+    if (response.detected_competitors && response.detected_competitors.length > 0) {
+      console.log(
+        `[Agent 2] 偵測到 ${response.detected_competitors.length} 個競品，查詢詳細資訊...`
+      );
+
+      const enrichedCompetitors = await Promise.all(
+        response.detected_competitors.map(async (competitor) => {
+          try {
+            const details = await getCompetitorInfo({
+              competitorName: competitor.name,
+            });
+
+            if (details.found) {
+              console.log(`[Agent 2] ✅ 找到競品資訊: ${competitor.name}`);
+              return {
+                ...competitor,
+                details: details.competitor,
+              };
+            } else {
+              console.log(`[Agent 2] ⚠️  資料庫中沒有競品資訊: ${competitor.name}`);
+              return {
+                ...competitor,
+                details: null,
+              };
+            }
+          } catch (error) {
+            console.error(
+              `[Agent 2] ❌ 查詢競品資訊失敗: ${competitor.name}`,
+              error
+            );
+            return {
+              ...competitor,
+              details: null,
+            };
+          }
+        })
+      );
+
+      response.detected_competitors = enrichedCompetitors as typeof response.detected_competitors;
+    }
 
     return {
       ...state,
@@ -277,8 +320,44 @@ export class CoachAgent implements BaseAgent {
     const sellerData = JSON.stringify(state.sellerData, null, 2);
     const productLine = (state.metadata?.productLine || "ichef") as ProductLine;
 
+    // 【新增】檢查是否有競品資訊，並注入到 Prompt 中
+    let competitorContext = "";
+    const competitors = state.buyerData?.detected_competitors || [];
+
+    if (competitors.length > 0) {
+      console.log(
+        `[Agent 6] 注入 ${competitors.length} 個競品的知識庫參考資訊`
+      );
+
+      competitorContext = "\n\n## 競品知識庫參考資訊\n\n";
+      competitorContext +=
+        "以下是競品資料庫中的資訊，請參考這些資訊來評估業務的競品應對表現：\n\n";
+
+      for (const comp of competitors) {
+        if (comp.details) {
+          competitorContext += `### ${comp.name}\n\n`;
+          competitorContext += `**我方優勢**（相對於 ${comp.name}）：\n`;
+          comp.details.ourAdvantages
+            .slice(0, 5)
+            .forEach((adv) => {
+              competitorContext += `- ${adv}\n`;
+            });
+
+          competitorContext += `\n**建議話術**（針對 ${comp.name}）：\n`;
+          comp.details.counterTalkTracks
+            .slice(0, 3)
+            .forEach((track, idx) => {
+              competitorContext += `${idx + 1}. ${track}\n`;
+            });
+
+          competitorContext += "\n";
+        }
+      }
+    }
+
     const prompt =
       `${GLOBAL_CONTEXT_FOR_PRODUCT_LINE(productLine)}\n\n${AGENT6_PROMPT()}\n\n` +
+      `${competitorContext}` +
       `## Buyer Analysis:\n${buyerData}\n\n` +
       `## Seller Analysis:\n${sellerData}\n\n` +
       `## Meeting Transcript:\n${transcriptText}`;

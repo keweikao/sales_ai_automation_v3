@@ -691,6 +691,18 @@ export const analyzeConversation = protectedProcedure
           agent5?: Record<string, unknown>;
           agent6?: Record<string, unknown>;
         },
+        competitorAnalysis: analysisResult.competitorAnalysis as unknown as {
+          detectedCompetitors: Array<{
+            name: string;
+            customerQuote: string;
+            attitude: "positive" | "negative" | "neutral";
+            threatLevel: "high" | "medium" | "low";
+            ourAdvantages: string[];
+            suggestedTalkTracks: string[];
+          }>;
+          overallThreatLevel: "high" | "medium" | "low" | "none";
+          handlingScore?: number;
+        },
       })
       .returning();
 

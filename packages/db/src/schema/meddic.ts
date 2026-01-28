@@ -57,6 +57,20 @@ export const meddicAnalyses = pgTable("meddic_analyses", {
       }>
     >(),
 
+  // 【新增】競品分析結果
+  competitorAnalysis: jsonb("competitor_analysis").$type<{
+    detectedCompetitors: Array<{
+      name: string;
+      customerQuote: string;
+      attitude: "positive" | "negative" | "neutral";
+      threatLevel: "high" | "medium" | "low";
+      ourAdvantages: string[];
+      suggestedTalkTracks: string[];
+    }>;
+    overallThreatLevel: "high" | "medium" | "low" | "none";
+    handlingScore?: number; // 業務應對分數 (1-5)
+  }>(),
+
   // V2 Agent outputs (preserved for future analysis)
   agentOutputs: jsonb("agent_outputs").$type<{
     agent1?: Record<string, unknown>; // Context Agent
