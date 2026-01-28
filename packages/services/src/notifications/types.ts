@@ -52,6 +52,27 @@ export interface PDCMSpinAlerts {
 }
 
 /**
+ * 偵測到的競品
+ */
+export interface DetectedCompetitor {
+  name: string;
+  customerQuote: string;
+  attitude: "positive" | "negative" | "neutral";
+  threatLevel: "high" | "medium" | "low";
+  ourAdvantages: string[];
+  suggestedTalkTracks: string[];
+}
+
+/**
+ * 競品分析結果
+ */
+export interface CompetitorAnalysis {
+  detectedCompetitors: DetectedCompetitor[];
+  overallThreatLevel: "high" | "medium" | "low" | "none";
+  handlingScore?: number;
+}
+
+/**
  * MEDDIC 分析結果 (簡化版,用於通知)
  */
 export interface MEDDICAnalysisResult {
@@ -106,6 +127,9 @@ export interface MEDDICAnalysisResult {
 
   /** PDCM+SPIN 綜合警示 */
   pdcmSpinAlerts?: PDCMSpinAlerts;
+
+  /** 競品分析結果 */
+  competitorAnalysis?: CompetitorAnalysis;
 }
 
 /**

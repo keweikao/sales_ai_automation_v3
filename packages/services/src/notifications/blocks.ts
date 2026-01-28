@@ -281,6 +281,92 @@ export function buildProcessingCompletedBlocks(
   }
 
   // ==========================================
+  // Block: 競品分析 (新增)
+  // ==========================================
+  if (
+    analysisResult.competitorAnalysis &&
+    analysisResult.competitorAnalysis.detectedCompetitors.length > 0
+  ) {
+    const competitorAnalysis = analysisResult.competitorAnalysis;
+    blocks.push({ type: "divider" });
+
+    // 整體威脅等級
+    const threatEmoji = getCompetitorThreatEmoji(
+      competitorAnalysis.overallThreatLevel
+    );
+    const threatLabel = getCompetitorThreatLabel(
+      competitorAnalysis.overallThreatLevel
+    );
+
+    let headerText = `*🎯 競品分析*\n${threatEmoji} 整體威脅等級: *${threatLabel}*`;
+
+    // 業務應對評分
+    if (competitorAnalysis.handlingScore !== undefined) {
+      const scoreStars = getCompetitorScoreStars(
+        competitorAnalysis.handlingScore
+      );
+      headerText += `\n⭐ 業務應對評分: ${scoreStars} (${competitorAnalysis.handlingScore}/5)`;
+    }
+
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: headerText,
+      },
+    });
+
+    // 偵測到的競品 (最多顯示前 2 個)
+    for (const competitor of competitorAnalysis.detectedCompetitors.slice(
+      0,
+      2
+    )) {
+      const attitudeEmoji = getCompetitorAttitudeEmoji(competitor.attitude);
+      const competitorThreatEmoji = getCompetitorThreatEmoji(
+        competitor.threatLevel
+      );
+
+      let competitorText = `*${competitor.name}* | ${attitudeEmoji} ${getCompetitorAttitudeLabel(competitor.attitude)} | ${competitorThreatEmoji} ${getCompetitorThreatLabel(competitor.threatLevel)}\n`;
+      competitorText += `\n_客戶原話:_ 「${competitor.customerQuote}」`;
+
+      // 我方優勢 (最多顯示前 2 個)
+      if (competitor.ourAdvantages.length > 0) {
+        const advantages = competitor.ourAdvantages
+          .slice(0, 2)
+          .map((adv) => `✅ ${adv}`)
+          .join("\n");
+        competitorText += `\n\n*我方優勢:*\n${advantages}`;
+      }
+
+      // 建議話術 (只顯示第 1 個)
+      if (competitor.suggestedTalkTracks.length > 0) {
+        competitorText += `\n\n*💡 建議話術:*\n>${competitor.suggestedTalkTracks[0]}`;
+      }
+
+      blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: competitorText,
+        },
+      });
+    }
+
+    // 如果有超過 2 個競品，顯示提示
+    if (competitorAnalysis.detectedCompetitors.length > 2) {
+      blocks.push({
+        type: "context",
+        elements: [
+          {
+            type: "mrkdwn",
+            text: `_還有 ${competitorAnalysis.detectedCompetitors.length - 2} 個競品，請查看完整分析_`,
+          },
+        ],
+      });
+    }
+  }
+
+  // ==========================================
   // Block: 建議 SMS 跟進訊息
   // ==========================================
   if (analysisResult.smsText) {
@@ -504,4 +590,71 @@ function getStatusEmoji(status: string): string {
   };
 
   return statusMap[status.toLowerCase()] || "⚪";
+}
+
+/**
+ * 取得競品威脅等級對應的 emoji
+ */
+function getCompetitorThreatEmoji(
+  level: "high" | "medium" | "low" | "none"
+): string {
+  const emojiMap: Record<string, string> = {
+    high: "🔴",
+    medium: "🟡",
+    low: "🟢",
+    none: "⚪",
+  };
+  return emojiMap[level] || "❓";
+}
+
+/**
+ * 取得競品威脅等級對應的標籤
+ */
+function getCompetitorThreatLabel(
+  level: "high" | "medium" | "low" | "none"
+): string {
+  const labelMap: Record<string, string> = {
+    high: "高",
+    medium: "中",
+    low: "低",
+    none: "無",
+  };
+  return labelMap[level] || "未知";
+}
+
+/**
+ * 取得客戶態度對應的 emoji
+ */
+function getCompetitorAttitudeEmoji(
+  attitude: "positive" | "negative" | "neutral"
+): string {
+  const emojiMap: Record<string, string> = {
+    positive: "👍",
+    negative: "👎",
+    neutral: "😐",
+  };
+  return emojiMap[attitude] || "❓";
+}
+
+/**
+ * 取得客戶態度對應的標籤
+ */
+function getCompetitorAttitudeLabel(
+  attitude: "positive" | "negative" | "neutral"
+): string {
+  const labelMap: Record<string, string> = {
+    positive: "正面",
+    negative: "負面",
+    neutral: "中立",
+  };
+  return labelMap[attitude] || "未知";
+}
+
+/**
+ * 取得業務應對評分星星
+ */
+function getCompetitorScoreStars(score: number): string {
+  const fullStars = Math.floor(score);
+  const emptyStars = 5 - fullStars;
+  return "⭐".repeat(fullStars) + "☆".repeat(emptyStars);
 }
