@@ -2,11 +2,45 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Precision Dashboard Design System Fonts */
+@import "@fontsource/sora/400.css";
+@import "@fontsource/sora/500.css";
+@import "@fontsource/sora/600.css";
+@import "@fontsource/sora/700.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+@import "@fontsource/ibm-plex-mono/700.css";
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+
+  /* Precision Dashboard Design System */
+  /* Brand Accent - Teal */
+  --ds-accent: oklch(0.75 0.15 180);
+  --ds-accent-dark: oklch(0.65 0.15 180);
+  --ds-accent-glow: oklch(0.65 0.15 180 / 0.3);
+
+  /* Semantic Colors */
+  --ds-success: oklch(0.75 0.17 160);
+  --ds-success-glow: oklch(0.75 0.17 160 / 0.3);
+  --ds-danger: oklch(0.7 0.19 15);
+  --ds-danger-glow: oklch(0.7 0.19 15 / 0.3);
+  --ds-warning: oklch(0.8 0.16 85);
+  --ds-warning-glow: oklch(0.8 0.16 85 / 0.3);
+  --ds-info: oklch(0.75 0.14 230);
+  --ds-info-glow: oklch(0.75 0.14 230 / 0.3);
+
+  /* Ranking Colors */
+  --ds-rank-gold: oklch(0.8 0.15 85);
+  --ds-rank-gold-bg: oklch(0.8 0.15 85 / 0.15);
+  --ds-rank-silver: oklch(0.7 0.02 250);
+  --ds-rank-silver-bg: oklch(0.7 0.02 250 / 0.15);
+  --ds-rank-bronze: oklch(0.7 0.14 50);
+  --ds-rank-bronze-bg: oklch(0.7 0.14 50 / 0.15);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -125,4 +159,260 @@
   html {
     @apply font-sans;
   }
+}
+
+/* ============================================
+   Precision Dashboard Design System
+   ============================================ */
+
+/* Font Utilities */
+@utility font-display {
+  font-family: "Sora", sans-serif;
+}
+
+@utility font-data {
+  font-family: "IBM Plex Mono", monospace;
+}
+
+/* Animation Keyframes */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes progress-fill {
+  from {
+    width: 0%;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 0 0 20px var(--ds-accent-glow);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes number-tick {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  51% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Animation Utilities */
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+.animate-progress-fill {
+  animation: progress-fill 0.8s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(1 0 0 / 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Stagger Animation Delays */
+.stagger-1 {
+  animation-delay: 0.1s;
+}
+.stagger-2 {
+  animation-delay: 0.2s;
+}
+.stagger-3 {
+  animation-delay: 0.3s;
+}
+.stagger-4 {
+  animation-delay: 0.4s;
+}
+.stagger-5 {
+  animation-delay: 0.5s;
+}
+.stagger-6 {
+  animation-delay: 0.6s;
+}
+
+/* Dashboard Card Styles */
+.ds-card {
+  @apply relative overflow-hidden rounded-lg border border-border bg-card;
+  @apply transition-all duration-300 ease-out;
+}
+
+.ds-card:hover {
+  @apply -translate-y-1;
+  box-shadow:
+    0 0 30px var(--ds-accent-glow),
+    0 10px 20px oklch(0 0 0 / 0.2);
+}
+
+.ds-card-accent {
+  @apply before:absolute before:inset-y-0 before:left-0 before:w-1;
+  @apply before:bg-[var(--ds-accent)];
+}
+
+.ds-card-accent-success {
+  @apply before:bg-[var(--ds-success)];
+}
+
+.ds-card-accent-danger {
+  @apply before:bg-[var(--ds-danger)];
+}
+
+.ds-card-accent-warning {
+  @apply before:bg-[var(--ds-warning)];
+}
+
+/* Progress Bar Styles */
+.ds-progress {
+  @apply h-2 rounded-full bg-slate-700 overflow-hidden;
+}
+
+.ds-progress-fill {
+  @apply h-full rounded-full;
+  @apply bg-gradient-to-r from-[var(--ds-accent)] to-[var(--ds-accent-dark)];
+  box-shadow: 0 0 10px var(--ds-accent-glow);
+}
+
+/* Ranking Item Styles */
+.ds-rank-item {
+  @apply flex items-center justify-between p-3 rounded-lg;
+  @apply transition-all duration-200 ease-out;
+  @apply hover:translate-x-1 hover:bg-muted/50;
+}
+
+.ds-rank-gold {
+  background: linear-gradient(
+    135deg,
+    var(--ds-rank-gold-bg) 0%,
+    transparent 100%
+  );
+}
+
+.ds-rank-silver {
+  background: linear-gradient(
+    135deg,
+    var(--ds-rank-silver-bg) 0%,
+    transparent 100%
+  );
+}
+
+.ds-rank-bronze {
+  background: linear-gradient(
+    135deg,
+    var(--ds-rank-bronze-bg) 0%,
+    transparent 100%
+  );
+}
+
+.ds-rank-badge {
+  @apply flex items-center justify-center w-8 h-8 rounded-full font-data font-bold text-sm;
+}
+
+.ds-rank-badge-gold {
+  @apply bg-gradient-to-br from-yellow-400 to-amber-500 text-amber-900;
+}
+
+.ds-rank-badge-silver {
+  @apply bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800;
+}
+
+.ds-rank-badge-bronze {
+  @apply bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900;
+}
+
+.ds-rank-badge-default {
+  @apply bg-muted text-muted-foreground border border-border;
+}
+
+/* Badge Variants */
+.ds-badge-success {
+  @apply bg-[var(--ds-success-glow)] text-[var(--ds-success)] border border-[var(--ds-success)]/40;
+}
+
+.ds-badge-danger {
+  @apply bg-[var(--ds-danger-glow)] text-[var(--ds-danger)] border border-[var(--ds-danger)]/40;
+}
+
+.ds-badge-warning {
+  @apply bg-[var(--ds-warning-glow)] text-[var(--ds-warning)] border border-[var(--ds-warning)]/40;
+}
+
+/* Tabs Pill Style */
+.ds-tabs-list {
+  @apply inline-flex gap-1 p-1 rounded-full bg-muted;
+}
+
+.ds-tabs-trigger {
+  @apply px-4 py-2 rounded-full text-sm font-medium;
+  @apply text-muted-foreground transition-all duration-200;
+  @apply hover:text-foreground;
+}
+
+.ds-tabs-trigger[data-state="active"] {
+  @apply bg-[var(--ds-accent)] text-white;
+  box-shadow: 0 0 15px var(--ds-accent-glow);
+}
+
+/* Page Container */
+.ds-page {
+  @apply min-h-screen bg-background p-6 lg:p-8;
+}
+
+.ds-page-content {
+  @apply max-w-7xl mx-auto space-y-6;
+}
+
+/* Page Header */
+.ds-page-header {
+  @apply flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between;
+}
+
+.ds-page-title {
+  @apply font-display text-3xl font-bold tracking-tight;
+}
+
+.ds-page-subtitle {
+  @apply font-data text-sm text-muted-foreground;
 }

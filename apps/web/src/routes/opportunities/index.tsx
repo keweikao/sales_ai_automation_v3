@@ -1,6 +1,6 @@
 /**
  * Opportunities 列表頁面
- * 顯示所有機會並支援搜尋、篩選、分頁
+ * Precision Dashboard Design System
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,7 +18,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-
+import { ProgressBar } from "@/components/dashboard";
+import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -46,14 +47,24 @@ export const Route = createFileRoute("/opportunities/")({
   component: OpportunitiesPage,
 });
 
-function getScoreBarColor(score: number): string {
+function getScoreColor(score: number): "emerald" | "amber" | "rose" {
   if (score >= 70) {
-    return "bg-green-500";
+    return "emerald";
   }
   if (score >= 40) {
-    return "bg-yellow-500";
+    return "amber";
   }
-  return "bg-red-500";
+  return "rose";
+}
+
+function getScoreBadgeClass(score: number): string {
+  if (score >= 70) {
+    return "bg-emerald-500/20 text-emerald-400 ring-emerald-500/40";
+  }
+  if (score >= 40) {
+    return "bg-amber-500/20 text-amber-400 ring-amber-500/40";
+  }
+  return "bg-rose-500/20 text-rose-400 ring-rose-500/40";
 }
 
 function OpportunitiesPage() {
@@ -112,245 +123,307 @@ function OpportunitiesPage() {
   };
 
   return (
-    <main className="container mx-auto space-y-6 p-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-bold text-3xl tracking-tight">機會管理</h1>
-          <p className="text-muted-foreground">管理所有銷售機會和客戶資料</p>
-        </div>
-        <Button onClick={() => navigate({ to: "/opportunities/new" })}>
-          <Plus className="mr-2 h-4 w-4" />
-          新增機會
-        </Button>
-      </div>
+    <main className="ds-page">
+      <div className="ds-page-content">
+        {/* Page Header */}
+        <PageHeader
+          className="animate-fade-in-up opacity-0"
+          style={{ animationDelay: "0ms", animationFillMode: "forwards" }}
+          subtitle="管理所有銷售機會和客戶資料"
+          title="機會管理"
+        >
+          <Button
+            className="bg-[var(--ds-accent)] text-white shadow-lg shadow-teal-500/20 transition-all hover:bg-[var(--ds-accent-dark)] hover:shadow-teal-500/30"
+            onClick={() => navigate({ to: "/opportunities/new" })}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            新增機會
+          </Button>
+        </PageHeader>
 
-      {/* Filters */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 sm:max-w-sm">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(0);
-            }}
-            placeholder="搜尋公司、聯絡人..."
-            value={search}
-          />
+        {/* Search Bar */}
+        <div
+          className="animate-fade-in-up opacity-0"
+          style={{ animationDelay: "100ms", animationFillMode: "forwards" }}
+        >
+          <div className="relative max-w-md">
+            <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              className="h-11 rounded-full border-transparent bg-muted/50 pl-11 transition-all focus:border-[var(--ds-accent)] focus:ring-2 focus:ring-[var(--ds-accent-glow)]"
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(0);
+              }}
+              placeholder="搜尋公司、聯絡人..."
+              value={search}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Table */}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>
-                <div className="flex items-center gap-2">
-                  <Building2 className="h-4 w-4" />
-                  公司名稱
-                </div>
-              </TableHead>
-              <TableHead>案件編號</TableHead>
-              <TableHead>客戶編號</TableHead>
-              <TableHead>聯絡人</TableHead>
-              <TableHead>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
-                  <TermTooltip termKey="spinScore">SPIN</TermTooltip>
-                </div>
-              </TableHead>
-              <TableHead>
-                <TermTooltip termKey="pdcmScore">PDCM</TermTooltip>
-              </TableHead>
-              <TableHead>上次更新</TableHead>
-              <TableHead className="w-[50px]" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <Skeleton className="h-4 w-32" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-28" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-20" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-6 w-12" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-4 w-24" />
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton className="h-8 w-8" />
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : opportunities.length > 0 ? (
-              opportunities.map((opportunity) => (
-                <TableRow
-                  className="cursor-pointer"
-                  key={opportunity.id}
-                  onClick={() => handleView(opportunity.id)}
-                >
-                  <TableCell className="font-medium">
-                    {opportunity.companyName}
-                  </TableCell>
-                  <TableCell className="font-mono text-muted-foreground text-sm">
-                    {opportunity.latestCaseNumber || "-"}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {opportunity.customerNumber}
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div>{opportunity.contactName || "-"}</div>
-                      {opportunity.contactEmail && (
-                        <div className="flex items-center gap-1 text-muted-foreground text-xs">
-                          <Mail className="h-3 w-3" />
-                          {opportunity.contactEmail}
+        {/* Table */}
+        <div
+          className="ds-card animate-fade-in-up opacity-0"
+          style={{ animationDelay: "200ms", animationFillMode: "forwards" }}
+        >
+          <Table>
+            <TableHeader>
+              <TableRow className="border-border/50 hover:bg-transparent">
+                <TableHead className="font-data font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-[var(--ds-accent)]" />
+                    公司名稱
+                  </div>
+                </TableHead>
+                <TableHead className="font-data font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                  案件編號
+                </TableHead>
+                <TableHead className="font-data font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                  客戶編號
+                </TableHead>
+                <TableHead className="font-data font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                  聯絡人
+                </TableHead>
+                <TableHead className="font-data font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-[var(--ds-accent)]" />
+                    <TermTooltip termKey="spinScore">SPIN</TermTooltip>
+                  </div>
+                </TableHead>
+                <TableHead className="font-data font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                  <TermTooltip termKey="pdcmScore">PDCM</TermTooltip>
+                </TableHead>
+                <TableHead className="font-data font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                  上次更新
+                </TableHead>
+                <TableHead className="w-[50px]" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow className="border-border/30" key={i}>
+                    <TableCell>
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-28" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-12" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-8 w-8" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : opportunities.length > 0 ? (
+                opportunities.map((opportunity, index) => (
+                  <TableRow
+                    className={cn(
+                      "cursor-pointer border-border/30 transition-all duration-200",
+                      "hover:translate-x-1 hover:bg-[var(--ds-accent-glow)]",
+                      index % 2 === 0 ? "bg-transparent" : "bg-muted/30"
+                    )}
+                    key={opportunity.id}
+                    onClick={() => handleView(opportunity.id)}
+                  >
+                    <TableCell className="font-display font-medium">
+                      {opportunity.companyName}
+                    </TableCell>
+                    <TableCell className="font-data text-muted-foreground text-sm">
+                      {opportunity.latestCaseNumber || "-"}
+                    </TableCell>
+                    <TableCell className="font-data text-muted-foreground text-sm">
+                      {opportunity.customerNumber}
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="font-medium">
+                          {opportunity.contactName || "-"}
                         </div>
-                      )}
-                      {opportunity.contactPhone && (
-                        <div className="flex items-center gap-1 text-muted-foreground text-xs">
-                          <Phone className="h-3 w-3" />
-                          {opportunity.contactPhone}
+                        {opportunity.contactEmail && (
+                          <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                            <Mail className="h-3 w-3" />
+                            <span className="font-data">
+                              {opportunity.contactEmail}
+                            </span>
+                          </div>
+                        )}
+                        {opportunity.contactPhone && (
+                          <div className="flex items-center gap-1 text-muted-foreground text-xs">
+                            <Phone className="h-3 w-3" />
+                            <span className="font-data">
+                              {opportunity.contactPhone}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {opportunity.spinScore !== null ? (
+                        <div className="flex items-center gap-3">
+                          <div className="w-16">
+                            <ProgressBar
+                              animated={false}
+                              color={getScoreColor(opportunity.spinScore)}
+                              size="sm"
+                              value={opportunity.spinScore}
+                            />
+                          </div>
+                          <span className="font-data font-semibold text-[var(--ds-accent)] text-sm">
+                            {opportunity.spinScore}%
+                          </span>
                         </div>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
                       )}
+                    </TableCell>
+                    <TableCell>
+                      {opportunity.meddicScore ? (
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={cn(
+                              "inline-flex h-7 w-7 items-center justify-center rounded-full font-bold font-data text-xs ring-1",
+                              getScoreBadgeClass(
+                                opportunity.meddicScore.overall
+                              )
+                            )}
+                          >
+                            P
+                          </span>
+                          <span className="font-data font-semibold">
+                            {opportunity.meddicScore.overall}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-data text-muted-foreground text-sm">
+                      {new Intl.DateTimeFormat("zh-TW", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      }).format(new Date(opportunity.updatedAt))}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg p-0 transition-colors hover:bg-muted"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <span className="sr-only">開啟選單</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                          <DropdownMenuLabel className="font-data text-xs uppercase tracking-wider">
+                            操作
+                          </DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleView(opportunity.id);
+                            }}
+                          >
+                            查看詳情
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-[var(--ds-danger)] focus:bg-[var(--ds-danger-glow)] focus:text-[var(--ds-danger)]"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(opportunity.id);
+                            }}
+                          >
+                            刪除
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell className="h-32 text-center" colSpan={8}>
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <Building2 className="h-10 w-10 opacity-30" />
+                      <p className="font-display">沒有找到資料</p>
+                      <p className="text-sm">嘗試調整搜尋條件</p>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    {opportunity.spinScore !== null ? (
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-16 rounded-full bg-gray-200 dark:bg-gray-700">
-                          <div
-                            className={cn(
-                              "h-full rounded-full",
-                              getScoreBarColor(opportunity.spinScore)
-                            )}
-                            style={{
-                              width: `${opportunity.spinScore}%`,
-                            }}
-                          />
-                        </div>
-                        <span className="font-medium text-sm">
-                          {opportunity.spinScore}%
-                        </span>
-                      </div>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {opportunity.meddicScore ? (
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={cn(
-                            "inline-flex h-6 w-6 items-center justify-center rounded-full font-bold text-white text-xs",
-                            getScoreBarColor(opportunity.meddicScore.overall)
-                          )}
-                        >
-                          P
-                        </span>
-                        <span className="font-medium">
-                          {opportunity.meddicScore.overall}
-                        </span>
-                      </div>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {new Intl.DateTimeFormat("zh-TW", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    }).format(new Date(opportunity.updatedAt))}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-md p-0 hover:bg-muted"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <span className="sr-only">開啟選單</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>操作</DropdownMenuLabel>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleView(opportunity.id);
-                          }}
-                        >
-                          查看詳情
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-red-600 focus:text-red-600"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(opportunity.id);
-                          }}
-                        >
-                          刪除
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell className="h-24 text-center" colSpan={7}>
-                  沒有找到資料
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <div className="text-muted-foreground text-sm">
-          共 {totalCount} 筆資料
+              )}
+            </TableBody>
+          </Table>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            disabled={page === 0}
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            size="sm"
-            variant="outline"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            上一頁
-          </Button>
-          <div className="text-sm">
-            第 {page + 1} / {Math.max(1, totalPages)} 頁
+
+        {/* Pagination */}
+        <div
+          className="flex animate-fade-in-up items-center justify-between opacity-0"
+          style={{ animationDelay: "300ms", animationFillMode: "forwards" }}
+        >
+          <div className="font-data text-muted-foreground text-sm">
+            共{" "}
+            <span className="font-semibold text-foreground">{totalCount}</span>{" "}
+            筆資料
           </div>
-          <Button
-            disabled={page >= totalPages - 1}
-            onClick={() => setPage((p) => p + 1)}
-            size="sm"
-            variant="outline"
-          >
-            下一頁
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              className="rounded-full px-4 disabled:opacity-30"
+              disabled={page === 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              size="sm"
+              variant="outline"
+            >
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              上一頁
+            </Button>
+            <div className="flex items-center gap-2">
+              {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+                const pageNum =
+                  Math.max(0, Math.min(page - 2, totalPages - 5)) + i;
+                if (pageNum >= totalPages) {
+                  return null;
+                }
+                return (
+                  <button
+                    className={cn(
+                      "h-8 w-8 rounded-full font-data text-sm transition-all",
+                      pageNum === page
+                        ? "bg-[var(--ds-accent)] text-white shadow-lg shadow-teal-500/30"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                    key={pageNum}
+                    onClick={() => setPage(pageNum)}
+                  >
+                    {pageNum + 1}
+                  </button>
+                );
+              })}
+            </div>
+            <Button
+              className="rounded-full px-4 disabled:opacity-30"
+              disabled={page >= totalPages - 1}
+              onClick={() => setPage((p) => p + 1)}
+              size="sm"
+              variant="outline"
+            >
+              下一頁
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </main>

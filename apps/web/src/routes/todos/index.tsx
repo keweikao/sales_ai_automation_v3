@@ -1,5 +1,6 @@
 /**
  * 個人待辦頁面 - Sales Pipeline
+ * Precision Dashboard Design System
  * 顯示個人待辦事項，支援日曆選擇日期、完成、改期、成交、拒絕操作
  */
 
@@ -37,9 +38,9 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { PageHeader } from "@/components/layout/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogClose,
@@ -159,70 +160,79 @@ function MiniCalendar({
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <Button onClick={prevMonth} size="icon" variant="ghost">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <CardTitle className="text-base">
-            {format(currentMonth, "yyyy年 M月", { locale: zhTW })}
-          </CardTitle>
-          <Button onClick={nextMonth} size="icon" variant="ghost">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="px-2 pb-3">
-        {/* Week day headers */}
-        <div className="mb-1 grid grid-cols-7 gap-1">
-          {weekDays.map((day) => (
-            <div
-              className="py-1 text-center text-muted-foreground text-xs"
-              key={day}
-            >
-              {day}
-            </div>
-          ))}
-        </div>
-        {/* Calendar days */}
-        <div className="grid grid-cols-7 gap-1">
-          {days.map((day) => {
-            const dateKey = format(day, "yyyy-MM-dd");
-            const todoCount = todoCounts?.[dateKey] || 0;
-            const isSelected = isSameDay(day, selectedDate);
-            const isCurrentMonth = isSameMonth(day, currentMonth);
-            const isTodayDate = isToday(day);
+    <div className="ds-card p-4">
+      {/* Header */}
+      <div className="mb-4 flex items-center justify-between">
+        <Button
+          className="h-8 w-8 p-0 text-muted-foreground hover:bg-muted hover:text-foreground"
+          onClick={prevMonth}
+          variant="ghost"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <h3 className="font-display font-semibold text-base">
+          {format(currentMonth, "yyyy年 M月", { locale: zhTW })}
+        </h3>
+        <Button
+          className="h-8 w-8 p-0 text-muted-foreground hover:bg-muted hover:text-foreground"
+          onClick={nextMonth}
+          variant="ghost"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
 
-            return (
-              <button
-                className={cn(
-                  "relative flex h-9 w-full flex-col items-center justify-center rounded-md text-sm transition-colors",
-                  "hover:bg-accent hover:text-accent-foreground",
-                  !isCurrentMonth && "text-muted-foreground/50",
-                  isSelected &&
-                    "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
-                  isTodayDate && !isSelected && "border border-primary"
-                )}
-                key={day.toISOString()}
-                onClick={() => onSelectDate(day)}
-                type="button"
-              >
-                <span>{format(day, "d")}</span>
-                {todoCount > 0 && (
-                  <span
-                    className={cn(
-                      "absolute bottom-0.5 h-1.5 w-1.5 rounded-full",
-                      isSelected ? "bg-primary-foreground" : "bg-primary"
-                    )}
-                  />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+      {/* Week day headers */}
+      <div className="mb-2 grid grid-cols-7 gap-1">
+        {weekDays.map((day) => (
+          <div
+            className="py-1 text-center font-data text-muted-foreground text-xs"
+            key={day}
+          >
+            {day}
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar days */}
+      <div className="grid grid-cols-7 gap-1">
+        {days.map((day) => {
+          const dateKey = format(day, "yyyy-MM-dd");
+          const todoCount = todoCounts?.[dateKey] || 0;
+          const isSelected = isSameDay(day, selectedDate);
+          const isCurrentMonth = isSameMonth(day, currentMonth);
+          const isTodayDate = isToday(day);
+
+          return (
+            <button
+              className={cn(
+                "relative flex h-9 w-full flex-col items-center justify-center rounded-lg font-data text-sm transition-all",
+                "hover:bg-muted",
+                !isCurrentMonth && "text-muted-foreground/40",
+                isSelected &&
+                  "bg-[var(--ds-accent)] text-white hover:bg-[var(--ds-accent)]",
+                isTodayDate &&
+                  !isSelected &&
+                  "ring-1 ring-[var(--ds-accent)] ring-offset-1 ring-offset-background"
+              )}
+              key={day.toISOString()}
+              onClick={() => onSelectDate(day)}
+              type="button"
+            >
+              <span>{format(day, "d")}</span>
+              {todoCount > 0 && (
+                <span
+                  className={cn(
+                    "absolute bottom-0.5 h-1.5 w-1.5 rounded-full",
+                    isSelected ? "bg-white" : "bg-[var(--ds-accent)]"
+                  )}
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -284,10 +294,12 @@ function CompleteAndNextDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md border-border bg-card">
         <DialogHeader>
-          <DialogTitle>完成待辦並建立下一步</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="font-display">
+            完成待辦並建立下一步
+          </DialogTitle>
+          <DialogDescription className="font-data text-sm">
             {todo?.opportunity &&
               `[${todo.opportunity.customerNumber} ${todo.opportunity.companyName}] `}
             {todo?.title}
@@ -295,8 +307,11 @@ function CompleteAndNextDialog({
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="result">執行結果</Label>
+            <Label className="font-display text-sm" htmlFor="result">
+              執行結果
+            </Label>
             <Textarea
+              className="border-border bg-muted/50 focus:border-[var(--ds-accent)] focus:ring-[var(--ds-accent-glow)]"
               id="result"
               onChange={(e) => setResult(e.target.value)}
               placeholder="請描述執行結果..."
@@ -304,12 +319,15 @@ function CompleteAndNextDialog({
               value={result}
             />
           </div>
-          <div className="border-t pt-4">
-            <p className="mb-3 font-medium text-sm">下一個待辦</p>
+          <div className="border-border border-t pt-4">
+            <p className="mb-3 font-display font-medium text-sm">下一個待辦</p>
             <div className="space-y-3">
               <div className="space-y-2">
-                <Label htmlFor="nextTitle">標題</Label>
+                <Label className="font-display text-sm" htmlFor="nextTitle">
+                  標題
+                </Label>
                 <Input
+                  className="border-border bg-muted/50 focus:border-[var(--ds-accent)] focus:ring-[var(--ds-accent-glow)]"
                   id="nextTitle"
                   onChange={(e) => setNextTitle(e.target.value)}
                   placeholder="下一個待辦標題..."
@@ -317,12 +335,17 @@ function CompleteAndNextDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="nextDays">幾天後執行</Label>
+                <Label className="font-display text-sm" htmlFor="nextDays">
+                  幾天後執行
+                </Label>
                 <Select onValueChange={setNextDays} value={nextDays}>
-                  <SelectTrigger id="nextDays">
+                  <SelectTrigger
+                    className="border-border bg-muted/50"
+                    id="nextDays"
+                  >
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="border-border bg-card">
                     <SelectItem value="1">1 天後</SelectItem>
                     <SelectItem value="2">2 天後</SelectItem>
                     <SelectItem value="3">3 天後</SelectItem>
@@ -334,8 +357,14 @@ function CompleteAndNextDialog({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="nextDescription">描述（選填）</Label>
+                <Label
+                  className="font-display text-sm"
+                  htmlFor="nextDescription"
+                >
+                  描述（選填）
+                </Label>
                 <Textarea
+                  className="border-border bg-muted/50 focus:border-[var(--ds-accent)] focus:ring-[var(--ds-accent-glow)]"
                   id="nextDescription"
                   onChange={(e) => setNextDescription(e.target.value)}
                   placeholder="待辦描述..."
@@ -348,9 +377,15 @@ function CompleteAndNextDialog({
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">取消</Button>
+            <Button
+              className="border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+              variant="outline"
+            >
+              取消
+            </Button>
           </DialogClose>
           <Button
+            className="bg-[var(--ds-accent)] text-white hover:bg-[var(--ds-accent-dark)]"
             disabled={!(result.trim() && nextTitle.trim()) || isLoading}
             onClick={handleComplete}
           >
@@ -398,10 +433,10 @@ function PostponeDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent>
+      <DialogContent className="border-border bg-card">
         <DialogHeader>
-          <DialogTitle>改期待辦</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="font-display">改期待辦</DialogTitle>
+          <DialogDescription className="font-data text-sm">
             {todo?.opportunity &&
               `[${todo.opportunity.customerNumber} ${todo.opportunity.companyName}] `}
             {todo?.title}
@@ -409,8 +444,11 @@ function PostponeDialog({
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="newDate">新日期</Label>
+            <Label className="font-display text-sm" htmlFor="newDate">
+              新日期
+            </Label>
             <Input
+              className="border-border bg-muted/50 font-data focus:border-[var(--ds-accent)] focus:ring-[var(--ds-accent-glow)]"
               id="newDate"
               min={minDate}
               onChange={(e) => setNewDate(e.target.value)}
@@ -419,8 +457,11 @@ function PostponeDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="reason">改期原因（選填）</Label>
+            <Label className="font-display text-sm" htmlFor="reason">
+              改期原因（選填）
+            </Label>
             <Textarea
+              className="border-border bg-muted/50 focus:border-[var(--ds-accent)] focus:ring-[var(--ds-accent-glow)]"
               id="reason"
               onChange={(e) => setReason(e.target.value)}
               placeholder="請說明改期原因..."
@@ -431,9 +472,18 @@ function PostponeDialog({
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">取消</Button>
+            <Button
+              className="border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+              variant="outline"
+            >
+              取消
+            </Button>
           </DialogClose>
-          <Button disabled={!newDate || isLoading} onClick={handlePostpone}>
+          <Button
+            className="bg-[var(--ds-accent)] text-white hover:bg-[var(--ds-accent-dark)]"
+            disabled={!newDate || isLoading}
+            onClick={handlePostpone}
+          >
             {isLoading ? "處理中..." : "確認改期"}
           </Button>
         </DialogFooter>
@@ -484,10 +534,13 @@ function WinDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent>
+      <DialogContent className="border-border bg-card">
         <DialogHeader>
-          <DialogTitle>恭喜成交</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="flex items-center gap-2 font-display">
+            <Trophy className="h-5 w-5 text-amber-400" />
+            恭喜成交
+          </DialogTitle>
+          <DialogDescription className="font-data text-sm">
             {todo?.opportunity &&
               `[${todo.opportunity.customerNumber} ${todo.opportunity.companyName}] `}
             {todo?.title}
@@ -495,8 +548,11 @@ function WinDialog({
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="paymentDate">預計付款日期（選填）</Label>
+            <Label className="font-display text-sm" htmlFor="paymentDate">
+              預計付款日期（選填）
+            </Label>
             <Input
+              className="border-border bg-muted/50 font-data focus:border-[var(--ds-accent)] focus:ring-[var(--ds-accent-glow)]"
               id="paymentDate"
               onChange={(e) => setPaymentDate(e.target.value)}
               type="date"
@@ -504,8 +560,11 @@ function WinDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="amount">成交金額（選填）</Label>
+            <Label className="font-display text-sm" htmlFor="amount">
+              成交金額（選填）
+            </Label>
             <Input
+              className="border-border bg-muted/50 font-data focus:border-[var(--ds-accent)] focus:ring-[var(--ds-accent-glow)]"
               id="amount"
               onChange={(e) => setAmount(e.target.value)}
               placeholder="例如：50000"
@@ -514,8 +573,11 @@ function WinDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="winNote">備註（選填）</Label>
+            <Label className="font-display text-sm" htmlFor="winNote">
+              備註（選填）
+            </Label>
             <Textarea
+              className="border-border bg-muted/50 focus:border-[var(--ds-accent)] focus:ring-[var(--ds-accent-glow)]"
               id="winNote"
               onChange={(e) => setNote(e.target.value)}
               placeholder="成交備註..."
@@ -526,10 +588,15 @@ function WinDialog({
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">取消</Button>
+            <Button
+              className="border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+              variant="outline"
+            >
+              取消
+            </Button>
           </DialogClose>
           <Button
-            className="bg-yellow-500 hover:bg-yellow-600"
+            className="bg-gradient-to-r from-amber-500 to-yellow-500 text-amber-900 hover:from-amber-600 hover:to-yellow-600"
             disabled={isLoading}
             onClick={handleWin}
           >
@@ -583,10 +650,13 @@ function LoseDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent>
+      <DialogContent className="border-border bg-card">
         <DialogHeader>
-          <DialogTitle>記錄拒絕</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="flex items-center gap-2 font-display">
+            <UserX className="h-5 w-5 text-slate-400" />
+            記錄拒絕
+          </DialogTitle>
+          <DialogDescription className="font-data text-sm">
             {todo?.opportunity &&
               `[${todo.opportunity.customerNumber} ${todo.opportunity.companyName}] `}
             {todo?.title}
@@ -594,8 +664,11 @@ function LoseDialog({
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="loseReason">拒絕原因</Label>
+            <Label className="font-display text-sm" htmlFor="loseReason">
+              拒絕原因
+            </Label>
             <Textarea
+              className="border-border bg-muted/50 focus:border-[var(--ds-accent)] focus:ring-[var(--ds-accent-glow)]"
               id="loseReason"
               onChange={(e) => setReason(e.target.value)}
               placeholder="例如：預算不足、選擇競品、暫無需求..."
@@ -604,8 +677,11 @@ function LoseDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="competitor">競品（選填）</Label>
+            <Label className="font-display text-sm" htmlFor="competitor">
+              競品（選填）
+            </Label>
             <Input
+              className="border-border bg-muted/50 focus:border-[var(--ds-accent)] focus:ring-[var(--ds-accent-glow)]"
               id="competitor"
               onChange={(e) => setCompetitor(e.target.value)}
               placeholder="若客戶選擇競品，請填寫"
@@ -613,8 +689,11 @@ function LoseDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="loseNote">備註（選填）</Label>
+            <Label className="font-display text-sm" htmlFor="loseNote">
+              備註（選填）
+            </Label>
             <Textarea
+              className="border-border bg-muted/50 focus:border-[var(--ds-accent)] focus:ring-[var(--ds-accent-glow)]"
               id="loseNote"
               onChange={(e) => setNote(e.target.value)}
               placeholder="其他備註..."
@@ -625,12 +704,17 @@ function LoseDialog({
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">取消</Button>
+            <Button
+              className="border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+              variant="outline"
+            >
+              取消
+            </Button>
           </DialogClose>
           <Button
+            className="bg-slate-600 text-white hover:bg-slate-700"
             disabled={!reason.trim() || isLoading}
             onClick={handleLose}
-            variant="secondary"
           >
             {isLoading ? "處理中..." : "確認記錄"}
           </Button>
@@ -691,15 +775,23 @@ function CreateDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent>
+      <DialogContent className="border-border bg-card">
         <DialogHeader>
-          <DialogTitle>建立待辦</DialogTitle>
-          <DialogDescription>新增一個待辦事項</DialogDescription>
+          <DialogTitle className="flex items-center gap-2 font-display">
+            <Plus className="h-5 w-5 text-[var(--ds-accent)]" />
+            建立待辦
+          </DialogTitle>
+          <DialogDescription className="font-data text-sm">
+            新增一個待辦事項
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="createTitle">標題</Label>
+            <Label className="font-display text-sm" htmlFor="createTitle">
+              標題
+            </Label>
             <Input
+              className="border-border bg-muted/50 focus:border-[var(--ds-accent)] focus:ring-[var(--ds-accent-glow)]"
               id="createTitle"
               onChange={(e) => setTitle(e.target.value)}
               placeholder="請輸入待辦標題..."
@@ -707,8 +799,11 @@ function CreateDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="createDescription">描述（選填）</Label>
+            <Label className="font-display text-sm" htmlFor="createDescription">
+              描述（選填）
+            </Label>
             <Textarea
+              className="border-border bg-muted/50 focus:border-[var(--ds-accent)] focus:ring-[var(--ds-accent-glow)]"
               id="createDescription"
               onChange={(e) => setDescription(e.target.value)}
               placeholder="請輸入詳細描述..."
@@ -717,8 +812,11 @@ function CreateDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="createDueDate">到期日</Label>
+            <Label className="font-display text-sm" htmlFor="createDueDate">
+              到期日
+            </Label>
             <Input
+              className="border-border bg-muted/50 font-data focus:border-[var(--ds-accent)] focus:ring-[var(--ds-accent-glow)]"
               id="createDueDate"
               min={minDate}
               onChange={(e) => setDueDate(e.target.value)}
@@ -727,12 +825,17 @@ function CreateDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="createOpportunity">關聯機會（選填）</Label>
+            <Label className="font-display text-sm" htmlFor="createOpportunity">
+              關聯機會（選填）
+            </Label>
             <Select onValueChange={setOpportunityId} value={opportunityId}>
-              <SelectTrigger id="createOpportunity">
+              <SelectTrigger
+                className="border-border bg-muted/50"
+                id="createOpportunity"
+              >
                 <SelectValue placeholder="選擇機會" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="border-border bg-card">
                 <SelectItem value="">不關聯機會</SelectItem>
                 {opportunities.map((opp) => (
                   <SelectItem key={opp.id} value={opp.id}>
@@ -745,9 +848,15 @@ function CreateDialog({
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">取消</Button>
+            <Button
+              className="border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+              variant="outline"
+            >
+              取消
+            </Button>
           </DialogClose>
           <Button
+            className="bg-[var(--ds-accent)] text-white hover:bg-[var(--ds-accent-dark)]"
             disabled={!(title.trim() && dueDate) || isLoading}
             onClick={handleCreate}
           >
@@ -769,6 +878,7 @@ interface TodoItemProps {
   onPostpone: (todo: Todo) => void;
   onWin: (todo: Todo) => void;
   onLose: (todo: Todo) => void;
+  animationDelay?: number;
 }
 
 function TodoItem({
@@ -777,6 +887,7 @@ function TodoItem({
   onPostpone,
   onWin,
   onLose,
+  animationDelay = 0,
 }: TodoItemProps) {
   const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
   const dueDate = new Date(todo.dueDate);
@@ -790,11 +901,34 @@ function TodoItem({
   const isWon = todo.status === "won";
   const isLost = todo.status === "lost";
 
-  // 狀態標籤顏色
+  // 狀態色彩條 class
+  const getAccentClass = () => {
+    if (isOverdue) {
+      return "before:bg-rose-500 dark:before:bg-rose-400 before:shadow-[0_0_8px_var(--ds-danger-glow)]";
+    }
+    if (isTodayDue) {
+      return "before:bg-amber-500 dark:before:bg-amber-400 before:shadow-[0_0_8px_var(--ds-warning-glow)]";
+    }
+    if (isPending) {
+      return "before:bg-sky-500 dark:before:bg-sky-400 before:shadow-[0_0_8px_var(--ds-info-glow)]";
+    }
+    if (isCompleted) {
+      return "before:bg-emerald-500 dark:before:bg-emerald-400 before:shadow-[0_0_8px_var(--ds-success-glow)]";
+    }
+    if (isWon) {
+      return "before:bg-gradient-to-b before:from-amber-400 before:to-yellow-500";
+    }
+    if (isLost) {
+      return "before:bg-slate-500 dark:before:bg-slate-400";
+    }
+    return "";
+  };
+
+  // 狀態標籤
   const getStatusBadge = () => {
     if (isOverdue) {
       return (
-        <Badge className="shrink-0 bg-red-500">
+        <Badge className="shrink-0 rounded-full border-rose-500/40 bg-rose-500/20 font-data text-rose-500 dark:text-rose-400">
           <AlertCircle className="mr-1 h-3 w-3" />
           逾期
         </Badge>
@@ -802,7 +936,7 @@ function TodoItem({
     }
     if (isTodayDue) {
       return (
-        <Badge className="shrink-0 bg-orange-500">
+        <Badge className="shrink-0 rounded-full border-amber-500/40 bg-amber-500/20 font-data text-amber-600 dark:text-amber-400">
           <Clock className="mr-1 h-3 w-3" />
           今日
         </Badge>
@@ -810,7 +944,7 @@ function TodoItem({
     }
     if (isPending) {
       return (
-        <Badge className="shrink-0 bg-blue-500">
+        <Badge className="shrink-0 rounded-full border-sky-500/40 bg-sky-500/20 font-data text-sky-600 dark:text-sky-400">
           <Clock className="mr-1 h-3 w-3" />
           待辦
         </Badge>
@@ -818,7 +952,7 @@ function TodoItem({
     }
     if (isCompleted) {
       return (
-        <Badge className="shrink-0 bg-green-500">
+        <Badge className="shrink-0 rounded-full border-emerald-500/40 bg-emerald-500/20 font-data text-emerald-600 dark:text-emerald-400">
           <CheckCircle className="mr-1 h-3 w-3" />
           已完成
         </Badge>
@@ -826,7 +960,7 @@ function TodoItem({
     }
     if (isWon) {
       return (
-        <Badge className="shrink-0 bg-yellow-500">
+        <Badge className="shrink-0 rounded-full border-amber-500/40 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 font-data text-amber-600 dark:text-amber-400">
           <Trophy className="mr-1 h-3 w-3" />
           已成交
         </Badge>
@@ -834,7 +968,7 @@ function TodoItem({
     }
     if (isLost) {
       return (
-        <Badge className="shrink-0 bg-gray-500">
+        <Badge className="shrink-0 rounded-full border-slate-500/40 bg-slate-500/20 font-data text-slate-500 dark:text-slate-400">
           <UserX className="mr-1 h-3 w-3" />
           已拒絕
         </Badge>
@@ -844,30 +978,29 @@ function TodoItem({
   };
 
   return (
-    <Card
+    <div
       className={cn(
-        isOverdue &&
-          "border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950",
-        isTodayDue &&
-          !isOverdue &&
-          "border-orange-300 bg-orange-50 dark:border-orange-800 dark:bg-orange-950",
-        isCompleted &&
-          "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950",
-        isWon &&
-          "border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950",
-        isLost &&
-          "border-gray-200 bg-gray-50 opacity-70 dark:border-gray-700 dark:bg-gray-900"
+        "ds-card relative pl-4 transition-all duration-300 hover:translate-x-1",
+        "before:absolute before:inset-y-0 before:left-0 before:w-1 before:rounded-l-lg",
+        "animate-fade-in-up opacity-0",
+        getAccentClass(),
+        isLost && "opacity-70"
       )}
+      style={{
+        animationDelay: `${animationDelay}ms`,
+        animationFillMode: "forwards",
+      }}
     >
-      <CardContent className="p-4">
+      <div className="p-4">
         <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1 space-y-1">
+          <div className="min-w-0 flex-1 space-y-2">
+            {/* Title and Status */}
             <div className="flex items-center gap-2">
               {getStatusBadge()}
               <h3
                 className={cn(
-                  "truncate font-medium",
-                  isLost && "text-gray-500"
+                  "truncate font-display font-medium",
+                  isLost && "text-muted-foreground"
                 )}
               >
                 {todo.title}
@@ -875,10 +1008,10 @@ function TodoItem({
             </div>
 
             {/* 關聯資訊 - 客戶編號和公司名稱 */}
-            <div className="text-muted-foreground text-sm">
+            <div className="font-data text-muted-foreground text-sm">
               {todo.opportunity && (
                 <Link
-                  className="hover:text-primary hover:underline"
+                  className="transition-colors hover:text-[var(--ds-accent)] hover:underline"
                   onClick={(e) => e.stopPropagation()}
                   params={{ id: todo.opportunity.id }}
                   to="/opportunities/$id"
@@ -901,11 +1034,13 @@ function TodoItem({
 
             {/* 完成記錄 */}
             {isCompleted && todo.completionRecord && (
-              <div className="mt-2 rounded bg-green-100 p-2 text-green-800 text-sm dark:bg-green-900 dark:text-green-200">
-                <strong>結果：</strong>
-                {todo.completionRecord.result}
+              <div className="mt-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2 text-emerald-700 text-sm dark:text-emerald-300">
+                <strong className="font-display">結果：</strong>
+                <span className="font-data">
+                  {todo.completionRecord.result}
+                </span>
                 {todo.nextTodoId && (
-                  <span className="ml-2 text-green-600 dark:text-green-400">
+                  <span className="ml-2 text-emerald-500">
                     已建立下一個待辦
                   </span>
                 )}
@@ -914,10 +1049,10 @@ function TodoItem({
 
             {/* 成交記錄 */}
             {isWon && todo.wonRecord && (
-              <div className="mt-2 rounded bg-yellow-100 p-2 text-sm text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                <strong>成交</strong>
+              <div className="mt-2 rounded-lg border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-yellow-500/10 p-2 text-amber-700 text-sm dark:text-amber-300">
+                <strong className="font-display">成交</strong>
                 {todo.wonRecord.amount && (
-                  <span className="ml-2">
+                  <span className="ml-2 font-data">
                     金額：${todo.wonRecord.amount.toLocaleString()}
                   </span>
                 )}
@@ -929,9 +1064,9 @@ function TodoItem({
 
             {/* 拒絕記錄 */}
             {isLost && todo.lostRecord && (
-              <div className="mt-2 rounded bg-gray-100 p-2 text-gray-600 text-sm dark:bg-gray-800 dark:text-gray-400">
-                <strong>拒絕原因：</strong>
-                {todo.lostRecord.reason}
+              <div className="mt-2 rounded-lg border border-slate-500/30 bg-slate-500/10 p-2 text-slate-600 text-sm dark:text-slate-400">
+                <strong className="font-display">拒絕原因：</strong>
+                <span className="font-data">{todo.lostRecord.reason}</span>
                 {todo.lostRecord.competitor && (
                   <span className="ml-2">
                     | 競品：{todo.lostRecord.competitor}
@@ -945,7 +1080,7 @@ function TodoItem({
 
             {/* 改期記錄 */}
             {postponeCount > 0 && (
-              <div className="flex items-center gap-1 text-muted-foreground text-xs">
+              <div className="flex items-center gap-1 font-data text-muted-foreground text-xs">
                 <RefreshCw className="h-3 w-3" />
                 <span>已改期 {postponeCount} 次</span>
               </div>
@@ -956,14 +1091,15 @@ function TodoItem({
           {isPending && (
             <div className="flex shrink-0 flex-wrap gap-2">
               <Button
+                className="bg-[var(--ds-accent)] text-white hover:bg-[var(--ds-accent-dark)]"
                 onClick={() => onComplete(todo)}
                 size="sm"
-                variant="default"
               >
                 <Check className="mr-1 h-4 w-4" />
                 完成
               </Button>
               <Button
+                className="border-border text-muted-foreground hover:bg-muted hover:text-foreground"
                 onClick={() => onPostpone(todo)}
                 size="sm"
                 variant="outline"
@@ -972,7 +1108,7 @@ function TodoItem({
                 改期
               </Button>
               <Button
-                className="bg-yellow-500 hover:bg-yellow-600"
+                className="bg-gradient-to-r from-amber-500 to-yellow-500 text-amber-900 hover:from-amber-600 hover:to-yellow-600"
                 onClick={() => onWin(todo)}
                 size="sm"
               >
@@ -980,9 +1116,9 @@ function TodoItem({
                 成交
               </Button>
               <Button
+                className="bg-slate-600 text-white hover:bg-slate-700"
                 onClick={() => onLose(todo)}
                 size="sm"
-                variant="secondary"
               >
                 <UserX className="mr-1 h-4 w-4" />
                 拒絕
@@ -990,8 +1126,8 @@ function TodoItem({
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -1390,233 +1526,277 @@ function TodosPage() {
   const isLoading = todosQuery.isLoading;
   const counts = countsQuery.data;
 
+  // 狀態篩選按鈕配置
+  const statusButtons: Array<{
+    key: StatusFilter;
+    label: string;
+    icon: typeof ListTodo;
+    count?: number;
+  }> = [
+    { key: "all", label: "全部", icon: ListTodo, count: counts?.all },
+    { key: "pending", label: "待辦中", icon: Clock, count: counts?.pending },
+    {
+      key: "completed",
+      label: "已完成",
+      icon: CheckCircle,
+      count: counts?.completed,
+    },
+    { key: "won", label: "已成交", icon: Trophy, count: counts?.won },
+    { key: "lost", label: "已拒絕", icon: UserX, count: counts?.lost },
+  ];
+
   return (
-    <main className="container mx-auto space-y-6 p-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-bold text-3xl tracking-tight">Sales Pipeline</h1>
-          <p className="text-muted-foreground">管理您的銷售待辦事項</p>
-        </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          建立待辦
-        </Button>
-      </div>
-
-      {/* 篩選區域 */}
-      <div className="flex flex-wrap items-center gap-4">
-        {/* 狀態篩選 */}
-        <div className="flex flex-wrap gap-1">
+    <main className="ds-page">
+      <div className="ds-page-content animate-fade-in-up opacity-0">
+        {/* Page Header */}
+        <PageHeader
+          className="animate-fade-in-up opacity-0"
+          style={{ animationDelay: "0ms", animationFillMode: "forwards" }}
+          subtitle="管理您的銷售待辦事項"
+          title="Sales Pipeline"
+        >
           <Button
-            onClick={() => setStatusFilter("all")}
-            size="sm"
-            variant={statusFilter === "all" ? "default" : "outline"}
+            className="bg-[var(--ds-accent)] text-white shadow-lg shadow-teal-500/20 transition-all hover:bg-[var(--ds-accent-dark)] hover:shadow-teal-500/30"
+            onClick={() => setCreateDialogOpen(true)}
           >
-            <ListTodo className="mr-1 h-4 w-4" />
-            全部 {counts?.all !== undefined && `(${counts.all})`}
+            <Plus className="mr-2 h-4 w-4" />
+            建立待辦
           </Button>
-          <Button
-            onClick={() => setStatusFilter("pending")}
-            size="sm"
-            variant={statusFilter === "pending" ? "default" : "outline"}
-          >
-            <Clock className="mr-1 h-4 w-4" />
-            待辦中 {counts?.pending !== undefined && `(${counts.pending})`}
-          </Button>
-          <Button
-            onClick={() => setStatusFilter("completed")}
-            size="sm"
-            variant={statusFilter === "completed" ? "default" : "outline"}
-          >
-            <CheckCircle className="mr-1 h-4 w-4" />
-            已完成 {counts?.completed !== undefined && `(${counts.completed})`}
-          </Button>
-          <Button
-            onClick={() => setStatusFilter("won")}
-            size="sm"
-            variant={statusFilter === "won" ? "default" : "outline"}
-          >
-            <Trophy className="mr-1 h-4 w-4" />
-            已成交 {counts?.won !== undefined && `(${counts.won})`}
-          </Button>
-          <Button
-            onClick={() => setStatusFilter("lost")}
-            size="sm"
-            variant={statusFilter === "lost" ? "default" : "outline"}
-          >
-            <UserX className="mr-1 h-4 w-4" />
-            已拒絕 {counts?.lost !== undefined && `(${counts.lost})`}
-          </Button>
-        </div>
+        </PageHeader>
 
-        {/* 日期範圍 */}
-        <div className="flex items-center gap-2">
-          <Input
-            className="w-[140px]"
-            onChange={(e) =>
-              setDateRange((prev) => ({ ...prev, from: e.target.value }))
-            }
-            type="date"
-            value={dateRange.from}
-          />
-          <span className="text-muted-foreground text-sm">至</span>
-          <Input
-            className="w-[140px]"
-            onChange={(e) =>
-              setDateRange((prev) => ({ ...prev, to: e.target.value }))
-            }
-            type="date"
-            value={dateRange.to}
-          />
-        </div>
-
-        {/* 快捷按鈕 */}
-        <div className="flex gap-1">
-          <Button onClick={setToday} size="sm" variant="ghost">
-            今天
-          </Button>
-          <Button onClick={setThisWeek} size="sm" variant="ghost">
-            本週
-          </Button>
-          <Button onClick={setThisMonth} size="sm" variant="ghost">
-            本月
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-        {/* 左側日曆 */}
-        <div className="space-y-4">
-          <MiniCalendar
-            onSelectDate={(date) => {
-              setSelectedDate(date);
-              const dateStr = format(date, "yyyy-MM-dd");
-              setDateRange({ from: dateStr, to: dateStr });
-            }}
-            selectedDate={selectedDate}
-            todoCounts={todoCounts}
-          />
-
-          {/* 逾期待辦提醒 */}
-          {overdueTodos.length > 0 && (
-            <Card className="border-destructive bg-destructive/5">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-destructive text-sm">
-                  <AlertCircle className="h-4 w-4" />
-                  逾期待辦 ({overdueTodos.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {overdueTodos.slice(0, 3).map((todo) => (
-                  <div className="text-sm" key={todo.id}>
-                    <p className="truncate font-medium">{todo.title}</p>
-                    <p className="text-muted-foreground text-xs">
-                      {format(new Date(todo.dueDate), "M/d", { locale: zhTW })}
-                    </p>
-                  </div>
-                ))}
-                {overdueTodos.length > 3 && (
-                  <p className="text-muted-foreground text-xs">
-                    還有 {overdueTodos.length - 3} 項...
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* 右側待辦列表 */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-muted-foreground" />
-            <h2 className="font-semibold text-xl">
-              {dateRange.from === dateRange.to
-                ? format(new Date(dateRange.from), "M月d日", { locale: zhTW })
-                : `${format(new Date(dateRange.from), "M/d", { locale: zhTW })} - ${format(new Date(dateRange.to), "M/d", { locale: zhTW })}`}{" "}
-              的待辦
-            </h2>
-            <Badge variant="secondary">{filteredTodos.length} 項</Badge>
+        {/* 篩選區域 */}
+        <div
+          className="flex animate-fade-in-up flex-wrap items-center gap-4 opacity-0"
+          style={{ animationDelay: "100ms", animationFillMode: "forwards" }}
+        >
+          {/* 狀態篩選 - 藥丸形狀 */}
+          <div className="flex flex-wrap gap-2">
+            {statusButtons.map((btn) => {
+              const Icon = btn.icon;
+              const isActive = statusFilter === btn.key;
+              return (
+                <button
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full px-4 py-2 font-data text-sm transition-all",
+                    isActive
+                      ? "bg-[var(--ds-accent)] text-white shadow-lg shadow-teal-500/20"
+                      : "border border-border bg-transparent text-muted-foreground hover:border-[var(--ds-accent)] hover:text-foreground"
+                  )}
+                  key={btn.key}
+                  onClick={() => setStatusFilter(btn.key)}
+                  type="button"
+                >
+                  <Icon className="h-4 w-4" />
+                  {btn.label}
+                  {btn.count !== undefined && (
+                    <span
+                      className={cn(
+                        "ml-1 rounded-full px-1.5 py-0.5 text-xs",
+                        isActive
+                          ? "bg-white/20 text-white"
+                          : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {btn.count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
-          {isLoading ? (
-            <div className="space-y-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Card key={i}>
-                  <CardContent className="p-4">
+          {/* 日期範圍 */}
+          <div className="flex items-center gap-2">
+            <Input
+              className="w-[140px] border-border bg-muted/50 font-data focus:border-[var(--ds-accent)] focus:ring-[var(--ds-accent-glow)]"
+              onChange={(e) =>
+                setDateRange((prev) => ({ ...prev, from: e.target.value }))
+              }
+              type="date"
+              value={dateRange.from}
+            />
+            <span className="font-data text-muted-foreground text-sm">至</span>
+            <Input
+              className="w-[140px] border-border bg-muted/50 font-data focus:border-[var(--ds-accent)] focus:ring-[var(--ds-accent-glow)]"
+              onChange={(e) =>
+                setDateRange((prev) => ({ ...prev, to: e.target.value }))
+              }
+              type="date"
+              value={dateRange.to}
+            />
+          </div>
+
+          {/* 快捷按鈕 */}
+          <div className="flex gap-1">
+            <Button
+              className="font-data text-muted-foreground hover:text-foreground"
+              onClick={setToday}
+              size="sm"
+              variant="ghost"
+            >
+              今天
+            </Button>
+            <Button
+              className="font-data text-muted-foreground hover:text-foreground"
+              onClick={setThisWeek}
+              size="sm"
+              variant="ghost"
+            >
+              本週
+            </Button>
+            <Button
+              className="font-data text-muted-foreground hover:text-foreground"
+              onClick={setThisMonth}
+              size="sm"
+              variant="ghost"
+            >
+              本月
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+          {/* 左側日曆 */}
+          <div
+            className="animate-fade-in-up space-y-4 opacity-0"
+            style={{ animationDelay: "200ms", animationFillMode: "forwards" }}
+          >
+            <MiniCalendar
+              onSelectDate={(date) => {
+                setSelectedDate(date);
+                const dateStr = format(date, "yyyy-MM-dd");
+                setDateRange({ from: dateStr, to: dateStr });
+              }}
+              selectedDate={selectedDate}
+              todoCounts={todoCounts}
+            />
+
+            {/* 逾期待辦提醒 */}
+            {overdueTodos.length > 0 && (
+              <div className="ds-card ds-card-accent-danger p-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-[var(--ds-danger)]" />
+                  <h4 className="font-display font-semibold text-[var(--ds-danger)] text-sm">
+                    逾期待辦 ({overdueTodos.length})
+                  </h4>
+                </div>
+                <div className="space-y-2">
+                  {overdueTodos.slice(0, 3).map((todo) => (
+                    <div className="text-sm" key={todo.id}>
+                      <p className="truncate font-medium">{todo.title}</p>
+                      <p className="font-data text-muted-foreground text-xs">
+                        {format(new Date(todo.dueDate), "M/d", {
+                          locale: zhTW,
+                        })}
+                      </p>
+                    </div>
+                  ))}
+                  {overdueTodos.length > 3 && (
+                    <p className="font-data text-muted-foreground text-xs">
+                      還有 {overdueTodos.length - 3} 項...
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 右側待辦列表 */}
+          <div
+            className="animate-fade-in-up space-y-4 opacity-0"
+            style={{ animationDelay: "300ms", animationFillMode: "forwards" }}
+          >
+            <div className="flex items-center gap-3">
+              <Calendar className="h-5 w-5 text-[var(--ds-accent)]" />
+              <h2 className="font-display font-semibold text-xl">
+                {dateRange.from === dateRange.to
+                  ? format(new Date(dateRange.from), "M月d日", { locale: zhTW })
+                  : `${format(new Date(dateRange.from), "M/d", { locale: zhTW })} - ${format(new Date(dateRange.to), "M/d", { locale: zhTW })}`}{" "}
+                的待辦
+              </h2>
+              <Badge className="rounded-full border-[var(--ds-accent)]/40 bg-[var(--ds-accent)]/20 font-data text-[var(--ds-accent)]">
+                {filteredTodos.length} 項
+              </Badge>
+            </div>
+
+            {isLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div className="ds-card p-4" key={i}>
                     <div className="space-y-2">
                       <Skeleton className="h-5 w-3/4" />
                       <Skeleton className="h-4 w-1/2" />
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : filteredTodos.length > 0 ? (
-            <div className="space-y-3">
-              {filteredTodos.map((todo) => (
-                <TodoItem
-                  key={todo.id}
-                  onComplete={handleOpenComplete}
-                  onLose={handleOpenLose}
-                  onPostpone={handleOpenPostpone}
-                  onWin={handleOpenWin}
-                  todo={todo as Todo}
-                />
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="py-12 text-center">
+                  </div>
+                ))}
+              </div>
+            ) : filteredTodos.length > 0 ? (
+              <div className="space-y-3">
+                {filteredTodos.map((todo, index) => (
+                  <TodoItem
+                    animationDelay={400 + index * 50}
+                    key={todo.id}
+                    onComplete={handleOpenComplete}
+                    onLose={handleOpenLose}
+                    onPostpone={handleOpenPostpone}
+                    onWin={handleOpenWin}
+                    todo={todo as Todo}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="ds-card py-12 text-center">
                 <Calendar className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                <p className="text-muted-foreground">此範圍內沒有待辦事項</p>
-              </CardContent>
-            </Card>
-          )}
+                <p className="font-display text-muted-foreground">
+                  此範圍內沒有待辦事項
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Dialogs */}
-      <CompleteAndNextDialog
-        isLoading={completeMutation.isPending}
-        onComplete={handleComplete}
-        onOpenChange={setCompleteDialogOpen}
-        open={completeDialogOpen}
-        todo={selectedTodo}
-      />
-      <PostponeDialog
-        isLoading={postponeMutation.isPending}
-        onOpenChange={setPostponeDialogOpen}
-        onPostpone={handlePostpone}
-        open={postponeDialogOpen}
-        todo={selectedTodo}
-      />
-      <WinDialog
-        isLoading={winMutation.isPending}
-        onOpenChange={setWinDialogOpen}
-        onWin={handleWin}
-        open={winDialogOpen}
-        todo={selectedTodo}
-      />
-      <LoseDialog
-        isLoading={loseMutation.isPending}
-        onLose={handleLose}
-        onOpenChange={setLoseDialogOpen}
-        open={loseDialogOpen}
-        todo={selectedTodo}
-      />
-      <CreateDialog
-        isLoading={createMutation.isPending}
-        onCreate={handleCreate}
-        onOpenChange={setCreateDialogOpen}
-        open={createDialogOpen}
-        opportunities={
-          opportunitiesQuery.data?.opportunities.map((opp) => ({
-            id: opp.id,
-            companyName: opp.companyName,
-          })) || []
-        }
-      />
+        {/* Dialogs */}
+        <CompleteAndNextDialog
+          isLoading={completeMutation.isPending}
+          onComplete={handleComplete}
+          onOpenChange={setCompleteDialogOpen}
+          open={completeDialogOpen}
+          todo={selectedTodo}
+        />
+        <PostponeDialog
+          isLoading={postponeMutation.isPending}
+          onOpenChange={setPostponeDialogOpen}
+          onPostpone={handlePostpone}
+          open={postponeDialogOpen}
+          todo={selectedTodo}
+        />
+        <WinDialog
+          isLoading={winMutation.isPending}
+          onOpenChange={setWinDialogOpen}
+          onWin={handleWin}
+          open={winDialogOpen}
+          todo={selectedTodo}
+        />
+        <LoseDialog
+          isLoading={loseMutation.isPending}
+          onLose={handleLose}
+          onOpenChange={setLoseDialogOpen}
+          open={loseDialogOpen}
+          todo={selectedTodo}
+        />
+        <CreateDialog
+          isLoading={createMutation.isPending}
+          onCreate={handleCreate}
+          onOpenChange={setCreateDialogOpen}
+          open={createDialogOpen}
+          opportunities={
+            opportunitiesQuery.data?.opportunities.map((opp) => ({
+              id: opp.id,
+              companyName: opp.companyName,
+            })) || []
+          }
+        />
+      </div>
     </main>
   );
 }

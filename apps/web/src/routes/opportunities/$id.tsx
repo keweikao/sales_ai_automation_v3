@@ -1,7 +1,7 @@
 /**
  * Opportunity 詳情頁面
  * 顯示機會詳細資訊、嵌入對話內容、PDCM+SPIN 分析
- * Precision Analytics Industrial Design
+ * Precision Dashboard Design System
  */
 
 import { useQuery } from "@tanstack/react-query";
@@ -52,15 +52,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { client } from "@/utils/orpc";
-
-// Import Playfair Display and JetBrains Mono
-import "@fontsource/playfair-display/600.css";
-import "@fontsource/playfair-display/700.css";
-import "@fontsource/playfair-display/800.css";
-import "@fontsource/jetbrains-mono/400.css";
-import "@fontsource/jetbrains-mono/500.css";
-import "@fontsource/jetbrains-mono/600.css";
-import "@fontsource/jetbrains-mono/700.css";
 
 export const Route = createFileRoute("/opportunities/$id")({
   component: OpportunityDetailPage,
@@ -270,16 +261,26 @@ function buildTimeline(opportunity: {
           actionVia: log.actionVia,
         });
         break;
-      case "lost":
+      case "lost": {
+        // 從 changes 中取得 lostRecord
+        const lostRecord = log.changes?.lostRecord as
+          | { reason?: string; competitor?: string }
+          | undefined;
+        const lostReason = lostRecord?.reason;
+        const competitor = lostRecord?.competitor;
+
         events.push({
           id: `log-${log.id}`,
           type: "todo_lost",
-          title: `拒絕: ${todoTitle}`,
-          description: log.note || undefined,
+          title: `結案: ${todoTitle}`,
+          description: lostReason
+            ? `原因: ${lostReason}${competitor ? ` | 競品: ${competitor}` : ""}`
+            : log.note || undefined,
           timestamp: new Date(log.createdAt),
           actionVia: log.actionVia,
         });
         break;
+      }
     }
   }
 
@@ -292,48 +293,72 @@ function buildTimeline(opportunity: {
 function getTimelineEventIcon(type: TimelineEventType) {
   switch (type) {
     case "todo_created":
-      return <FileText style={{ width: "1rem", height: "1rem" }} />;
+      return <FileText className="h-4 w-4" />;
     case "todo_completed":
-      return <Check style={{ width: "1rem", height: "1rem" }} />;
+      return <Check className="h-4 w-4" />;
     case "todo_postponed":
-      return <CalendarClock style={{ width: "1rem", height: "1rem" }} />;
+      return <CalendarClock className="h-4 w-4" />;
     case "todo_won":
-      return <Trophy style={{ width: "1rem", height: "1rem" }} />;
+      return <Trophy className="h-4 w-4" />;
     case "todo_lost":
-      return <HandMetal style={{ width: "1rem", height: "1rem" }} />;
+      return <HandMetal className="h-4 w-4" />;
     case "conversation_uploaded":
-      return <MessageSquare style={{ width: "1rem", height: "1rem" }} />;
+      return <MessageSquare className="h-4 w-4" />;
     case "conversation_analyzed":
-      return <TrendingUp style={{ width: "1rem", height: "1rem" }} />;
+      return <TrendingUp className="h-4 w-4" />;
     case "opportunity_created":
     case "opportunity_updated":
-      return <Calendar style={{ width: "1rem", height: "1rem" }} />;
+      return <Calendar className="h-4 w-4" />;
     default:
-      return <Calendar style={{ width: "1rem", height: "1rem" }} />;
+      return <Calendar className="h-4 w-4" />;
   }
 }
 
 function getTimelineEventColor(type: TimelineEventType): string {
   switch (type) {
     case "todo_created":
-      return "rgb(99 94 246)"; // purple
+      return "border-l-purple-500";
     case "todo_completed":
-      return "rgb(16 185 129)"; // green
+      return "border-l-emerald-500";
     case "todo_postponed":
-      return "rgb(251 191 36)"; // yellow
+      return "border-l-amber-400";
     case "todo_won":
-      return "rgb(234 179 8)"; // gold
+      return "border-l-yellow-500";
     case "todo_lost":
-      return "rgb(107 114 128)"; // gray
+      return "border-l-slate-500";
     case "conversation_uploaded":
-      return "rgb(59 130 246)"; // blue
+      return "border-l-blue-500";
     case "conversation_analyzed":
-      return "rgb(139 92 246)"; // violet
+      return "border-l-violet-500";
     case "opportunity_created":
     case "opportunity_updated":
-      return "rgb(148 163 184)"; // slate
+      return "border-l-slate-400";
     default:
-      return "rgb(148 163 184)";
+      return "border-l-slate-400";
+  }
+}
+
+function getTimelineEventTextColor(type: TimelineEventType): string {
+  switch (type) {
+    case "todo_created":
+      return "text-purple-500";
+    case "todo_completed":
+      return "text-emerald-500";
+    case "todo_postponed":
+      return "text-amber-400";
+    case "todo_won":
+      return "text-yellow-500";
+    case "todo_lost":
+      return "text-slate-500";
+    case "conversation_uploaded":
+      return "text-blue-500";
+    case "conversation_analyzed":
+      return "text-violet-500";
+    case "opportunity_created":
+    case "opportunity_updated":
+      return "text-slate-400";
+    default:
+      return "text-slate-400";
   }
 }
 
@@ -368,20 +393,22 @@ function OpportunityDetailPage() {
 
   if (isLoading) {
     return (
-      <main className="container mx-auto space-y-6 p-6">
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-10 w-10" />
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-32" />
+      <main className="ds-page">
+        <div className="ds-page-content">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-10 w-10" />
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-32" />
+            </div>
           </div>
-        </div>
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="space-y-6 lg:col-span-2">
-            <Skeleton className="h-64 w-full" />
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="space-y-6 lg:col-span-2">
+              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-96 w-full" />
+            </div>
             <Skeleton className="h-96 w-full" />
           </div>
-          <Skeleton className="h-96 w-full" />
         </div>
       </main>
     );
@@ -389,15 +416,20 @@ function OpportunityDetailPage() {
 
   if (!opportunity) {
     return (
-      <main className="container mx-auto p-6">
-        <Card>
-          <CardContent className="py-10 text-center">
-            <p className="text-muted-foreground">找不到此機會</p>
-            <Button asChild className="mt-4" variant="outline">
-              <Link to="/opportunities">返回機會列表</Link>
-            </Button>
-          </CardContent>
-        </Card>
+      <main className="ds-page">
+        <div className="ds-page-content">
+          <Card className="ds-card">
+            <CardContent className="py-10 text-center">
+              <p className="text-muted-foreground">找不到此機會</p>
+              <Link
+                className="mt-4 inline-flex h-8 items-center justify-center rounded-md border border-border bg-background px-3 font-data text-sm transition-all duration-300 hover:bg-muted"
+                to="/opportunities"
+              >
+                返回機會列表
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
       </main>
     );
   }
@@ -407,554 +439,62 @@ function OpportunityDetailPage() {
   const statusInfo = statusConfig[conversationStatus] || statusConfig.pending;
 
   return (
-    <main className="opportunity-detail-container">
-      <style>
-        {`
-          @keyframes fadeInUp {
-            from {
-              opacity: 0;
-              transform: translateY(20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          @keyframes shimmer {
-            0% { left: -100%; }
-            100% { left: 200%; }
-          }
-
-          @keyframes pulse-ring {
-            0%, 100% {
-              box-shadow: 0 0 0 0 rgba(99, 94, 246, 0.4);
-            }
-            50% {
-              box-shadow: 0 0 0 8px rgba(99, 94, 246, 0);
-            }
-          }
-
-          .opportunity-detail-container {
-            min-height: 100vh;
-            background: linear-gradient(135deg, rgb(2 6 23) 0%, rgb(15 23 42) 50%, rgb(30 41 59) 100%);
-            position: relative;
-            padding: 2rem;
-          }
-
-          .opportunity-detail-container::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-image:
-              linear-gradient(to right, rgb(71 85 105 / 0.1) 1px, transparent 1px),
-              linear-gradient(to bottom, rgb(71 85 105 / 0.1) 1px, transparent 1px);
-            background-size: 40px 40px;
-            pointer-events: none;
-          }
-
-          .detail-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-          }
-
-          .page-header {
-            margin-bottom: 2.5rem;
-            animation: fadeInUp 0.6s ease-out backwards;
-          }
-
-          .back-button {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 0.5rem;
-            background: linear-gradient(135deg, rgb(30 41 59) 0%, rgb(15 23 42) 100%);
-            border: 1px solid rgb(71 85 105);
-            color: rgb(148 163 184);
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          }
-
-          .back-button:hover {
-            background: linear-gradient(135deg, rgb(51 65 85) 0%, rgb(30 41 59) 100%);
-            border-color: rgb(99 94 246);
-            color: rgb(99 94 246);
-            transform: translateX(-4px);
-            box-shadow: 0 0 20px rgba(99, 94, 246, 0.3);
-          }
-
-          .company-header {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, rgb(226 232 240) 0%, rgb(148 163 184) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: -0.02em;
-            line-height: 1.2;
-          }
-
-          .customer-number {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: rgb(148 163 184);
-            letter-spacing: 0.05em;
-            margin-top: 0.5rem;
-          }
-
-          .action-buttons {
-            display: flex;
-            gap: 0.75rem;
-          }
-
-          .action-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.625rem 1.25rem;
-            border-radius: 0.5rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.875rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-decoration: none;
-          }
-
-          .action-button-outline {
-            background: linear-gradient(135deg, rgb(30 41 59) 0%, rgb(15 23 42) 100%);
-            border: 1px solid rgb(71 85 105);
-            color: rgb(226 232 240);
-          }
-
-          .action-button-outline:hover {
-            background: linear-gradient(135deg, rgb(51 65 85) 0%, rgb(30 41 59) 100%);
-            border-color: rgb(99 94 246);
-            color: rgb(99 94 246);
-            box-shadow: 0 0 20px rgba(99, 94, 246, 0.2);
-          }
-
-          .action-button-primary {
-            background: linear-gradient(135deg, rgb(99 94 246) 0%, rgb(139 92 246) 100%);
-            border: 1px solid rgb(99 94 246);
-            color: rgb(2 6 23);
-          }
-
-          .action-button-primary:hover {
-            background: linear-gradient(135deg, rgb(124 58 237) 0%, rgb(109 40 217) 100%);
-            box-shadow: 0 0 30px rgba(99, 94, 246, 0.5);
-            transform: translateY(-2px);
-          }
-
-          .detail-grid {
-            display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: 2rem;
-            animation: fadeInUp 0.6s ease-out backwards;
-            animation-delay: 0.1s;
-          }
-
-          @media (max-width: 1024px) {
-            .detail-grid {
-              grid-template-columns: 1fr;
-            }
-          }
-
-          .main-column {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-          }
-
-          .sidebar-column {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-          }
-
-          .detail-card {
-            border-radius: 0.75rem;
-            background: linear-gradient(135deg, rgb(15 23 42) 0%, rgb(30 41 59) 100%);
-            border: 1px solid rgb(51 65 85);
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          }
-
-          .detail-card:hover {
-            border-color: rgb(71 85 105);
-            box-shadow: 0 0 30px rgba(99, 94, 246, 0.1);
-          }
-
-          .card-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid rgb(51 65 85);
-          }
-
-          .card-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: rgb(226 232 240);
-            letter-spacing: -0.01em;
-          }
-
-          .card-description {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.875rem;
-            color: rgb(148 163 184);
-            margin-top: 0.25rem;
-          }
-
-          .card-content {
-            padding: 1.5rem;
-          }
-
-          .info-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-          }
-
-          @media (max-width: 640px) {
-            .info-grid {
-              grid-template-columns: 1fr;
-            }
-          }
-
-          .info-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            background: rgb(2 6 23 / 0.5);
-            border: 1px solid rgb(30 41 59);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          }
-
-          .info-item:hover {
-            background: rgb(30 41 59 / 0.5);
-            border-color: rgb(51 65 85);
-            transform: translateX(4px);
-          }
-
-          .info-icon {
-            flex-shrink: 0;
-            margin-top: 0.125rem;
-            color: rgb(99 94 246);
-          }
-
-          .info-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: rgb(148 163 184);
-            margin-bottom: 0.25rem;
-          }
-
-          .info-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9375rem;
-            font-weight: 500;
-            color: rgb(226 232 240);
-          }
-
-          .notes-display {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.875rem;
-            color: rgb(203 213 225);
-            white-space: pre-wrap;
-            line-height: 1.6;
-          }
-
-          .timeline-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            background: rgb(2 6 23 / 0.5);
-            border: 1px solid rgb(30 41 59);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          }
-
-          .timeline-item:hover {
-            background: rgb(30 41 59 / 0.5);
-            border-color: rgb(51 65 85);
-            transform: translateX(4px);
-          }
-
-          .timeline-icon {
-            flex-shrink: 0;
-            color: rgb(99 94 246);
-          }
-
-          .timeline-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: rgb(148 163 184);
-            margin-bottom: 0.25rem;
-          }
-
-          .timeline-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: rgb(226 232 240);
-          }
-
-          .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 3rem 1.5rem;
-            text-align: center;
-            color: rgb(148 163 184);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9375rem;
-          }
-
-          .status-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            padding: 0.375rem 0.875rem;
-            border-radius: 0.375rem;
-            font-size: 0.75rem;
-          }
-
-          .custom-tabs {
-            border-bottom: 1px solid rgb(30 41 59);
-          }
-
-          .custom-tab {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 600;
-            font-size: 0.875rem;
-            letter-spacing: 0.025em;
-            text-transform: uppercase;
-            padding: 0.75rem 1.5rem;
-            color: rgb(148 163 184);
-            border-bottom: 2px solid transparent;
-            transition: all 0.3s;
-          }
-
-          .custom-tab:hover {
-            color: rgb(99 94 246);
-          }
-
-          .custom-tab[data-state="active"] {
-            color: rgb(99 94 246);
-            border-bottom-color: rgb(99 94 246);
-            background: linear-gradient(180deg, transparent 0%, rgb(6 182 212 / 0.05) 100%);
-          }
-
-          .transcript-segment {
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid rgb(30 41 59);
-            background: rgb(15 23 42);
-            transition: all 0.3s;
-          }
-
-          .transcript-segment:hover {
-            border-color: rgb(6 182 212 / 0.3);
-            background: rgb(30 41 59);
-          }
-
-          .speaker-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.25rem 0.625rem;
-            background: rgb(30 41 59);
-            border: 1px solid rgb(51 65 85);
-            color: rgb(148 163 184);
-          }
-
-          .timestamp {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            color: rgb(100 116 139);
-          }
-
-          .audio-player {
-            width: 100%;
-            border-radius: 0.5rem;
-            filter: saturate(0.8) hue-rotate(-10deg);
-          }
-
-          .collapsible-trigger {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1rem 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s;
-          }
-
-          .collapsible-trigger:hover {
-            background: rgb(30 41 59 / 0.5);
-          }
-
-          .collapsible-trigger .chevron {
-            transition: transform 0.3s;
-          }
-
-          .collapsible-trigger[data-state="open"] .chevron {
-            transform: rotate(180deg);
-          }
-
-          .action-card {
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid rgb(30 41 59);
-            background: linear-gradient(135deg, rgb(15 23 42) 0%, rgb(30 41 59) 100%);
-            transition: all 0.3s;
-          }
-
-          .action-card:hover {
-            border-color: rgb(59 130 246 / 0.4);
-            transform: translateX(4px);
-          }
-
-          .risk-card {
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid rgb(127 29 29);
-            background: linear-gradient(135deg, rgb(127 29 29 / 0.1) 0%, rgb(127 29 29 / 0.05) 100%);
-            transition: all 0.3s;
-          }
-
-          .risk-card:hover {
-            border-color: rgb(239 68 68 / 0.5);
-          }
-
-          .finding-item {
-            padding-left: 1.5rem;
-            position: relative;
-            color: rgb(203 213 225);
-            line-height: 1.75;
-          }
-
-          .finding-item::before {
-            content: '▸';
-            position: absolute;
-            left: 0;
-            color: rgb(99 94 246);
-            font-weight: 700;
-          }
-
-          .priority-badge-high {
-            background: linear-gradient(135deg, rgb(239 68 68) 0%, rgb(220 38 38) 100%);
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            font-size: 0.7rem;
-            padding: 0.25rem 0.625rem;
-          }
-
-          .priority-badge-medium {
-            background: linear-gradient(135deg, rgb(139 92 246) 0%, rgb(109 40 217) 100%);
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 600;
-            font-size: 0.7rem;
-            padding: 0.25rem 0.625rem;
-          }
-
-          .priority-badge-low {
-            background: linear-gradient(135deg, rgb(100 116 139) 0%, rgb(71 85 105) 100%);
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 600;
-            font-size: 0.7rem;
-            padding: 0.25rem 0.625rem;
-          }
-        `}
-      </style>
-
-      <div className="detail-content">
+    <main className="ds-page">
+      <div className="ds-page-content">
         {/* Page Header */}
-        <div className="page-header">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              justifyContent: "space-between",
-              gap: "2rem",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: "1rem",
-                flex: 1,
-              }}
-            >
-              <button
-                className="back-button"
+        <div className="animate-fade-in-up">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex flex-1 items-start gap-4">
+              <Button
+                className="h-10 w-10 shrink-0 border-border transition-all duration-300 hover:border-[var(--ds-accent)] hover:text-[var(--ds-accent)]"
                 onClick={() => navigate({ to: "/opportunities" })}
-                type="button"
+                size="icon"
+                variant="outline"
               >
-                <ArrowLeft style={{ width: "1.25rem", height: "1.25rem" }} />
-              </button>
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "1rem",
-                    marginBottom: "0.5rem",
-                  }}
-                >
-                  <h1 className="company-header">{opportunity.companyName}</h1>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="min-w-0 flex-1">
+                <div className="mb-2 flex flex-wrap items-center gap-3">
+                  <h1 className="truncate font-bold font-display text-2xl tracking-tight sm:text-3xl">
+                    {opportunity.companyName}
+                  </h1>
                   <LeadStatusBadge status={opportunity.status} />
                 </div>
-                <p className="customer-number">{opportunity.customerNumber}</p>
+                <p className="font-data text-muted-foreground text-sm tracking-wide">
+                  {opportunity.customerNumber}
+                </p>
               </div>
             </div>
-            <div className="action-buttons">
+            <div className="flex gap-3">
               <Link
-                className="action-button action-button-outline"
+                className="inline-flex h-8 items-center justify-center rounded-md border border-border bg-background px-3 font-data text-sm transition-all duration-300 hover:border-[var(--ds-accent)] hover:bg-muted hover:text-[var(--ds-accent)]"
                 params={{ id: opportunity.id }}
                 to="/opportunities/$id/edit"
               >
-                <Edit style={{ width: "1rem", height: "1rem" }} />
+                <Edit className="mr-2 h-4 w-4" />
                 編輯
               </Link>
               <Link
-                className="action-button action-button-primary"
+                className="inline-flex h-8 items-center justify-center rounded-md bg-[var(--ds-accent)] px-3 font-data text-sm text-white shadow-lg shadow-teal-500/20 transition-all duration-300 hover:bg-[var(--ds-accent-dark)]"
                 search={{ opportunityId: opportunity.id }}
                 to="/conversations/new"
               >
-                <Plus style={{ width: "1rem", height: "1rem" }} />
+                <Plus className="mr-2 h-4 w-4" />
                 新增對話
               </Link>
             </div>
           </div>
         </div>
 
-        <div className="detail-grid">
+        <div className="stagger-1 grid animate-fade-in-up gap-6 lg:grid-cols-[1fr_400px]">
           {/* Main Content */}
-          <div className="main-column">
-            {/* Basic Info Card - 公司名稱 + 結構化備註欄位 */}
-            <div className="detail-card" style={{ animationDelay: "0.15s" }}>
-              <div className="card-header">
-                <h2 className="card-title">基本資訊</h2>
+          <div className="flex flex-col gap-6">
+            {/* Basic Info Card */}
+            <Card className="ds-card stagger-2 animate-fade-in-up">
+              <div className="border-border border-b p-6">
+                <h2 className="font-bold font-display text-xl">基本資訊</h2>
               </div>
-              <div className="card-content">
+              <CardContent className="p-6">
                 {(() => {
                   // 解析備註內容為結構化資料
                   const parseNotes = (notes: string | null | undefined) => {
@@ -976,171 +516,108 @@ function OpportunityDetailPage() {
                     Object.keys(parsedNotes).length > 0;
 
                   return (
-                    <div className="info-grid">
-                      <div className="info-item">
-                        <Building2
-                          className="info-icon"
-                          style={{ width: "1.25rem", height: "1.25rem" }}
-                        />
-                        <div>
-                          <p className="info-label">公司名稱</p>
-                          <p className="info-value">
-                            {opportunity.companyName}
-                          </p>
-                        </div>
-                      </div>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <InfoItem
+                        icon={Building2}
+                        label="公司名稱"
+                        value={opportunity.companyName}
+                      />
                       {opportunity.contactName && (
-                        <div className="info-item">
-                          <User
-                            className="info-icon"
-                            style={{ width: "1.25rem", height: "1.25rem" }}
-                          />
-                          <div>
-                            <p className="info-label">聯絡人</p>
-                            <p className="info-value">
-                              {opportunity.contactName}
-                            </p>
-                          </div>
-                        </div>
+                        <InfoItem
+                          icon={User}
+                          label="聯絡人"
+                          value={opportunity.contactName}
+                        />
                       )}
                       {opportunity.contactPhone && (
-                        <div className="info-item">
-                          <Phone
-                            className="info-icon"
-                            style={{ width: "1.25rem", height: "1.25rem" }}
-                          />
-                          <div>
-                            <p className="info-label">聯絡電話</p>
-                            <p className="info-value">
-                              {opportunity.contactPhone}
-                            </p>
-                          </div>
-                        </div>
+                        <InfoItem
+                          icon={Phone}
+                          label="聯絡電話"
+                          value={opportunity.contactPhone}
+                        />
                       )}
                       {opportunity.contactEmail && (
-                        <div className="info-item">
-                          <Mail
-                            className="info-icon"
-                            style={{ width: "1.25rem", height: "1.25rem" }}
-                          />
-                          <div>
-                            <p className="info-label">聯絡信箱</p>
-                            <p className="info-value">
-                              {opportunity.contactEmail}
-                            </p>
-                          </div>
-                        </div>
+                        <InfoItem
+                          icon={Mail}
+                          label="聯絡信箱"
+                          value={opportunity.contactEmail}
+                        />
                       )}
                       {hasStructuredNotes ? (
                         <>
                           {parsedNotes.店型 && (
-                            <div className="info-item">
-                              <Target
-                                className="info-icon"
-                                style={{ width: "1.25rem", height: "1.25rem" }}
-                              />
-                              <div>
-                                <p className="info-label">店型</p>
-                                <p className="info-value">{parsedNotes.店型}</p>
-                              </div>
-                            </div>
+                            <InfoItem
+                              icon={Target}
+                              label="店型"
+                              value={parsedNotes.店型}
+                            />
                           )}
                           {parsedNotes.營運型態 && (
-                            <div className="info-item">
-                              <BarChart3
-                                className="info-icon"
-                                style={{ width: "1.25rem", height: "1.25rem" }}
-                              />
-                              <div>
-                                <p className="info-label">營運型態</p>
-                                <p className="info-value">
-                                  {parsedNotes.營運型態}
-                                </p>
-                              </div>
-                            </div>
+                            <InfoItem
+                              icon={BarChart3}
+                              label="營運型態"
+                              value={parsedNotes.營運型態}
+                            />
                           )}
                           {parsedNotes["現有 POS"] && (
-                            <div className="info-item">
-                              <MessageSquare
-                                className="info-icon"
-                                style={{ width: "1.25rem", height: "1.25rem" }}
-                              />
-                              <div>
-                                <p className="info-label">現有 POS</p>
-                                <p className="info-value">
-                                  {parsedNotes["現有 POS"]}
-                                </p>
-                              </div>
-                            </div>
+                            <InfoItem
+                              icon={MessageSquare}
+                              label="現有 POS"
+                              value={parsedNotes["現有 POS"]}
+                            />
                           )}
                           {parsedNotes.決策者在場 && (
-                            <div className="info-item">
-                              <User
-                                className="info-icon"
-                                style={{ width: "1.25rem", height: "1.25rem" }}
-                              />
-                              <div>
-                                <p className="info-label">決策者在場</p>
-                                <p className="info-value">
-                                  {parsedNotes.決策者在場}
-                                </p>
-                              </div>
-                            </div>
+                            <InfoItem
+                              icon={User}
+                              label="決策者在場"
+                              value={parsedNotes.決策者在場}
+                            />
                           )}
                           {parsedNotes.來源 && (
-                            <div className="info-item">
-                              <FileText
-                                className="info-icon"
-                                style={{ width: "1.25rem", height: "1.25rem" }}
-                              />
-                              <div>
-                                <p className="info-label">來源</p>
-                                <p className="info-value">{parsedNotes.來源}</p>
-                              </div>
-                            </div>
+                            <InfoItem
+                              icon={FileText}
+                              label="來源"
+                              value={parsedNotes.來源}
+                            />
                           )}
                         </>
                       ) : opportunity.notes ? (
-                        <div
-                          className="info-item"
-                          style={{ gridColumn: "1 / -1" }}
-                        >
-                          <FileText
-                            className="info-icon"
-                            style={{ width: "1.25rem", height: "1.25rem" }}
+                        <div className="col-span-full">
+                          <InfoItem
+                            icon={FileText}
+                            label="備註"
+                            value={opportunity.notes}
                           />
-                          <div>
-                            <p className="info-label">備註</p>
-                            <p className="info-value">{opportunity.notes}</p>
-                          </div>
                         </div>
                       ) : null}
                     </div>
                   );
                 })()}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            {/* Conversation Content - 嵌入對話內容 */}
+            {/* Conversation Content */}
             {opportunity.conversations &&
             opportunity.conversations.length > 0 ? (
               <>
-                {/* 銷售分析 / 轉錄文字 Tabs - 極簡顯示 */}
+                {/* Tabs */}
                 <Tabs
-                  className="detail-card"
+                  className="ds-card stagger-3 animate-fade-in-up"
                   defaultValue="analysis"
-                  style={{ animationDelay: "0.2s" }}
                 >
-                  <TabsList className="custom-tabs w-full justify-start">
+                  <TabsList className="h-auto w-full justify-start rounded-none border-border border-b bg-transparent p-0">
                     <TabsTrigger
-                      className="custom-tab"
+                      className="rounded-none border-transparent border-b-2 bg-transparent px-6 py-4 font-data text-sm uppercase tracking-wider transition-all duration-300 data-[state=active]:border-[var(--ds-accent)] data-[state=active]:text-[var(--ds-accent)]"
                       disabled={!conversation?.analysis}
                       value="analysis"
                     >
                       <TrendingUp className="mr-2 h-4 w-4" />
                       銷售分析
                     </TabsTrigger>
-                    <TabsTrigger className="custom-tab" value="transcript">
+                    <TabsTrigger
+                      className="rounded-none border-transparent border-b-2 bg-transparent px-6 py-4 font-data text-sm uppercase tracking-wider transition-all duration-300 data-[state=active]:border-[var(--ds-accent)] data-[state=active]:text-[var(--ds-accent)]"
+                      value="transcript"
+                    >
                       <MessageSquare className="mr-2 h-4 w-4" />
                       轉錄文字
                     </TabsTrigger>
@@ -1153,22 +630,22 @@ function OpportunityDetailPage() {
                         {conversation.transcript.segments.map(
                           (segment, idx) => (
                             <div
-                              className="transcript-segment flex gap-4"
+                              className="flex gap-4 rounded-lg border border-border bg-muted/30 p-4 transition-all duration-300 hover:bg-muted/50"
                               key={idx}
                             >
                               <div className="shrink-0">
                                 <Badge
-                                  className="speaker-badge"
+                                  className="px-2.5 py-1 font-data text-xs"
                                   variant="outline"
                                 >
                                   <User className="mr-1.5 h-3 w-3" />
                                   {segment.speaker || "說話者"}
                                 </Badge>
-                                <p className="timestamp mt-2">
+                                <p className="mt-2 font-data text-[0.7rem] text-muted-foreground">
                                   {formatTime(segment.start)}
                                 </p>
                               </div>
-                              <p className="flex-1 text-slate-300 leading-relaxed">
+                              <p className="flex-1 text-foreground/80 leading-relaxed">
                                 {segment.text}
                               </p>
                             </div>
@@ -1176,21 +653,11 @@ function OpportunityDetailPage() {
                         )}
                       </div>
                     ) : conversation?.transcript?.fullText ? (
-                      <p className="whitespace-pre-wrap text-slate-300 leading-relaxed">
+                      <p className="whitespace-pre-wrap text-foreground/80 leading-relaxed">
                         {conversation.transcript.fullText}
                       </p>
                     ) : (
-                      <div className="empty-state">
-                        <MessageSquare
-                          style={{
-                            width: "3rem",
-                            height: "3rem",
-                            marginBottom: "1rem",
-                            color: "rgb(71 85 105)",
-                          }}
-                        />
-                        <p>尚無轉錄文字</p>
-                      </div>
+                      <EmptyState icon={MessageSquare} message="尚無轉錄文字" />
                     )}
                   </TabsContent>
 
@@ -1200,14 +667,14 @@ function OpportunityDetailPage() {
                         {/* PDCM+SPIN Analysis Section */}
                         {conversation.analysis.agentOutputs && (
                           <>
-                            {/* Two Column Layout for PDCM and SPIN details */}
+                            {/* Two Column Layout */}
                             <div className="grid gap-6 md:grid-cols-2">
                               {/* PDCM Detailed Analysis */}
                               {conversation.analysis.agentOutputs.agent2
                                 ?.pdcm_scores && (
-                                <Card className="detail-card border-purple-600/20">
+                                <Card className="ds-card border-purple-600/20">
                                   <CardContent className="space-y-4 p-4">
-                                    <h3 className="flex items-center gap-2 font-semibold text-lg text-slate-200">
+                                    <h3 className="flex items-center gap-2 font-display font-semibold text-lg">
                                       <BarChart3 className="h-5 w-5 text-purple-400" />
                                       PDCM 詳細分析
                                     </h3>
@@ -1221,26 +688,10 @@ function OpportunityDetailPage() {
                                       }
 
                                       const dimensions = [
-                                        {
-                                          key: "pain",
-                                          label: "P (痛點)",
-                                          color: "purple",
-                                        },
-                                        {
-                                          key: "decision",
-                                          label: "D (決策)",
-                                          color: "blue",
-                                        },
-                                        {
-                                          key: "champion",
-                                          label: "C (支持)",
-                                          color: "emerald",
-                                        },
-                                        {
-                                          key: "metrics",
-                                          label: "M (量化)",
-                                          color: "amber",
-                                        },
+                                        { key: "pain", label: "P (痛點)" },
+                                        { key: "decision", label: "D (決策)" },
+                                        { key: "champion", label: "C (支持)" },
+                                        { key: "metrics", label: "M (量化)" },
                                       ];
 
                                       return dimensions.map(
@@ -1259,21 +710,27 @@ function OpportunityDetailPage() {
 
                                           return (
                                             <div
-                                              className="rounded-lg border border-slate-700/50 bg-slate-800/30 p-3"
+                                              className="rounded-lg border border-border bg-muted/30 p-3"
                                               key={key}
                                             >
                                               <div className="mb-1 flex items-center justify-between">
-                                                <span className="font-semibold text-slate-300 text-sm">
+                                                <span className="font-data font-semibold text-sm">
                                                   {label}
                                                 </span>
                                                 <span
-                                                  className={`font-bold ${score >= 60 ? "text-green-400" : score >= 30 ? "text-yellow-400" : "text-red-400"}`}
+                                                  className={`font-bold font-data ${
+                                                    score >= 60
+                                                      ? "text-[var(--ds-success)]"
+                                                      : score >= 30
+                                                        ? "text-[var(--ds-warning)]"
+                                                        : "text-[var(--ds-danger)]"
+                                                  }`}
                                                 >
                                                   {score}分
                                                 </span>
                                               </div>
                                               {evidence && (
-                                                <p className="text-slate-400 text-xs leading-relaxed">
+                                                <p className="font-data text-muted-foreground text-xs leading-relaxed">
                                                   {evidence}
                                                 </p>
                                               )}
@@ -1289,9 +746,9 @@ function OpportunityDetailPage() {
                               {/* SPIN Detailed Analysis */}
                               {conversation.analysis.agentOutputs.agent3
                                 ?.spin_analysis && (
-                                <Card className="detail-card border-cyan-600/20">
+                                <Card className="ds-card border-cyan-600/20">
                                   <CardContent className="space-y-3 p-4">
-                                    <h3 className="flex items-center gap-2 font-semibold text-lg text-slate-200">
+                                    <h3 className="flex items-center gap-2 font-display font-semibold text-lg">
                                       <TrendingUp className="h-5 w-5 text-cyan-400" />
                                       SPIN 銷售技巧
                                     </h3>
@@ -1329,12 +786,18 @@ function OpportunityDetailPage() {
 
                                             return (
                                               <div
-                                                className="flex items-center justify-between rounded-lg border border-slate-700/50 bg-slate-800/30 p-2.5"
+                                                className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-2.5"
                                                 key={key}
                                               >
                                                 <div className="flex items-center gap-2">
                                                   <span
-                                                    className={`${achieved && score >= 60 ? "text-green-400" : score >= 30 ? "text-yellow-400" : "text-red-400"}`}
+                                                    className={
+                                                      achieved && score >= 60
+                                                        ? "text-[var(--ds-success)]"
+                                                        : score >= 30
+                                                          ? "text-[var(--ds-warning)]"
+                                                          : "text-[var(--ds-danger)]"
+                                                    }
                                                   >
                                                     {achieved && score >= 60
                                                       ? "✅"
@@ -1342,12 +805,18 @@ function OpportunityDetailPage() {
                                                         ? "⚠️"
                                                         : "❌"}
                                                   </span>
-                                                  <span className="text-slate-300 text-sm">
+                                                  <span className="font-data text-sm">
                                                     {label}
                                                   </span>
                                                 </div>
                                                 <span
-                                                  className={`font-bold text-sm ${score >= 60 ? "text-green-400" : score >= 30 ? "text-yellow-400" : "text-red-400"}`}
+                                                  className={`font-bold font-data text-sm ${
+                                                    score >= 60
+                                                      ? "text-[var(--ds-success)]"
+                                                      : score >= 30
+                                                        ? "text-[var(--ds-warning)]"
+                                                        : "text-[var(--ds-danger)]"
+                                                  }`}
                                                 >
                                                   {score}分
                                                 </span>
@@ -1357,10 +826,10 @@ function OpportunityDetailPage() {
                                           {spinAnalysis.spin_completion_rate !==
                                             undefined && (
                                             <div className="mt-3 rounded-lg border border-cyan-500/30 bg-cyan-500/5 p-3 text-center">
-                                              <p className="text-slate-400 text-xs">
+                                              <p className="font-data text-muted-foreground text-xs">
                                                 達成率
                                               </p>
-                                              <p className="font-bold text-2xl text-cyan-400">
+                                              <p className="font-bold font-data text-2xl text-cyan-400">
                                                 {Math.round(
                                                   (spinAnalysis.spin_completion_rate as number) *
                                                     100
@@ -1380,22 +849,20 @@ function OpportunityDetailPage() {
                             {/* Tactical Suggestions */}
                             <TacticalSuggestions
                               suggestions={
-                                conversation.analysis.agentOutputs.agent6
+                                (conversation.analysis.agentOutputs.agent6
                                   ?.tactical_suggestions as
                                   | TacticalSuggestion[]
-                                  | null
-                                  | undefined
+                                  | undefined) ?? null
                               }
                             />
 
                             {/* PDCM+SPIN Alerts */}
                             <PdcmSpinAlerts
                               alerts={
-                                conversation.analysis.agentOutputs.agent6
+                                (conversation.analysis.agentOutputs.agent6
                                   ?.pdcm_spin_alerts as
                                   | PdcmSpinAlertsData
-                                  | null
-                                  | undefined
+                                  | undefined) ?? null
                               }
                             />
                           </>
@@ -1404,16 +871,19 @@ function OpportunityDetailPage() {
                         {/* Key Findings */}
                         {conversation.analysis.keyFindings &&
                           conversation.analysis.keyFindings.length > 0 && (
-                            <Card className="detail-card border-purple-600/20">
+                            <Card className="ds-card border-purple-600/20">
                               <CardContent className="p-4">
-                                <h3 className="mb-3 flex items-center gap-2 font-semibold text-lg text-slate-200">
+                                <h3 className="mb-3 flex items-center gap-2 font-display font-semibold text-lg">
                                   <Lightbulb className="h-5 w-5 text-purple-400" />
                                   關鍵發現
                                 </h3>
                                 <ul className="space-y-2.5">
                                   {conversation.analysis.keyFindings.map(
                                     (finding, idx) => (
-                                      <li className="finding-item" key={idx}>
+                                      <li
+                                        className="relative pl-6 text-foreground/80 leading-relaxed before:absolute before:left-0 before:font-bold before:text-[var(--ds-accent)] before:content-['▸']"
+                                        key={idx}
+                                      >
                                         {finding}
                                       </li>
                                     )
@@ -1426,25 +896,28 @@ function OpportunityDetailPage() {
                         {/* Next Steps */}
                         {conversation.analysis.nextSteps &&
                           conversation.analysis.nextSteps.length > 0 && (
-                            <Card className="detail-card border-purple-500/20">
+                            <Card className="ds-card border-purple-500/20">
                               <CardContent className="p-4">
-                                <h3 className="mb-3 flex items-center gap-2 font-semibold text-lg text-slate-200">
+                                <h3 className="mb-3 flex items-center gap-2 font-display font-semibold text-lg">
                                   <TrendingUp className="h-5 w-5 text-purple-400" />
                                   下一步行動
                                 </h3>
                                 <div className="space-y-3">
                                   {conversation.analysis.nextSteps.map(
                                     (step, idx) => (
-                                      <div className="action-card" key={idx}>
+                                      <div
+                                        className="rounded-lg border border-border bg-muted/30 p-4 transition-all duration-300 hover:translate-x-1"
+                                        key={idx}
+                                      >
                                         <div className="flex items-start gap-3">
                                           <Badge
-                                            className={
+                                            className={`font-data font-semibold text-[0.7rem] ${
                                               step.priority === "high"
-                                                ? "priority-badge-high"
+                                                ? "bg-gradient-to-r from-red-500 to-red-600 text-white"
                                                 : step.priority === "medium"
-                                                  ? "priority-badge-medium"
-                                                  : "priority-badge-low"
-                                            }
+                                                  ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white"
+                                                  : "bg-gradient-to-r from-slate-500 to-slate-600 text-white"
+                                            }`}
                                           >
                                             {step.priority === "high"
                                               ? "HIGH"
@@ -1453,11 +926,11 @@ function OpportunityDetailPage() {
                                                 : "LOW"}
                                           </Badge>
                                           <div className="flex-1">
-                                            <p className="text-slate-200 leading-relaxed">
+                                            <p className="leading-relaxed">
                                               {step.action}
                                             </p>
                                             {step.owner && (
-                                              <p className="mt-1.5 text-slate-400 text-sm">
+                                              <p className="mt-1.5 font-data text-muted-foreground text-sm">
                                                 負責人: {step.owner}
                                               </p>
                                             )}
@@ -1474,23 +947,26 @@ function OpportunityDetailPage() {
                         {/* Risks */}
                         {conversation.analysis.risks &&
                           conversation.analysis.risks.length > 0 && (
-                            <Card className="detail-card border-red-500/20">
+                            <Card className="ds-card border-red-500/20">
                               <CardContent className="p-4">
-                                <h3 className="mb-3 flex items-center gap-2 font-semibold text-lg text-slate-200">
+                                <h3 className="mb-3 flex items-center gap-2 font-display font-semibold text-lg">
                                   <AlertTriangle className="h-5 w-5 text-red-400" />
                                   風險警示
                                 </h3>
                                 <div className="space-y-3">
                                   {conversation.analysis.risks.map(
                                     (risk, idx) => (
-                                      <div className="risk-card" key={idx}>
+                                      <div
+                                        className="rounded-lg border border-red-900/30 bg-red-500/5 p-4 transition-all duration-300 hover:border-red-500/50"
+                                        key={idx}
+                                      >
                                         <div className="flex items-center gap-2.5">
                                           <Badge
-                                            className={
+                                            className={`font-data font-semibold text-[0.7rem] ${
                                               risk.severity === "high"
-                                                ? "priority-badge-high"
-                                                : "priority-badge-medium"
-                                            }
+                                                ? "bg-gradient-to-r from-red-500 to-red-600 text-white"
+                                                : "bg-gradient-to-r from-purple-500 to-purple-600 text-white"
+                                            }`}
                                           >
                                             {risk.severity === "high"
                                               ? "高風險"
@@ -1498,12 +974,12 @@ function OpportunityDetailPage() {
                                                 ? "中風險"
                                                 : "低風險"}
                                           </Badge>
-                                          <p className="font-semibold text-red-300">
+                                          <p className="font-semibold text-red-400">
                                             {risk.risk}
                                           </p>
                                         </div>
                                         {risk.mitigation && (
-                                          <p className="mt-2.5 text-slate-400 text-sm leading-relaxed">
+                                          <p className="mt-2.5 font-data text-muted-foreground text-sm leading-relaxed">
                                             建議: {risk.mitigation}
                                           </p>
                                         )}
@@ -1516,107 +992,74 @@ function OpportunityDetailPage() {
                           )}
                       </div>
                     ) : (
-                      <div className="empty-state">
-                        <BarChart3
-                          style={{
-                            width: "3rem",
-                            height: "3rem",
-                            marginBottom: "1rem",
-                            color: "rgb(71 85 105)",
-                          }}
-                        />
-                        <p>尚無分析結果</p>
-                      </div>
+                      <EmptyState icon={BarChart3} message="尚無分析結果" />
                     )}
                   </TabsContent>
                 </Tabs>
 
-                {/* 會議摘要 - 放在頁面最下面，預設收合 */}
+                {/* Meeting Summary */}
                 {conversation?.summary && (
                   <Collapsible
-                    className="detail-card"
+                    className="ds-card stagger-4 animate-fade-in-up"
                     onOpenChange={setIsSummaryOpen}
                     open={isSummaryOpen}
-                    style={{ animationDelay: "0.3s" }}
                   >
-                    <CollapsibleTrigger className="collapsible-trigger">
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.75rem",
-                        }}
-                      >
-                        <FileText
-                          style={{
-                            width: "1.25rem",
-                            height: "1.25rem",
-                            color: "rgb(99 94 246)",
-                          }}
-                        />
-                        <h2
-                          className="card-title"
-                          style={{ fontSize: "1.25rem" }}
-                        >
+                    <CollapsibleTrigger className="flex w-full cursor-pointer items-center justify-between p-6 transition-all duration-300 hover:bg-muted/30">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-5 w-5 text-[var(--ds-accent)]" />
+                        <h2 className="font-bold font-display text-lg">
                           會議摘要
                         </h2>
                       </div>
                       <ChevronDown
-                        className="chevron"
-                        style={{
-                          width: "1.25rem",
-                          height: "1.25rem",
-                          color: "rgb(148 163 184)",
-                        }}
+                        className={`h-5 w-5 text-muted-foreground transition-transform duration-300 ${
+                          isSummaryOpen ? "rotate-180" : ""
+                        }`}
                       />
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      <div className="card-content" style={{ paddingTop: 0 }}>
-                        <p className="notes-display">{conversation.summary}</p>
+                      <div className="px-6 pb-6">
+                        <p className="whitespace-pre-wrap font-data text-foreground/80 text-sm leading-relaxed">
+                          {conversation.summary}
+                        </p>
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
                 )}
               </>
             ) : (
-              /* 無對話情況 */
-              <div className="detail-card" style={{ animationDelay: "0.2s" }}>
-                <div className="card-header">
-                  <h2 className="card-title">對話記錄</h2>
+              /* No conversation state */
+              <Card className="ds-card stagger-3 animate-fade-in-up">
+                <div className="border-border border-b p-6">
+                  <h2 className="font-bold font-display text-xl">對話記錄</h2>
                 </div>
-                <div className="card-content">
-                  <div className="empty-state">
-                    <MessageSquare
-                      style={{
-                        width: "3rem",
-                        height: "3rem",
-                        marginBottom: "1rem",
-                        color: "rgb(71 85 105)",
-                      }}
-                    />
-                    <p style={{ marginBottom: "1rem" }}>尚未上傳對話</p>
+                <CardContent className="p-6">
+                  <div className="flex flex-col items-center justify-center py-10 text-center">
+                    <MessageSquare className="mb-4 h-12 w-12 text-muted-foreground/50" />
+                    <p className="mb-4 font-data text-muted-foreground">
+                      尚未上傳對話
+                    </p>
                     <Link
-                      className="action-button action-button-primary"
+                      className="inline-flex h-8 items-center justify-center rounded-md bg-[var(--ds-accent)] px-3 font-data text-sm text-white shadow-lg shadow-teal-500/20 transition-all duration-300 hover:bg-[var(--ds-accent-dark)]"
                       search={{ opportunityId: opportunity.id }}
-                      style={{ fontSize: "0.875rem" }}
                       to="/conversations/new"
                     >
-                      <Plus style={{ width: "1rem", height: "1rem" }} />
+                      <Plus className="mr-2 h-4 w-4" />
                       上傳錄音
                     </Link>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             )}
           </div>
 
           {/* Sidebar */}
-          <div className="sidebar-column">
+          <div className="flex flex-col gap-6">
             {/* PDCM Score */}
-            <div style={{ animationDelay: "0.25s" }}>
+            <div className="stagger-3 animate-fade-in-up">
               <PdcmScoreCard
                 pdcmScores={
-                  conversation?.analysis?.agentOutputs?.agent2?.pdcm_scores as
+                  (conversation?.analysis?.agentOutputs?.agent2?.pdcm_scores as
                     | {
                         pain: {
                           score: number;
@@ -1641,17 +1084,17 @@ function OpportunityDetailPage() {
                         };
                         total_score?: number;
                       }
-                    | null
-                    | undefined
+                    | undefined) ?? null
                 }
               />
             </div>
 
             {/* SPIN Progress */}
-            <div style={{ animationDelay: "0.3s" }}>
+            <div className="stagger-4 animate-fade-in-up">
               <SpinProgressCard
                 spinAnalysis={
-                  conversation?.analysis?.agentOutputs?.agent3?.spin_analysis as
+                  (conversation?.analysis?.agentOutputs?.agent3
+                    ?.spin_analysis as
                     | {
                         situation: { score: number; achieved: boolean };
                         problem: { score: number; achieved: boolean };
@@ -1666,85 +1109,63 @@ function OpportunityDetailPage() {
                         key_gap?: string;
                         improvement_suggestion?: string;
                       }
-                    | null
-                    | undefined
+                    | undefined) ?? null
                 }
               />
             </div>
 
             {/* Audio Player */}
             {conversation?.audioUrl && (
-              <div className="detail-card" style={{ animationDelay: "0.35s" }}>
-                <div className="card-header">
-                  <h2 className="card-title" style={{ fontSize: "1.25rem" }}>
-                    音檔
-                  </h2>
+              <Card className="ds-card stagger-5 animate-fade-in-up">
+                <div className="border-border border-b p-4">
+                  <h2 className="font-bold font-display text-lg">音檔</h2>
                 </div>
-                <div className="card-content">
+                <CardContent className="p-4">
                   <audio
-                    className="audio-player"
+                    className="w-full rounded-lg"
                     controls
                     src={conversation.audioUrl}
                   >
                     <track kind="captions" />
                     您的瀏覽器不支援音檔播放
                   </audio>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Timeline */}
-            <div className="detail-card" style={{ animationDelay: "0.4s" }}>
-              <div className="card-header">
-                <h2 className="card-title" style={{ fontSize: "1.25rem" }}>
-                  客戶歷程
-                </h2>
-                <p className="card-description">Sales Pipeline 時間軸</p>
+            <Card className="ds-card stagger-5 animate-fade-in-up">
+              <div className="border-border border-b p-4">
+                <h2 className="font-bold font-display text-lg">客戶歷程</h2>
+                <p className="mt-1 font-data text-muted-foreground text-sm">
+                  Sales Pipeline 時間軸
+                </p>
               </div>
-              <div className="card-content">
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0.75rem",
-                    maxHeight: "500px",
-                    overflowY: "auto",
-                  }}
-                >
+              <CardContent className="p-4">
+                <div className="flex max-h-[500px] flex-col gap-3 overflow-y-auto">
                   {(() => {
                     const timelineEvents = buildTimeline(
                       opportunity as Parameters<typeof buildTimeline>[0]
                     );
                     if (timelineEvents.length === 0) {
-                      return <div className="empty-state">尚無歷程記錄</div>;
+                      return (
+                        <div className="flex flex-col items-center justify-center py-6 text-center">
+                          <p className="font-data text-muted-foreground">
+                            尚無歷程記錄
+                          </p>
+                        </div>
+                      );
                     }
                     return timelineEvents.map((event) => (
                       <div
-                        className="timeline-item"
+                        className={`rounded-lg border border-border border-l-4 bg-muted/30 p-4 transition-all duration-300 hover:translate-x-1 hover:bg-muted/50 ${getTimelineEventColor(event.type)}`}
                         key={event.id}
-                        style={{
-                          borderLeft: `3px solid ${getTimelineEventColor(event.type)}`,
-                          paddingLeft: "1rem",
-                        }}
                       >
                         <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.5rem",
-                            color: getTimelineEventColor(event.type),
-                          }}
+                          className={`flex items-center gap-2 ${getTimelineEventTextColor(event.type)}`}
                         >
                           {getTimelineEventIcon(event.type)}
-                          <span
-                            style={{
-                              fontFamily: "'JetBrains Mono', monospace",
-                              fontSize: "0.75rem",
-                              fontWeight: 600,
-                              textTransform: "uppercase",
-                              letterSpacing: "0.05em",
-                            }}
-                          >
+                          <span className="font-data font-semibold text-xs uppercase tracking-wider">
                             {event.type === "todo_created" && "建立待辦"}
                             {event.type === "todo_completed" && "完成待辦"}
                             {event.type === "todo_postponed" && "改期"}
@@ -1756,51 +1177,20 @@ function OpportunityDetailPage() {
                             {event.type === "opportunity_updated" && "更新"}
                           </span>
                           {event.actionVia && (
-                            <span
-                              style={{
-                                fontFamily: "'JetBrains Mono', monospace",
-                                fontSize: "0.625rem",
-                                padding: "0.125rem 0.375rem",
-                                borderRadius: "0.25rem",
-                                background: "rgb(30 41 59)",
-                                color: "rgb(148 163 184)",
-                              }}
-                            >
+                            <span className="rounded bg-muted px-1.5 py-0.5 font-data text-[0.625rem] text-muted-foreground">
                               via {event.actionVia}
                             </span>
                           )}
                         </div>
-                        <p
-                          style={{
-                            fontFamily: "'JetBrains Mono', monospace",
-                            fontSize: "0.875rem",
-                            fontWeight: 500,
-                            color: "rgb(226 232 240)",
-                            marginTop: "0.25rem",
-                          }}
-                        >
+                        <p className="mt-1 font-data font-medium text-sm">
                           {event.title}
                         </p>
                         {event.description && (
-                          <p
-                            style={{
-                              fontFamily: "'JetBrains Mono', monospace",
-                              fontSize: "0.75rem",
-                              color: "rgb(148 163 184)",
-                              marginTop: "0.125rem",
-                            }}
-                          >
+                          <p className="mt-0.5 font-data text-muted-foreground text-xs">
                             {event.description}
                           </p>
                         )}
-                        <p
-                          style={{
-                            fontFamily: "'JetBrains Mono', monospace",
-                            fontSize: "0.6875rem",
-                            color: "rgb(100 116 139)",
-                            marginTop: "0.25rem",
-                          }}
-                        >
+                        <p className="mt-1 font-data text-[0.6875rem] text-muted-foreground">
                           {new Date(event.timestamp).toLocaleString("zh-TW", {
                             year: "numeric",
                             month: "short",
@@ -1813,88 +1203,115 @@ function OpportunityDetailPage() {
                     ));
                   })()}
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
             {/* Quick Info */}
-            <div className="detail-card" style={{ animationDelay: "0.45s" }}>
-              <div className="card-header">
-                <h2 className="card-title" style={{ fontSize: "1.25rem" }}>
-                  基本時間
-                </h2>
+            <Card className="ds-card stagger-6 animate-fade-in-up">
+              <div className="border-border border-b p-4">
+                <h2 className="font-bold font-display text-lg">基本時間</h2>
               </div>
-              <div className="card-content">
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "1rem",
-                  }}
-                >
-                  <div className="timeline-item">
-                    <Calendar
-                      className="timeline-icon"
-                      style={{ width: "1.25rem", height: "1.25rem" }}
-                    />
-                    <div>
-                      <p className="timeline-label">建立時間</p>
-                      <p className="timeline-value">
-                        {new Date(opportunity.createdAt).toLocaleDateString(
-                          "zh-TW",
-                          {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          }
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="timeline-item">
-                    <Calendar
-                      className="timeline-icon"
-                      style={{ width: "1.25rem", height: "1.25rem" }}
-                    />
-                    <div>
-                      <p className="timeline-label">最後更新</p>
-                      <p className="timeline-value">
-                        {new Date(opportunity.updatedAt).toLocaleDateString(
-                          "zh-TW",
-                          {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          }
-                        )}
-                      </p>
-                    </div>
-                  </div>
+              <CardContent className="p-4">
+                <div className="flex flex-col gap-4">
+                  <TimelineInfoItem
+                    icon={Calendar}
+                    label="建立時間"
+                    value={new Date(opportunity.createdAt).toLocaleDateString(
+                      "zh-TW",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }
+                    )}
+                  />
+                  <TimelineInfoItem
+                    icon={Calendar}
+                    label="最後更新"
+                    value={new Date(opportunity.updatedAt).toLocaleDateString(
+                      "zh-TW",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }
+                    )}
+                  />
                   {opportunity.lastContactedAt && (
-                    <div className="timeline-item">
-                      <Target
-                        className="timeline-icon"
-                        style={{ width: "1.25rem", height: "1.25rem" }}
-                      />
-                      <div>
-                        <p className="timeline-label">上次聯繫</p>
-                        <p className="timeline-value">
-                          {new Date(
-                            opportunity.lastContactedAt
-                          ).toLocaleDateString("zh-TW", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
-                        </p>
-                      </div>
-                    </div>
+                    <TimelineInfoItem
+                      icon={Target}
+                      label="上次聯繫"
+                      value={new Date(
+                        opportunity.lastContactedAt
+                      ).toLocaleDateString("zh-TW", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    />
                   )}
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
     </main>
+  );
+}
+
+// Helper Components
+
+interface InfoItemProps {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+}
+
+function InfoItem({ icon: Icon, label, value }: InfoItemProps) {
+  return (
+    <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-4 transition-all duration-300 hover:translate-x-1 hover:bg-muted/50">
+      <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[var(--ds-accent)]" />
+      <div>
+        <p className="mb-1 font-data font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+          {label}
+        </p>
+        <p className="font-data text-sm">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+interface TimelineInfoItemProps {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+}
+
+function TimelineInfoItem({ icon: Icon, label, value }: TimelineInfoItemProps) {
+  return (
+    <div className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-4 transition-all duration-300 hover:translate-x-1 hover:bg-muted/50">
+      <Icon className="h-5 w-5 shrink-0 text-[var(--ds-accent)]" />
+      <div>
+        <p className="mb-1 font-data font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+          {label}
+        </p>
+        <p className="font-data text-sm">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+interface EmptyStateProps {
+  icon: React.ComponentType<{ className?: string }>;
+  message: string;
+}
+
+function EmptyState({ icon: Icon, message }: EmptyStateProps) {
+  return (
+    <div className="flex flex-col items-center justify-center py-12 text-center">
+      <Icon className="mb-4 h-12 w-12 text-muted-foreground/50" />
+      <p className="font-data text-muted-foreground">{message}</p>
+    </div>
   );
 }
