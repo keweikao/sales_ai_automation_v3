@@ -14,10 +14,7 @@ import { Client } from "pg";
 dotenv.config({ path: "apps/server/.env" });
 
 const caseNumbers = [
-  '202601-IC010', '202601-IC011', '202601-IC012', '202601-IC013',
-  '202601-IC015', '202601-IC016', '202601-IC017', '202601-IC018',
-  '202601-IC019', '202601-IC020', '202601-IC021', '202601-IC022',
-  '202601-IC023', '202601-IC024'
+  'M202512-IC002'
 ];
 
 async function deleteSpecificCases() {
@@ -31,16 +28,20 @@ async function deleteSpecificCases() {
     console.log('目標案件:', caseNumbers);
     console.log('');
 
-    // 1. 先查詢要刪除的 conversation IDs
+    // 1. 先查詢要刪除的 conversation IDs 和 opportunity_id
     console.log('🔍 查詢要刪除的案件...');
     const conversationsQuery = await client.query(
-      `SELECT id, case_number, title FROM conversations WHERE case_number = ANY($1)`,
+      `SELECT c.id, c.case_number, c.title, c.opportunity_id, o.company_name, o.customer_number
+       FROM conversations c
+       LEFT JOIN opportunities o ON c.opportunity_id = o.id
+       WHERE c.case_number = ANY($1)`,
       [caseNumbers]
     );
 
     console.log(`\n找到 ${conversationsQuery.rows.length} 個案件：`);
     conversationsQuery.rows.forEach((c, idx) => {
       console.log(`  ${idx + 1}. ${c.case_number} - ${c.title || '(無標題)'}`);
+      console.log(`      機會: ${c.customer_number} - ${c.company_name || '(無公司名)'}`);
     });
 
     if (conversationsQuery.rows.length === 0) {
@@ -48,6 +49,9 @@ async function deleteSpecificCases() {
       await client.end();
       return;
     }
+
+    // 取得相關的 opportunity IDs
+    const opportunityIds = [...new Set(conversationsQuery.rows.map(c => c.opportunity_id).filter(Boolean))];
 
     console.log('\n⏳ 開始刪除關聯資料...\n');
 
@@ -105,18 +109,31 @@ async function deleteSpecificCases() {
       });
     }
 
-    // 6. 最後刪除 conversations
+    // 6. 刪除 conversations
     console.log('\n⏳ 刪除案件主記錄...');
     const conversationsResult = await client.query(
       `DELETE FROM conversations WHERE case_number = ANY($1) RETURNING id, case_number, title`,
       [caseNumbers]
     );
 
-    console.log(`\n✅ 成功刪除 ${conversationsResult.rowCount || 0} 筆 conversations`);
-    console.log('\n已刪除的案件:');
+    console.log(`✅ 成功刪除 ${conversationsResult.rowCount || 0} 筆 conversations`);
     conversationsResult.rows.forEach((c, idx) => {
       console.log(`  ${idx + 1}. ${c.case_number} - ${c.title || '(無標題)'}`);
     });
+
+    // 7. 刪除 opportunities（機會）
+    if (opportunityIds.length > 0) {
+      console.log('\n⏳ 刪除機會主記錄...');
+      const opportunitiesResult = await client.query(
+        `DELETE FROM opportunities WHERE id = ANY($1) RETURNING id, customer_number, company_name`,
+        [opportunityIds]
+      );
+
+      console.log(`✅ 成功刪除 ${opportunitiesResult.rowCount || 0} 筆 opportunities`);
+      opportunitiesResult.rows.forEach((o, idx) => {
+        console.log(`  ${idx + 1}. ${o.customer_number} - ${o.company_name || '(無公司名)'}`);
+      });
+    }
 
     console.log('\n🎉 刪除完成！');
 
