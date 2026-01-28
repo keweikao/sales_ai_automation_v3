@@ -299,6 +299,71 @@ export interface Agent6Output {
     recommended_response: string; // 建議的更好回應
     improvement_tips: string[]; // 改進重點
   }>;
+
+  // ========== 對話轉折點分析 (Conversation Turning Points) ==========
+
+  /**
+   * Aha Moments - 正向轉折點
+   * 客戶態度從冷淡/猶豫轉為積極/感興趣的關鍵時刻
+   */
+  aha_moments?: Array<{
+    /** 轉折發生的時間區間描述 (e.g., "對話中段，討論到外送整合時") */
+    timestamp_hint: string;
+    /** 轉折前的客戶狀態 */
+    before_state: "冷淡" | "猶豫" | "中立" | "質疑";
+    /** 轉折後的客戶狀態 */
+    after_state: "感興趣" | "認同" | "積極" | "想成交";
+    /** 觸發轉折的業務話術（黃金句型） */
+    trigger_phrase: string;
+    /** 客戶的正面回應 */
+    customer_response: string;
+    /** 為什麼這句話有效 */
+    why_it_worked: string;
+    /** 轉折強度 (1-5，5 最強) */
+    intensity: number;
+  }>;
+
+  /**
+   * Deal Breakers - 負向轉折點
+   * 客戶態度從積極轉為冷淡/抗拒的關鍵時刻
+   */
+  deal_breakers?: Array<{
+    /** 轉折發生的時間區間描述 */
+    timestamp_hint: string;
+    /** 轉折前的客戶狀態 */
+    before_state: "感興趣" | "積極" | "認同" | "中立";
+    /** 轉折後的客戶狀態 */
+    after_state: "猶豫" | "冷淡" | "抗拒" | "想離開";
+    /** 導致轉折的原因（業務說了什麼/做了什麼） */
+    trigger_cause: string;
+    /** 客戶的負面反應 */
+    customer_reaction: string;
+    /** 問題分析：為什麼客戶反應變差 */
+    problem_analysis: string;
+    /** 建議的補救話術 */
+    recovery_suggestion: string;
+    /** 轉折強度 (1-5，5 最嚴重) */
+    intensity: number;
+  }>;
+
+  /**
+   * 情緒曲線摘要
+   * 整體對話的情緒走向
+   */
+  emotional_journey?: {
+    /** 開場情緒 */
+    opening: "正面" | "中立" | "負面";
+    /** 最高點描述 */
+    peak_moment?: string;
+    /** 最低點描述 */
+    low_moment?: string;
+    /** 結尾情緒 */
+    closing: "正面" | "中立" | "負面";
+    /** 整體趨勢 */
+    overall_trend: "上升" | "平穩" | "下降" | "波動";
+    /** 關鍵轉折數量 */
+    turning_point_count: number;
+  };
 }
 
 // ============================================================
