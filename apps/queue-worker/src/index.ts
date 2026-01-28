@@ -910,6 +910,22 @@ export default {
                 nextAction,
                 topTacticalSuggestion,
                 pdcmSpinAlerts,
+
+                // 競品分析
+                competitorAnalysis: analysisResult.competitorAnalysis as
+                  | {
+                      detectedCompetitors: Array<{
+                        name: string;
+                        customerQuote: string;
+                        attitude: "positive" | "negative" | "neutral";
+                        threatLevel: "high" | "medium" | "low";
+                        ourAdvantages: string[];
+                        suggestedTalkTracks: string[];
+                      }>;
+                      overallThreatLevel: "high" | "medium" | "low" | "none";
+                      handlingScore?: number;
+                    }
+                  | undefined,
               },
               processingTimeMs,
               threadTs, // 傳遞 thread_ts 以在同一個 thread 內回覆
