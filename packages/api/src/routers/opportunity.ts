@@ -357,16 +357,46 @@ export const listOpportunities = protectedProcedure
       conditions.push(eq(opportunities.productLine, productLine));
     }
 
+    // 處理搜尋：如果有搜尋詞，先找出符合 case_number 或 store_name 的 opportunity IDs
+    let searchMatchingOppIds: string[] = [];
     if (search) {
       const searchPattern = `%${search}%`;
-      conditions.push(
-        or(
-          ilike(opportunities.companyName, searchPattern),
-          ilike(opportunities.contactName, searchPattern),
-          ilike(opportunities.contactEmail, searchPattern),
-          ilike(opportunities.customerNumber, searchPattern)
-        )!
-      );
+
+      const matchingConvs = await db
+        .selectDistinct({ opportunityId: conversations.opportunityId })
+        .from(conversations)
+        .where(
+          or(
+            ilike(conversations.caseNumber, searchPattern),
+            ilike(conversations.storeName, searchPattern)
+          )!
+        );
+
+      searchMatchingOppIds = matchingConvs
+        .map((c) => c.opportunityId)
+        .filter((id): id is string => id !== null);
+    }
+
+    if (search) {
+      const searchPattern = `%${search}%`;
+
+      const searchConditions = [
+        ilike(opportunities.companyName, searchPattern),
+        ilike(opportunities.contactName, searchPattern),
+        ilike(opportunities.contactEmail, searchPattern),
+        ilike(opportunities.customerNumber, searchPattern),
+      ];
+
+      // 如果從 conversations 找到匹配的 opportunity IDs，加入條件
+      if (searchMatchingOppIds.length > 0) {
+        searchConditions.push(
+          sql`${opportunities.id} IN (${sql.raw(
+            searchMatchingOppIds.map((id) => `'${id}'`).join(", ")
+          )})`
+        );
+      }
+
+      conditions.push(or(...searchConditions)!);
     }
 
     // 先查詢總數（不分頁）

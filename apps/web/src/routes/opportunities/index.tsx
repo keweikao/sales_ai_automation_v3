@@ -300,7 +300,7 @@ function OpportunitiesPage() {
                 setSearch(e.target.value);
                 setPage(0);
               }}
-              placeholder="搜尋公司、聯絡人..."
+              placeholder="搜尋公司、聯絡人、案件編號、店名..."
               value={search}
             />
           </div>
