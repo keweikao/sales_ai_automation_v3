@@ -3,9 +3,9 @@
  * 將原 Orchestrator 中的 6 個 Agent 包裝成符合 BaseAgent 介面的類別
  */
 
+import { getCompetitorInfo } from "../mcp/tools/get-competitor-info.js";
 import type { BaseAgent } from "./base-agent.js";
 import type { GeminiClient } from "./gemini.js";
-import { getCompetitorInfo } from "../mcp/tools/get-competitor-info.js";
 import {
   AGENT1_PROMPT,
   AGENT2_PROMPT,
@@ -116,7 +116,10 @@ export class BuyerAgent implements BaseAgent {
     );
 
     // 【新增】如果偵測到競品，查詢詳細資訊
-    if (response.detected_competitors && response.detected_competitors.length > 0) {
+    if (
+      response.detected_competitors &&
+      response.detected_competitors.length > 0
+    ) {
       console.log(
         `[Agent 2] 偵測到 ${response.detected_competitors.length} 個競品，查詢詳細資訊...`
       );
@@ -134,13 +137,14 @@ export class BuyerAgent implements BaseAgent {
                 ...competitor,
                 details: details.competitor,
               };
-            } else {
-              console.log(`[Agent 2] ⚠️  資料庫中沒有競品資訊: ${competitor.name}`);
-              return {
-                ...competitor,
-                details: null,
-              };
             }
+            console.log(
+              `[Agent 2] ⚠️  資料庫中沒有競品資訊: ${competitor.name}`
+            );
+            return {
+              ...competitor,
+              details: null,
+            };
           } catch (error) {
             console.error(
               `[Agent 2] ❌ 查詢競品資訊失敗: ${competitor.name}`,
@@ -154,7 +158,8 @@ export class BuyerAgent implements BaseAgent {
         })
       );
 
-      response.detected_competitors = enrichedCompetitors as typeof response.detected_competitors;
+      response.detected_competitors =
+        enrichedCompetitors as typeof response.detected_competitors;
     }
 
     return {
@@ -337,18 +342,14 @@ export class CoachAgent implements BaseAgent {
         if (comp.details) {
           competitorContext += `### ${comp.name}\n\n`;
           competitorContext += `**我方優勢**（相對於 ${comp.name}）：\n`;
-          comp.details.ourAdvantages
-            .slice(0, 5)
-            .forEach((adv) => {
-              competitorContext += `- ${adv}\n`;
-            });
+          comp.details.ourAdvantages.slice(0, 5).forEach((adv) => {
+            competitorContext += `- ${adv}\n`;
+          });
 
           competitorContext += `\n**建議話術**（針對 ${comp.name}）：\n`;
-          comp.details.counterTalkTracks
-            .slice(0, 3)
-            .forEach((track, idx) => {
-              competitorContext += `${idx + 1}. ${track}\n`;
-            });
+          comp.details.counterTalkTracks.slice(0, 3).forEach((track, idx) => {
+            competitorContext += `${idx + 1}. ${track}\n`;
+          });
 
           competitorContext += "\n";
         }

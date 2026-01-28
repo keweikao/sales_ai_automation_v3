@@ -786,13 +786,11 @@ export class MeddicOrchestrator {
     });
 
     // 計算整體威脅等級
-    const overallThreatLevel = this.calculateOverallThreatLevel(
-      detectedCompetitors
-    );
+    const overallThreatLevel =
+      this.calculateOverallThreatLevel(detectedCompetitors);
 
     // 從 Agent6 提取業務應對評分（如果有 competitor_handling_evaluation）
-    const handlingEvaluation =
-      state.coachData?.competitor_handling_evaluation;
+    const handlingEvaluation = state.coachData?.competitor_handling_evaluation;
     const handlingScore = handlingEvaluation
       ? this.calculateAverageHandlingScore(handlingEvaluation)
       : undefined;
@@ -830,7 +828,9 @@ export class MeddicOrchestrator {
       return "none";
     }
 
-    const highCount = competitors.filter((c) => c.threatLevel === "high").length;
+    const highCount = competitors.filter(
+      (c) => c.threatLevel === "high"
+    ).length;
     const mediumCount = competitors.filter(
       (c) => c.threatLevel === "medium"
     ).length;
