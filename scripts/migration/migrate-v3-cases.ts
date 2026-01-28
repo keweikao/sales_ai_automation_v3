@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 // scripts/migration/migrate-v3-cases.ts
 
-import { conversations, meddicAnalyses, opportunities } from "../../packages/db/src/schema";
-import { db } from "../../packages/db";
 import { eq } from "drizzle-orm";
-import { firestore } from "./config";
+import { conversations, db, firestore, meddicAnalyses, opportunities } from "./config";
 import {
+  isExcludedCustomerId,
   isTestData,
   mapCaseToConversation,
   mapCaseToMeddicAnalysis,
@@ -46,17 +45,58 @@ async function migrate() {
 
     console.log(`✅ 讀取 ${allCaseDocs.length} 筆 cases`);
 
-    // 過濾測試資料
-    const caseDocs = allCaseDocs.filter((caseDoc) => {
+    // 過濾測試資料和額外排除的客戶
+    let testDataCount = 0;
+    let excludedCustomerCount = 0;
+
+    const filteredCaseDocs = allCaseDocs.filter((caseDoc) => {
+      // 過濾測試資料（根據 customerName）
       if (isTestData(caseDoc.customerName)) {
-        console.log(`⏭️  跳過測試資料: ${caseDoc.caseId} (${caseDoc.customerName})`);
+        console.log(
+          `⏭️  跳過測試資料: ${caseDoc.caseId} (${caseDoc.customerName})`,
+        );
+        testDataCount++;
+        return false;
+      }
+      // 過濾額外排除的客戶編號
+      if (caseDoc.customerId && isExcludedCustomerId(caseDoc.customerId)) {
+        console.log(
+          `⏭️  跳過排除客戶: ${caseDoc.caseId} (${caseDoc.customerId} - ${caseDoc.customerName})`,
+        );
+        excludedCustomerCount++;
         return false;
       }
       return true;
     });
 
-    const filteredCount = allCaseDocs.length - caseDocs.length;
-    console.log(`📊 過濾掉 ${filteredCount} 筆測試資料,剩餘 ${caseDocs.length} 筆正式資料`);
+    console.log(`📊 過濾掉 ${testDataCount} 筆測試資料`);
+    console.log(`📊 過濾掉 ${excludedCustomerCount} 筆排除客戶`);
+    console.log(`📊 剩餘 ${filteredCaseDocs.length} 筆待處理資料`);
+
+    // 每個客戶只保留最新一筆案件
+    console.log("\n📋 每個客戶只保留最新一筆案件...");
+    const customerLatestCase = new Map<string, FirestoreV3Case>();
+
+    for (const caseDoc of filteredCaseDocs) {
+      if (!caseDoc.customerId) continue;
+
+      const existing = customerLatestCase.get(caseDoc.customerId);
+      if (!existing) {
+        customerLatestCase.set(caseDoc.customerId, caseDoc);
+      } else {
+        // 比較 createdAt，保留最新的
+        const existingDate = existing.createdAt?.toDate() || new Date(0);
+        const currentDate = caseDoc.createdAt?.toDate() || new Date(0);
+        if (currentDate > existingDate) {
+          customerLatestCase.set(caseDoc.customerId, caseDoc);
+        }
+      }
+    }
+
+    const caseDocs = Array.from(customerLatestCase.values());
+    const duplicatesRemoved = filteredCaseDocs.length - caseDocs.length;
+    console.log(`📊 移除 ${duplicatesRemoved} 筆重複客戶的舊案件`);
+    console.log(`📊 最終遷移 ${caseDocs.length} 筆資料（每客戶一筆）`);
 
     // ========== Phase 2: 建立 Opportunities (去重) ==========
     console.log("\n🎯 Phase 2: 建立 Opportunities (按 customerId 去重)");

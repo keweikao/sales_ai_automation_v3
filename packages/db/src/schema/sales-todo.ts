@@ -4,7 +4,14 @@
  */
 
 import { relations } from "drizzle-orm";
-import { boolean, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { conversations } from "./conversation";
 import { opportunities } from "./opportunity";
@@ -42,6 +49,7 @@ export interface WonRecord {
   amount?: number;
   currency?: string;
   product?: string;
+  paymentDate?: string; // 預計付款日期
   note?: string;
   wonAt: string;
   wonVia: "slack" | "web";
@@ -74,6 +82,9 @@ export const salesTodos = pgTable("sales_todos", {
     onDelete: "set null",
   }),
 
+  // customerNumber - 用於連接 opportunity（不依賴 opportunityId）
+  customerNumber: text("customer_number"),
+
   // Todo 內容
   title: text("title").notNull(), // Follow 事項標題
   description: text("description"), // 詳細描述（選填）
@@ -81,6 +92,7 @@ export const salesTodos = pgTable("sales_todos", {
   // 日期相關
   dueDate: timestamp("due_date").notNull(), // 預計 follow 日期
   originalDueDate: timestamp("original_due_date").notNull(), // 原始預計日期
+  remindDays: integer("remind_days"), // 用戶選擇的提醒天數 (1/3/5/7/14)
 
   // 狀態: pending, completed, postponed, cancelled
   status: text("status").$type<SalesTodoStatus>().notNull().default("pending"),

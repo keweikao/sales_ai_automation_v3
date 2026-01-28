@@ -21,6 +21,7 @@ export const conversations = pgTable("conversations", {
 
   // Case tracking
   caseNumber: text("case_number").unique(), // Auto-generated case number, e.g. "202601-IC046"
+  legacyCaseId: text("legacy_case_id"), // 保留 V2 原始 caseId（遷移用）
 
   // Basic info
   title: text("title"),

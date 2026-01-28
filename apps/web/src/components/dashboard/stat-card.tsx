@@ -36,6 +36,9 @@ interface StatCardProps {
   loading?: boolean;
   accentColor?: keyof typeof ACCENT_COLORS;
   delay?: number;
+  // 新增響應式尺寸
+  valueSize?: "xl" | "2xl" | "3xl" | { base: string; lg: string };
+  compact?: boolean; // 緊湊模式（移動端）
 }
 
 function ChangeBadge({ change }: { change: number }) {
@@ -70,6 +73,8 @@ export function StatCard({
   loading,
   accentColor = "teal",
   delay = 0,
+  valueSize = "3xl",
+  compact = false,
 }: StatCardProps) {
   return (
     <Card
@@ -104,7 +109,15 @@ export function StatCard({
         ) : (
           <>
             <div className="flex items-center gap-3">
-              <span className="font-bold font-data text-3xl tracking-tight">
+              <span
+                className={cn(
+                  "font-bold font-data tracking-tight",
+                  typeof valueSize === "object"
+                    ? `text-${valueSize.base} lg:text-${valueSize.lg}`
+                    : `text-${valueSize}`,
+                  compact && "text-2xl lg:text-3xl"
+                )}
+              >
                 {value}
               </span>
               {change !== undefined && <ChangeBadge change={change} />}

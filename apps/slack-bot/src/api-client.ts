@@ -51,6 +51,12 @@ export class ApiClient {
       }
     }
 
+    console.log(`[ApiClient] Request: ${options.method || "POST"} ${url}`);
+    console.log(
+      `[ApiClient] Headers: ${JSON.stringify({ ...headers, Authorization: headers.Authorization ? "Bearer ***" : undefined })}`
+    );
+    console.log(`[ApiClient] Body: ${body}`);
+
     const response = await fetch(url, {
       ...options,
       method: options.method || "POST", // oRPC 所有端點都使用 POST
@@ -58,13 +64,16 @@ export class ApiClient {
       body,
     });
 
+    const responseText = await response.text();
+    console.log(`[ApiClient] Response status: ${response.status}`);
+    console.log(`[ApiClient] Response body: ${responseText.slice(0, 500)}`);
+
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`API Error: ${response.status} - ${error}`);
+      throw new Error(`API Error: ${response.status} - ${responseText}`);
     }
 
     // oRPC 響應格式為 {"json": data, "meta": [...]}
-    const result = (await response.json()) as { json?: T };
+    const result = JSON.parse(responseText) as { json?: T };
     return (result.json ?? result) as T;
   }
 
@@ -85,6 +94,22 @@ export class ApiClient {
         "/rpc/opportunities/get",
         {
           body: JSON.stringify({ opportunityId: id }),
+        }
+      );
+      return result.opportunity;
+    } catch {
+      return null;
+    }
+  }
+
+  async getOpportunityByCustomerNumber(
+    customerNumber: string
+  ): Promise<OpportunityResponse | null> {
+    try {
+      const result = await this.request<{ opportunity: OpportunityResponse }>(
+        "/rpc/opportunities/getByCustomerNumber",
+        {
+          body: JSON.stringify({ customerNumber }),
         }
       );
       return result.opportunity;
@@ -279,7 +304,8 @@ export class ApiClient {
     title: string;
     description?: string;
     dueDate: string; // ISO string
-    opportunityId?: string;
+    customerNumber?: string; // 主要連接欄位，用於關聯 opportunity
+    opportunityId?: string; // 保留向後相容
     conversationId?: string;
     source: string;
   }): Promise<{ id: string }> {

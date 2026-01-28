@@ -1157,14 +1157,16 @@ async function handleDailyHealthReport(env: Env): Promise<void> {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
+    // 排除已封存的對話 (archived 狀態)
     const stats = await sql`
       SELECT
         COUNT(*) FILTER (WHERE status = 'completed') as completed_count,
         COUNT(*) FILTER (WHERE status = 'failed') as failed_count,
-        COUNT(*) as total_count,
+        COUNT(*) FILTER (WHERE status != 'archived') as total_count,
         AVG(EXTRACT(EPOCH FROM (updated_at - created_at))) FILTER (WHERE status = 'completed') as avg_processing_time
       FROM conversations
       WHERE created_at >= ${yesterday.toISOString()}
+        AND status != 'archived'
     `;
 
     const result = stats[0] || {
@@ -1230,7 +1232,7 @@ async function handleWeeklyReport(env: Env): Promise<void> {
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
 
-    // 查詢各業務上傳統計
+    // 查詢各業務上傳統計（排除已封存的對話，以及 won/lost 狀態的機會）
     const repStats = await sql`
       SELECT
         u.name as user_name,
@@ -1238,20 +1240,24 @@ async function handleWeeklyReport(env: Env): Promise<void> {
         COUNT(*) FILTER (WHERE c.created_at >= ${weekStart.toISOString()}) as week_count
       FROM conversations c
       JOIN "user" u ON c.created_by = u.id
+      LEFT JOIN opportunities o ON c.opportunity_id = o.id
       WHERE c.created_at >= ${mtdStart.toISOString()}
-        AND c.status = 'completed'
+        AND c.status NOT IN ('archived', 'failed')
+        AND (o.status IS NULL OR o.status NOT IN ('won', 'lost'))
       GROUP BY u.id, u.name
       ORDER BY mtd_count DESC, week_count DESC
     `;
 
-    // 總計
+    // 總計（排除已封存的對話，以及 won/lost 狀態的機會）
     const totals = await sql`
       SELECT
-        COUNT(*) FILTER (WHERE created_at >= ${mtdStart.toISOString()}) as mtd_total,
-        COUNT(*) FILTER (WHERE created_at >= ${weekStart.toISOString()}) as week_total
-      FROM conversations
-      WHERE created_at >= ${mtdStart.toISOString()}
-        AND status = 'completed'
+        COUNT(*) FILTER (WHERE c.created_at >= ${mtdStart.toISOString()}) as mtd_total,
+        COUNT(*) FILTER (WHERE c.created_at >= ${weekStart.toISOString()}) as week_total
+      FROM conversations c
+      LEFT JOIN opportunities o ON c.opportunity_id = o.id
+      WHERE c.created_at >= ${mtdStart.toISOString()}
+        AND c.status NOT IN ('archived', 'failed')
+        AND (o.status IS NULL OR o.status NOT IN ('won', 'lost'))
     `;
 
     const totalResult = totals[0] || { mtd_total: 0, week_total: 0 };
@@ -1307,7 +1313,8 @@ interface TodoWithOpportunity {
 
 /**
  * 每日待辦提醒 Handler
- * 查詢今日 + 逾期的 pending 待辦，發送 Slack DM 給各用戶
+ * 1. 查詢今日 + 逾期的 pending 待辦，發送 Slack DM 給各用戶
+ * 2. 查詢需要提前提醒的待辦（根據 remindDays 設定），發送個別提醒
  */
 async function handleDailyTodoReminder(env: Env): Promise<void> {
   try {
@@ -1320,11 +1327,128 @@ async function handleDailyTodoReminder(env: Env): Promise<void> {
     const todayEnd = new Date(now);
     todayEnd.setHours(23, 59, 59, 999);
 
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+
     console.log(
       `[DailyTodoReminder] Querying pending todos due before: ${todayEnd.toISOString()}`
     );
 
-    // 1. 從資料庫查詢今日 + 逾期的 pending 待辦
+    // ========================================
+    // Part 1: 查詢需要個別提前提醒的待辦
+    // 條件: status=pending, reminderSent=false, remindDays>0, dueDate - remindDays <= today
+    // ========================================
+    console.log("[DailyTodoReminder] Checking for advance reminder todos...");
+
+    const advanceReminderTodos = await sql`
+      SELECT
+        st.id,
+        st.user_id as "userId",
+        st.title,
+        st.description,
+        st.due_date as "dueDate",
+        st.remind_days as "remindDays",
+        st.opportunity_id as "opportunityId",
+        o.company_name as "companyName",
+        o.customer_number as "customerNumber",
+        up.slack_user_id as "slackUserId"
+      FROM sales_todos st
+      LEFT JOIN opportunities o ON st.opportunity_id = o.id
+      LEFT JOIN user_profiles up ON st.user_id = up.user_id
+      WHERE st.status = 'pending'
+        AND st.reminder_sent = false
+        AND st.remind_days IS NOT NULL
+        AND st.remind_days > 0
+        AND st.due_date > ${todayEnd.toISOString()}
+        AND st.due_date - INTERVAL '1 day' * st.remind_days <= ${todayEnd.toISOString()}
+    `;
+
+    console.log(
+      `[DailyTodoReminder] Found ${advanceReminderTodos.length} advance reminder todos`
+    );
+
+    // 發送個別提前提醒
+    for (const todo of advanceReminderTodos) {
+      if (!todo.slackUserId) {
+        console.log(
+          `[DailyTodoReminder] User ${todo.userId} has no Slack ID, skipping advance reminder`
+        );
+        continue;
+      }
+
+      try {
+        const daysUntilDue = Math.ceil(
+          (new Date(todo.dueDate).getTime() - now.getTime()) /
+            (1000 * 60 * 60 * 24)
+        );
+        const displayPrefix =
+          [todo.customerNumber, todo.companyName].filter(Boolean).join(" ") ||
+          "無客戶";
+
+        await slackClient.chat.postMessage({
+          channel: todo.slackUserId,
+          text: `⏰ 提前提醒 - ${todo.title}`,
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: `⏰ *提前提醒*\n\n*[${displayPrefix}] ${todo.title}*\n📅 將於 ${daysUntilDue} 天後到期 (${new Date(todo.dueDate).toISOString().split("T")[0]})`,
+              },
+            },
+            {
+              type: "actions",
+              elements: [
+                {
+                  type: "button",
+                  text: { type: "plain_text", text: "✅ 完成", emoji: true },
+                  action_id: "complete_todo",
+                  value: JSON.stringify({
+                    todoId: todo.id,
+                    todoTitle: todo.title,
+                    opportunityId: todo.opportunityId,
+                    customerNumber: todo.customerNumber,
+                    companyName: todo.companyName,
+                  }),
+                },
+                {
+                  type: "button",
+                  text: { type: "plain_text", text: "📅 改期", emoji: true },
+                  action_id: "postpone_todo",
+                  value: JSON.stringify({
+                    todoId: todo.id,
+                    todoTitle: todo.title,
+                  }),
+                },
+              ],
+            },
+          ],
+        });
+
+        // 更新 reminderSent 狀態
+        await db
+          .update(salesTodos)
+          .set({
+            reminderSent: true,
+            reminderSentAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(salesTodos.id, todo.id));
+
+        console.log(
+          `[DailyTodoReminder] Sent advance reminder for todo ${todo.id} to ${todo.slackUserId}`
+        );
+      } catch (sendError) {
+        console.error(
+          `[DailyTodoReminder] Failed to send advance reminder for ${todo.id}:`,
+          sendError
+        );
+      }
+    }
+
+    // ========================================
+    // Part 2: 查詢今日 + 逾期的 pending 待辦（原有邏輯）
+    // ========================================
     const pendingTodos = await db
       .select({
         id: salesTodos.id,
@@ -1343,7 +1467,7 @@ async function handleDailyTodoReminder(env: Env): Promise<void> {
       );
 
     console.log(
-      `[DailyTodoReminder] Found ${pendingTodos.length} pending todos`
+      `[DailyTodoReminder] Found ${pendingTodos.length} pending todos for today/overdue`
     );
 
     if (pendingTodos.length === 0) {
@@ -1390,9 +1514,6 @@ async function handleDailyTodoReminder(env: Env): Promise<void> {
     }
 
     // 4. 對每個用戶發送 Slack DM
-    const todayStart = new Date(now);
-    todayStart.setHours(0, 0, 0, 0);
-
     const todoIdsToUpdate: string[] = [];
 
     for (const [slackUserId, todos] of todosByUser) {

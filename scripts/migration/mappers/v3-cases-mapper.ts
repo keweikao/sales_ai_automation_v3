@@ -1,5 +1,6 @@
 // scripts/migration/mappers/v3-cases-mapper.ts
 
+import { randomUUID } from "node:crypto";
 import type {
   NewConversation,
   NewMeddicAnalysis,
@@ -70,6 +71,27 @@ export function convertTranscript(transcription?: {
 }
 
 /**
+ * 需要額外排除的客戶編號（用戶指定）
+ */
+const EXCLUDED_CUSTOMER_IDS = new Set([
+  "102511-111888",
+  "123456-789012",
+  "201500-000001",
+  "201700-000001",
+  "202512-122807",
+  "202512-000001",
+  "202512-111111",
+  "202512-111222",
+]);
+
+/**
+ * 檢查客戶編號是否在排除列表中
+ */
+export function isExcludedCustomerId(customerId: string): boolean {
+  return EXCLUDED_CUSTOMER_IDS.has(customerId);
+}
+
+/**
  * 檢查是否為測試資料
  * 根據 customerName 判斷是否包含測試相關關鍵字
  */
@@ -77,13 +99,24 @@ export function isTestData(customerName: string): boolean {
   if (!customerName) return false;
 
   const testKeywords = [
-    '測試', '测试', 'test', 'demo', 'sample',
-    '範例', '范例', '樣本', '样本', 'testing',
-    'デモ', 'テスト' // 日文測試關鍵字
+    "測試",
+    "测试",
+    "test",
+    "demo",
+    "sample",
+    "範例",
+    "范例",
+    "樣本",
+    "样本",
+    "testing",
+    "デモ",
+    "テスト", // 日文測試關鍵字
   ];
 
   const lowerName = customerName.toLowerCase();
-  return testKeywords.some(keyword => lowerName.includes(keyword.toLowerCase()));
+  return testKeywords.some((keyword) =>
+    lowerName.includes(keyword.toLowerCase()),
+  );
 }
 
 /**
@@ -96,7 +129,7 @@ export function mapCaseToOpportunity(
   const createdAt = caseDoc.createdAt?.toDate() || new Date();
 
   return {
-    // 不設定 id,讓 PostgreSQL 自動生成 UUID
+    id: randomUUID(), // 明確生成 UUID
     userId,
     productLine: mapProductLine(caseDoc.unit),
     customerNumber: caseDoc.customerId, // 直接使用 V2 customerId
@@ -148,10 +181,11 @@ export function mapCaseToConversation(
     : null;
 
   return {
-    id: caseDoc.caseId, // 保留原始 ID
+    id: randomUUID(), // 使用新的 UUID
     opportunityId,
     productLine: mapProductLine(caseDoc.unit),
-    caseNumber: caseDoc.caseId,
+    caseNumber: `M${caseDoc.caseId}`, // 加上 M 前綴（如 M202511-IC004）
+    legacyCaseId: caseDoc.caseId, // 保留 V2 原始 caseId 供追溯
     title: caseDoc.customerName || `對話 ${caseDoc.caseId}`,
     type: "demo", // 預設為 Demo
     status: mapConversationStatus(caseDoc.status),
@@ -160,7 +194,7 @@ export function mapCaseToConversation(
     audioUrl: null,
     transcript,
     summary,
-    duration: caseDoc.audio?.duration || caseDoc.transcription?.duration || null,
+    duration: Math.round(caseDoc.audio?.duration || caseDoc.transcription?.duration || 0) || null,
 
     // MEDDIC Analysis (簡化版)
     meddicAnalysis,

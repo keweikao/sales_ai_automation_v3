@@ -199,7 +199,7 @@ function RepPerformanceReport() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
           {[1, 2, 3, 4].map((i) => (
             <Card key={i}>
               <CardHeader className="pb-2">
@@ -277,7 +277,7 @@ function RepPerformanceReport() {
       )}
 
       {/* Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6 xl:grid-cols-8">
         <StatCard
           accentColor="teal"
           delay={0}
@@ -776,7 +776,7 @@ function TeamPerformanceReport() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 xl:grid-cols-6">
           {[1, 2, 3, 4, 5].map((i) => (
             <Card key={i}>
               <CardHeader className="pb-2">
@@ -868,7 +868,7 @@ function TeamPerformanceReport() {
       </div>
 
       {/* Team Summary */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5 xl:grid-cols-6">
         <StatCard
           accentColor="teal"
           delay={0}
@@ -1014,7 +1014,7 @@ function TeamPerformanceReport() {
           icon={BarChart3}
           title="團隊 PDCM 維度分析"
         >
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
             {Object.entries(cachedData.pdcmAnalysis).map(
               ([key, dim]: [string, any]) => {
                 const labelInfo = PDCM_LABELS[key];

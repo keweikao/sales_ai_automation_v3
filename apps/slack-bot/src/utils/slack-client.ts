@@ -161,6 +161,50 @@ export class SlackClient {
   }
 
   /**
+   * Push Modal（在現有 modal 上疊加新的 modal）
+   */
+  async pushView(
+    triggerId: string,
+    view: object
+  ): Promise<{ ok: boolean; error?: string }> {
+    const response = await fetch("https://slack.com/api/views.push", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        trigger_id: triggerId,
+        view,
+      }),
+    });
+
+    return response.json();
+  }
+
+  /**
+   * 更新現有 Modal
+   */
+  async updateView(
+    viewId: string,
+    view: object
+  ): Promise<{ ok: boolean; error?: string }> {
+    const response = await fetch("https://slack.com/api/views.update", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        view_id: viewId,
+        view,
+      }),
+    });
+
+    return response.json();
+  }
+
+  /**
    * 取得使用者資訊（包含 email）
    * 需要 users:read.email scope 才能取得 email
    */

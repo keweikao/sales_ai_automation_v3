@@ -3,32 +3,30 @@
  * Precision Dashboard Design System
  */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Building2,
   ChevronLeft,
   ChevronRight,
   Mail,
-  MoreHorizontal,
   Phone,
   Plus,
   Search,
   TrendingUp,
+  UserCircle,
 } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { ProgressBar } from "@/components/dashboard";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -67,9 +65,146 @@ function getScoreBadgeClass(score: number): string {
   return "bg-rose-500/20 text-rose-400 ring-rose-500/40";
 }
 
+interface OpportunityCardProps {
+  opportunity: {
+    id: string;
+    companyName: string;
+    customerNumber: string;
+    latestCaseNumber: string | null;
+    salesRepName: string | null;
+    contactName: string | null;
+    contactEmail: string | null;
+    contactPhone: string | null;
+    meddicScore: { overall: number } | null;
+    spinScore: number | null;
+    updatedAt: Date;
+  };
+}
+
+function OpportunityCard({ opportunity }: OpportunityCardProps) {
+  const navigate = useNavigate();
+
+  const handleView = (id: string) => {
+    navigate({ to: "/opportunities/$id", params: { id } });
+  };
+
+  return (
+    <Card
+      className="cursor-pointer transition-all hover:shadow-lg hover:shadow-teal-500/10"
+      onClick={() => handleView(opportunity.id)}
+    >
+      <CardHeader>
+        <div className="flex items-start justify-between gap-2">
+          <CardTitle className="truncate font-display font-semibold text-lg">
+            {opportunity.companyName}
+          </CardTitle>
+          {opportunity.latestCaseNumber && (
+            <span className="inline-flex shrink-0 items-center rounded-full bg-[var(--ds-accent)]/20 px-2.5 py-0.5 font-data font-medium text-[var(--ds-accent)] text-xs ring-1 ring-[var(--ds-accent)]/30">
+              {opportunity.latestCaseNumber}
+            </span>
+          )}
+        </div>
+        <CardDescription className="font-data">
+          客戶編號: {opportunity.customerNumber}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* 業務代表 */}
+        <div className="flex items-center gap-2 text-sm">
+          <UserCircle className="h-4 w-4 text-[var(--ds-accent)]" />
+          <span className="font-data text-muted-foreground">
+            {opportunity.salesRepName || "未指派"}
+          </span>
+        </div>
+
+        {/* 聯絡人資訊 */}
+        <div className="space-y-2">
+          {opportunity.contactName && (
+            <div className="font-medium text-sm">{opportunity.contactName}</div>
+          )}
+          {opportunity.contactEmail && (
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <Mail className="h-3 w-3" />
+              <span className="font-data">{opportunity.contactEmail}</span>
+            </div>
+          )}
+          {opportunity.contactPhone && (
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <Phone className="h-3 w-3" />
+              <span className="font-data">{opportunity.contactPhone}</span>
+            </div>
+          )}
+        </div>
+
+        {/* PDCM & SPIN 分數 */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* PDCM Score */}
+          <div className="flex flex-col items-center justify-center rounded-lg bg-muted/50 p-4">
+            <div className="mb-2 font-data text-muted-foreground text-xs uppercase">
+              PDCM
+            </div>
+            {opportunity.meddicScore ? (
+              <div className="flex items-center gap-2">
+                <span
+                  className={cn(
+                    "inline-flex h-8 w-8 items-center justify-center rounded-full font-bold font-data text-sm ring-1",
+                    getScoreBadgeClass(opportunity.meddicScore.overall)
+                  )}
+                >
+                  P
+                </span>
+                <span className="font-data font-semibold text-lg">
+                  {opportunity.meddicScore.overall}
+                </span>
+              </div>
+            ) : (
+              <span className="text-muted-foreground text-sm">-</span>
+            )}
+          </div>
+
+          {/* SPIN Score */}
+          <div className="flex flex-col items-center justify-center rounded-lg bg-muted/50 p-4">
+            <div className="mb-2 font-data text-muted-foreground text-xs uppercase">
+              SPIN
+            </div>
+            {opportunity.spinScore !== null ? (
+              <div className="flex w-full flex-col items-center gap-2">
+                <div className="w-full">
+                  <ProgressBar
+                    animated={false}
+                    color={getScoreColor(opportunity.spinScore)}
+                    size="sm"
+                    value={opportunity.spinScore}
+                  />
+                </div>
+                <span className="font-data font-semibold text-[var(--ds-accent)] text-sm">
+                  {opportunity.spinScore}%
+                </span>
+              </div>
+            ) : (
+              <span className="text-muted-foreground text-sm">-</span>
+            )}
+          </div>
+        </div>
+
+        {/* 更新時間 */}
+        <div className="border-border/50 border-t pt-3 text-center">
+          <span className="font-data text-muted-foreground text-xs">
+            更新於{" "}
+            {new Intl.DateTimeFormat("zh-TW", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            }).format(new Date(opportunity.updatedAt))}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function OpportunitiesPage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -95,18 +230,6 @@ function OpportunitiesPage() {
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (opportunityId: string) =>
-      client.opportunities.delete({ opportunityId }),
-    onSuccess: () => {
-      toast.success("機會已刪除");
-      queryClient.invalidateQueries({ queryKey: ["opportunities"] });
-    },
-    onError: () => {
-      toast.error("刪除失敗");
-    },
-  });
-
   const opportunities = opportunitiesQuery.data?.opportunities ?? [];
   const isLoading = opportunitiesQuery.isLoading;
   const totalCount = opportunitiesQuery.data?.total ?? 0;
@@ -114,12 +237,6 @@ function OpportunitiesPage() {
 
   const handleView = (id: string) => {
     navigate({ to: "/opportunities/$id", params: { id } });
-  };
-
-  const handleDelete = (id: string) => {
-    if (window.confirm("確定要刪除這個機會嗎？")) {
-      deleteMutation.mutate(id);
-    }
   };
 
   return (
@@ -160,9 +277,9 @@ function OpportunitiesPage() {
           </div>
         </div>
 
-        {/* Table */}
+        {/* Table - Desktop View */}
         <div
-          className="ds-card animate-fade-in-up opacity-0"
+          className="ds-card hidden animate-fade-in-up opacity-0 lg:block"
           style={{ animationDelay: "200ms", animationFillMode: "forwards" }}
         >
           <Table>
@@ -175,6 +292,9 @@ function OpportunitiesPage() {
                   </div>
                 </TableHead>
                 <TableHead className="font-data font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                  業務
+                </TableHead>
+                <TableHead className="font-data font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                   案件編號
                 </TableHead>
                 <TableHead className="font-data font-semibold text-muted-foreground text-xs uppercase tracking-wider">
@@ -184,18 +304,17 @@ function OpportunitiesPage() {
                   聯絡人
                 </TableHead>
                 <TableHead className="font-data font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                  <TermTooltip termKey="pdcmScore">PDCM</TermTooltip>
+                </TableHead>
+                <TableHead className="font-data font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                   <div className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4 text-[var(--ds-accent)]" />
                     <TermTooltip termKey="spinScore">SPIN</TermTooltip>
                   </div>
                 </TableHead>
                 <TableHead className="font-data font-semibold text-muted-foreground text-xs uppercase tracking-wider">
-                  <TermTooltip termKey="pdcmScore">PDCM</TermTooltip>
-                </TableHead>
-                <TableHead className="font-data font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                   上次更新
                 </TableHead>
-                <TableHead className="w-[50px]" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -204,6 +323,9 @@ function OpportunitiesPage() {
                   <TableRow className="border-border/30" key={i}>
                     <TableCell>
                       <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
                     </TableCell>
                     <TableCell>
                       <Skeleton className="h-4 w-24" />
@@ -215,16 +337,13 @@ function OpportunitiesPage() {
                       <Skeleton className="h-4 w-28" />
                     </TableCell>
                     <TableCell>
-                      <Skeleton className="h-4 w-20" />
-                    </TableCell>
-                    <TableCell>
                       <Skeleton className="h-6 w-12" />
                     </TableCell>
                     <TableCell>
-                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-20" />
                     </TableCell>
                     <TableCell>
-                      <Skeleton className="h-8 w-8" />
+                      <Skeleton className="h-4 w-24" />
                     </TableCell>
                   </TableRow>
                 ))
@@ -232,15 +351,21 @@ function OpportunitiesPage() {
                 opportunities.map((opportunity, index) => (
                   <TableRow
                     className={cn(
-                      "cursor-pointer border-border/30 transition-all duration-200",
-                      "hover:translate-x-1 hover:bg-[var(--ds-accent-glow)]",
+                      "border-border/30 transition-all duration-200",
                       index % 2 === 0 ? "bg-transparent" : "bg-muted/30"
                     )}
                     key={opportunity.id}
-                    onClick={() => handleView(opportunity.id)}
                   >
                     <TableCell className="font-display font-medium">
-                      {opportunity.companyName}
+                      <button
+                        className="cursor-pointer text-left hover:text-[var(--ds-accent)] hover:underline"
+                        onClick={() => handleView(opportunity.id)}
+                      >
+                        {opportunity.companyName}
+                      </button>
+                    </TableCell>
+                    <TableCell className="font-data text-muted-foreground text-sm">
+                      {opportunity.salesRepName || "-"}
                     </TableCell>
                     <TableCell className="font-data text-muted-foreground text-sm">
                       {opportunity.latestCaseNumber || "-"}
@@ -272,25 +397,6 @@ function OpportunitiesPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {opportunity.spinScore !== null ? (
-                        <div className="flex items-center gap-3">
-                          <div className="w-16">
-                            <ProgressBar
-                              animated={false}
-                              color={getScoreColor(opportunity.spinScore)}
-                              size="sm"
-                              value={opportunity.spinScore}
-                            />
-                          </div>
-                          <span className="font-data font-semibold text-[var(--ds-accent)] text-sm">
-                            {opportunity.spinScore}%
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
                       {opportunity.meddicScore ? (
                         <div className="flex items-center gap-2">
                           <span
@@ -311,46 +417,31 @@ function OpportunitiesPage() {
                         <span className="text-muted-foreground">-</span>
                       )}
                     </TableCell>
+                    <TableCell>
+                      {opportunity.spinScore !== null ? (
+                        <div className="flex items-center gap-3">
+                          <div className="w-16">
+                            <ProgressBar
+                              animated={false}
+                              color={getScoreColor(opportunity.spinScore)}
+                              size="sm"
+                              value={opportunity.spinScore}
+                            />
+                          </div>
+                          <span className="font-data font-semibold text-[var(--ds-accent)] text-sm">
+                            {opportunity.spinScore}%
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
                     <TableCell className="font-data text-muted-foreground text-sm">
                       {new Intl.DateTimeFormat("zh-TW", {
                         year: "numeric",
                         month: "short",
                         day: "numeric",
                       }).format(new Date(opportunity.updatedAt))}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg p-0 transition-colors hover:bg-muted"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <span className="sr-only">開啟選單</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuLabel className="font-data text-xs uppercase tracking-wider">
-                            操作
-                          </DropdownMenuLabel>
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleView(opportunity.id);
-                            }}
-                          >
-                            查看詳情
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-[var(--ds-danger)] focus:bg-[var(--ds-danger-glow)] focus:text-[var(--ds-danger)]"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(opportunity.id);
-                            }}
-                          >
-                            刪除
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))
@@ -367,6 +458,56 @@ function OpportunitiesPage() {
               )}
             </TableBody>
           </Table>
+        </div>
+
+        {/* Card View - Mobile/Tablet */}
+        <div
+          className="animate-fade-in-up space-y-4 opacity-0 lg:hidden"
+          style={{ animationDelay: "200ms", animationFillMode: "forwards" }}
+        >
+          {isLoading && (
+            <>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Card key={i}>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-40" />
+                    <Skeleton className="h-4 w-24" />
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <div className="grid grid-cols-2 gap-4">
+                      <Skeleton className="h-12 w-full" />
+                      <Skeleton className="h-12 w-full" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </>
+          )}
+
+          {!isLoading && opportunities.length > 0 && (
+            <>
+              {opportunities.map((opportunity) => (
+                <OpportunityCard
+                  key={opportunity.id}
+                  opportunity={opportunity}
+                />
+              ))}
+            </>
+          )}
+
+          {!isLoading && opportunities.length === 0 && (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Building2 className="mb-4 h-12 w-12 text-muted-foreground opacity-30" />
+                <p className="font-display text-lg">沒有找到資料</p>
+                <p className="text-muted-foreground text-sm">
+                  嘗試調整搜尋條件
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Pagination */}

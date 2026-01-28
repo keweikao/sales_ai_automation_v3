@@ -15,7 +15,7 @@ import {
 import { createKVCacheService } from "@Sales_ai_automation_v3/services";
 import { ORPCError } from "@orpc/server";
 import { MEDDIC_DIMENSION_NAMES } from "@sales_ai_automation_v3/shared";
-import { and, avg, count, desc, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, avg, count, desc, eq, gte, inArray, lte, ne } from "drizzle-orm";
 import { z } from "zod";
 
 import { protectedProcedure } from "../index";
@@ -171,13 +171,18 @@ export const getOpportunityStats = protectedProcedure.handler(
       Number(avgScoreResult[0]?.avgScore) || 0
     );
 
-    // Recent activity (last 7 days)
+    // Recent activity (last 7 days) - 排除已封存的對話
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const recentResult = await db
       .select({ count: count() })
       .from(conversations)
-      .where(gte(conversations.createdAt, sevenDaysAgo));
+      .where(
+        and(
+          gte(conversations.createdAt, sevenDaysAgo),
+          ne(conversations.status, "archived")
+        )
+      );
     const recentActivity = recentResult[0]?.count || 0;
 
     const result = {
@@ -260,7 +265,7 @@ export const getDashboard = protectedProcedure
       count: 0,
     };
 
-    // Total conversations
+    // Total conversations (排除已封存的對話)
     const totalConversationsResults = await db
       .select({ count: count() })
       .from(conversations)
@@ -268,7 +273,12 @@ export const getDashboard = protectedProcedure
         opportunities,
         eq(conversations.opportunityId, opportunities.id)
       )
-      .where(eq(opportunities.userId, userId));
+      .where(
+        and(
+          eq(opportunities.userId, userId),
+          ne(conversations.status, "archived")
+        )
+      );
     const totalConversationsResult = totalConversationsResults[0] ?? {
       count: 0,
     };
@@ -746,7 +756,7 @@ export const getRepPerformance = protectedProcedure
       .from(opportunities)
       .where(eq(opportunities.userId, queryUserId));
 
-    // 對話總數
+    // 對話總數 (排除已封存的對話)
     const totalConversationsResult = await db
       .select({ count: count() })
       .from(conversations)
@@ -754,7 +764,12 @@ export const getRepPerformance = protectedProcedure
         opportunities,
         eq(conversations.opportunityId, opportunities.id)
       )
-      .where(eq(opportunities.userId, queryUserId));
+      .where(
+        and(
+          eq(opportunities.userId, queryUserId),
+          ne(conversations.status, "archived")
+        )
+      );
 
     // 當期分析總數和平均分數
     const currentPeriodStats = await db
@@ -1424,7 +1439,12 @@ export const getTeamPerformance = protectedProcedure
         opportunities,
         eq(conversations.opportunityId, opportunities.id)
       )
-      .where(inArray(opportunities.userId, memberIds));
+      .where(
+        and(
+          inArray(opportunities.userId, memberIds),
+          ne(conversations.status, "archived")
+        )
+      );
 
     const teamCurrentStats = await db
       .select({
@@ -1507,7 +1527,7 @@ export const getTeamPerformance = protectedProcedure
 
     const userNameMap = new Map(memberUsers.map((u) => [u.id, u.name]));
 
-    // 計算對話數
+    // 計算對話數 (排除已封存的對話)
     const memberConvCounts = await db
       .select({
         userId: opportunities.userId,
@@ -1516,7 +1536,10 @@ export const getTeamPerformance = protectedProcedure
       .from(opportunities)
       .leftJoin(
         conversations,
-        eq(conversations.opportunityId, opportunities.id)
+        and(
+          eq(conversations.opportunityId, opportunities.id),
+          ne(conversations.status, "archived")
+        )
       )
       .where(inArray(opportunities.userId, memberIds))
       .groupBy(opportunities.userId);
@@ -1849,7 +1872,8 @@ export const getMtdUploads = protectedProcedure
       .where(
         and(
           gte(conversations.createdAt, mtdStart),
-          lte(conversations.createdAt, mtdEnd)
+          lte(conversations.createdAt, mtdEnd),
+          ne(conversations.status, "archived")
         )
       )
       .orderBy(desc(conversations.createdAt));

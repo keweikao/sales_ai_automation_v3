@@ -52,6 +52,8 @@ interface ProgressBarProps {
   sublabel?: React.ReactNode;
   size?: keyof typeof SIZES;
   className?: string;
+  // 響應式高度
+  responsiveSize?: { base: keyof typeof SIZES; lg: keyof typeof SIZES };
 }
 
 export function ProgressBar({
@@ -64,9 +66,15 @@ export function ProgressBar({
   sublabel,
   size = "md",
   className,
+  responsiveSize,
 }: ProgressBarProps) {
   const percentage = Math.min(100, Math.max(0, (value / max) * 100));
   const colorConfig = PROGRESS_COLORS[color];
+
+  // 計算最終的尺寸類名
+  const sizeClass = responsiveSize
+    ? `${SIZES[responsiveSize.base]} lg:${SIZES[responsiveSize.lg]}`
+    : SIZES[size];
 
   return (
     <div className={cn("space-y-2", className)}>
@@ -86,7 +94,7 @@ export function ProgressBar({
       <div
         className={cn(
           "w-full overflow-hidden rounded-full bg-slate-700/50",
-          SIZES[size]
+          sizeClass
         )}
       >
         <div

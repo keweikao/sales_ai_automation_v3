@@ -20,6 +20,7 @@
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "hono": "^4.8.2",
+    "postgres": "^3.4.8",
     "zod": "catalog:"
   },
   "devDependencies": {

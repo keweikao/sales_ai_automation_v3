@@ -58,6 +58,10 @@ export const opportunities = pgTable("opportunities", {
   companySize: text("company_size"),
   notes: text("notes"),
 
+  // Close Case 相關
+  rejectionReason: text("rejection_reason"), // 拒絕/失敗原因
+  selectedCompetitor: text("selected_competitor"), // 客戶選擇的競品
+
   // Product-Specific Business Context
   storeType: text("store_type"),
   serviceType: text("service_type"),

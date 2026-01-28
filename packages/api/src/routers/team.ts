@@ -19,7 +19,9 @@ import { z } from "zod";
 import { protectedProcedure } from "../index";
 
 /**
- * 列出所有用戶及其團隊資訊 (僅 admin)
+ * 列出用戶及其團隊資訊 (admin 或 manager)
+ * - Admin: 看到全部用戶
+ * - Manager: 只看到同部門的業務 (sales_rep)
  */
 const listUsers = protectedProcedure.handler(async ({ context }) => {
   const currentUserId = context.session?.user.id;
@@ -28,17 +30,25 @@ const listUsers = protectedProcedure.handler(async ({ context }) => {
     throw new ORPCError("UNAUTHORIZED");
   }
 
-  // 檢查是否為 admin
+  // 取得當前用戶的角色和部門
   const currentUserProfile = await db.query.userProfiles.findFirst({
     where: eq(userProfiles.userId, currentUserId),
   });
 
-  if (currentUserProfile?.role !== "admin") {
-    throw new ORPCError("FORBIDDEN", { message: "只有管理員可以管理團隊" });
+  const currentRole = currentUserProfile?.role;
+  const currentDepartment = currentUserProfile?.department;
+
+  // 檢查是否為 admin 或 manager
+  if (currentRole !== "admin" && currentRole !== "manager") {
+    throw new ORPCError("FORBIDDEN", {
+      message: "只有管理員或經理可以查看團隊",
+    });
   }
 
+  const isAdmin = currentRole === "admin";
+
   // 查詢所有用戶及其 profile
-  const users = await db.query.user.findMany({
+  const allUsers = await db.query.user.findMany({
     columns: {
       id: true,
       name: true,
@@ -51,7 +61,7 @@ const listUsers = protectedProcedure.handler(async ({ context }) => {
   const profiles = await db.query.userProfiles.findMany();
 
   // 組合資料
-  const usersWithProfiles = users.map((u) => {
+  const usersWithProfiles = allUsers.map((u) => {
     const profile = profiles.find((p) => p.userId === u.id);
 
     return {
@@ -64,7 +74,20 @@ const listUsers = protectedProcedure.handler(async ({ context }) => {
     };
   });
 
-  return { users: usersWithProfiles };
+  // 根據角色過濾用戶列表
+  let filteredUsers = usersWithProfiles;
+
+  if (!isAdmin) {
+    // Manager 只看到同部門的業務 (sales_rep)
+    filteredUsers = usersWithProfiles.filter(
+      (u) => u.role === "sales_rep" && u.department === currentDepartment
+    );
+  }
+
+  return {
+    users: filteredUsers,
+    currentUserRole: currentRole,
+  };
 });
 
 /**
@@ -360,9 +383,33 @@ const getViewableUsers = protectedProcedure.handler(async ({ context }) => {
   };
 });
 
+/**
+ * 取得當前用戶的 profile（角色和部門）
+ * 用於前端條件顯示
+ */
+const getCurrentUserProfile = protectedProcedure.handler(
+  async ({ context }) => {
+    const currentUserId = context.session?.user.id;
+
+    if (!currentUserId) {
+      throw new ORPCError("UNAUTHORIZED");
+    }
+
+    const profile = await db.query.userProfiles.findFirst({
+      where: eq(userProfiles.userId, currentUserId),
+    });
+
+    return {
+      role: profile?.role || "sales_rep",
+      department: profile?.department || null,
+    };
+  }
+);
+
 export const teamRouter = {
   listUsers,
   updateUserRole,
   deleteUser,
   getViewableUsers,
+  getCurrentUserProfile,
 };

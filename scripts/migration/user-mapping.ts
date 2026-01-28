@@ -1,8 +1,7 @@
 // scripts/migration/user-mapping.ts
 
-import { db } from "../../packages/db";
-import { userProfiles } from "../../packages/db/src/schema";
 import { eq } from "drizzle-orm";
+import { db, userProfiles } from "./config";
 
 // Slack User ID → PostgreSQL User ID 映射快取
 const userIdCache = new Map<string, string>();

@@ -26,6 +26,7 @@ import { Route as ConversationsNewRouteImport } from './routes/conversations/new
 import { Route as ConversationsIdRouteImport } from './routes/conversations/$id'
 import { Route as AlertsAlertIdRouteImport } from './routes/alerts/$alertId'
 import { Route as AdminTeamRouteImport } from './routes/admin/team'
+import { Route as OpportunitiesIdEditRouteImport } from './routes/opportunities/$id/edit'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -112,6 +113,11 @@ const AdminTeamRoute = AdminTeamRouteImport.update({
   path: '/admin/team',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OpportunitiesIdEditRoute = OpportunitiesIdEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => OpportunitiesIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -121,7 +127,7 @@ export interface FileRoutesByFullPath {
   '/alerts/$alertId': typeof AlertsAlertIdRoute
   '/conversations/$id': typeof ConversationsIdRoute
   '/conversations/new': typeof ConversationsNewRoute
-  '/opportunities/$id': typeof OpportunitiesIdRoute
+  '/opportunities/$id': typeof OpportunitiesIdRouteWithChildren
   '/opportunities/new': typeof OpportunitiesNewRoute
   '/reports/mtd-uploads': typeof ReportsMtdUploadsRoute
   '/share/$token': typeof ShareTokenRoute
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/opportunities': typeof OpportunitiesIndexRoute
   '/reports': typeof ReportsIndexRoute
   '/todos': typeof TodosIndexRoute
+  '/opportunities/$id/edit': typeof OpportunitiesIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -140,7 +147,7 @@ export interface FileRoutesByTo {
   '/alerts/$alertId': typeof AlertsAlertIdRoute
   '/conversations/$id': typeof ConversationsIdRoute
   '/conversations/new': typeof ConversationsNewRoute
-  '/opportunities/$id': typeof OpportunitiesIdRoute
+  '/opportunities/$id': typeof OpportunitiesIdRouteWithChildren
   '/opportunities/new': typeof OpportunitiesNewRoute
   '/reports/mtd-uploads': typeof ReportsMtdUploadsRoute
   '/share/$token': typeof ShareTokenRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/opportunities': typeof OpportunitiesIndexRoute
   '/reports': typeof ReportsIndexRoute
   '/todos': typeof TodosIndexRoute
+  '/opportunities/$id/edit': typeof OpportunitiesIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -160,7 +168,7 @@ export interface FileRoutesById {
   '/alerts/$alertId': typeof AlertsAlertIdRoute
   '/conversations/$id': typeof ConversationsIdRoute
   '/conversations/new': typeof ConversationsNewRoute
-  '/opportunities/$id': typeof OpportunitiesIdRoute
+  '/opportunities/$id': typeof OpportunitiesIdRouteWithChildren
   '/opportunities/new': typeof OpportunitiesNewRoute
   '/reports/mtd-uploads': typeof ReportsMtdUploadsRoute
   '/share/$token': typeof ShareTokenRoute
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/opportunities/': typeof OpportunitiesIndexRoute
   '/reports/': typeof ReportsIndexRoute
   '/todos/': typeof TodosIndexRoute
+  '/opportunities/$id/edit': typeof OpportunitiesIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/opportunities'
     | '/reports'
     | '/todos'
+    | '/opportunities/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/opportunities'
     | '/reports'
     | '/todos'
+    | '/opportunities/$id/edit'
   id:
     | '__root__'
     | '/'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/opportunities/'
     | '/reports/'
     | '/todos/'
+    | '/opportunities/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -239,7 +251,7 @@ export interface RootRouteChildren {
   AlertsAlertIdRoute: typeof AlertsAlertIdRoute
   ConversationsIdRoute: typeof ConversationsIdRoute
   ConversationsNewRoute: typeof ConversationsNewRoute
-  OpportunitiesIdRoute: typeof OpportunitiesIdRoute
+  OpportunitiesIdRoute: typeof OpportunitiesIdRouteWithChildren
   OpportunitiesNewRoute: typeof OpportunitiesNewRoute
   ReportsMtdUploadsRoute: typeof ReportsMtdUploadsRoute
   ShareTokenRoute: typeof ShareTokenRoute
@@ -372,8 +384,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTeamRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/opportunities/$id/edit': {
+      id: '/opportunities/$id/edit'
+      path: '/edit'
+      fullPath: '/opportunities/$id/edit'
+      preLoaderRoute: typeof OpportunitiesIdEditRouteImport
+      parentRoute: typeof OpportunitiesIdRoute
+    }
   }
 }
+
+interface OpportunitiesIdRouteChildren {
+  OpportunitiesIdEditRoute: typeof OpportunitiesIdEditRoute
+}
+
+const OpportunitiesIdRouteChildren: OpportunitiesIdRouteChildren = {
+  OpportunitiesIdEditRoute: OpportunitiesIdEditRoute,
+}
+
+const OpportunitiesIdRouteWithChildren = OpportunitiesIdRoute._addFileChildren(
+  OpportunitiesIdRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -383,7 +414,7 @@ const rootRouteChildren: RootRouteChildren = {
   AlertsAlertIdRoute: AlertsAlertIdRoute,
   ConversationsIdRoute: ConversationsIdRoute,
   ConversationsNewRoute: ConversationsNewRoute,
-  OpportunitiesIdRoute: OpportunitiesIdRoute,
+  OpportunitiesIdRoute: OpportunitiesIdRouteWithChildren,
   OpportunitiesNewRoute: OpportunitiesNewRoute,
   ReportsMtdUploadsRoute: ReportsMtdUploadsRoute,
   ShareTokenRoute: ShareTokenRoute,

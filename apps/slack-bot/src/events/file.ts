@@ -485,12 +485,16 @@ async function processAudioFile(
           `[${fileProcessingId}] ❌ Failed to create opportunity:`,
           createError
         );
-        // 如果建立失敗，嘗試使用最近的商機
-        console.log(
-          `[${fileProcessingId}] 🔄 Falling back to most recent opportunity`
+        // 不再 fallback 到不相關的商機，直接拋出錯誤讓用戶知道
+        const errorMessage =
+          createError instanceof Error
+            ? createError.message
+            : String(createError);
+        throw new Error(
+          `無法建立商機「${metadata.customerName}」: ${errorMessage}\n` +
+            "可能原因：聯絡人 Email 格式不正確、API 認證問題。\n" +
+            "請檢查表單資料或稍後再試。"
         );
-        const fallbackResult = await apiClient.getOpportunities({ limit: 1 });
-        opportunity = fallbackResult.opportunities[0];
       }
     }
   } else {

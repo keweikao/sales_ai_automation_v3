@@ -112,7 +112,7 @@ const sql = neon(getEnvVar("DATABASE_URL"));
 export const db = drizzle(sql, { schema });
 
 // 匯出 schema 供其他模組使用
-export const { conversations, meddicAnalyses, opportunities } = schema;
+export const { conversations, meddicAnalyses, opportunities, userProfiles } = schema;
 
 // 遷移設定（支援環境變數覆蓋）
 export const migrationConfig = {

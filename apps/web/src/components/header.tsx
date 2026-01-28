@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link, useMatchRoute } from "@tanstack/react-router";
 import {
   BarChart3,
@@ -8,6 +9,10 @@ import {
   Shield,
 } from "lucide-react";
 
+import { authClient } from "@/lib/auth-client";
+import { client } from "@/utils/orpc";
+
+import MobileNav from "./mobile-nav";
 import { ModeToggle } from "./mode-toggle";
 import UserMenu from "./user-menu";
 
@@ -19,15 +24,35 @@ import "@fontsource/jetbrains-mono/600.css";
 
 export default function Header() {
   const matchRoute = useMatchRoute();
+  const { data: session } = authClient.useSession();
 
-  const links = [
+  // 獲取當前用戶角色（只在登入時查詢）
+  const { data: userProfile } = useQuery({
+    queryKey: ["user", "profile"],
+    queryFn: () => client.team.getCurrentUserProfile(),
+    enabled: !!session,
+    staleTime: 5 * 60 * 1000, // 5 分鐘快取
+  });
+
+  const userRole = userProfile?.role;
+  const canAccessTeamManagement =
+    userRole === "admin" || userRole === "manager";
+
+  const baseLinks = [
     { to: "/", label: "首頁", icon: Home },
     { to: "/opportunities", label: "機會", icon: Building2 },
     // { to: "/conversations", label: "對話", icon: MessageSquare }, // 暫時屏蔽
     { to: "/reports", label: "報告", icon: FileText },
     { to: "/todos", label: "待辦", icon: CheckSquare },
-    { to: "/admin/team", label: "團隊管理", icon: Shield },
   ] as const;
+
+  // 只有 admin 和 manager 可看到團隊管理
+  const links = canAccessTeamManagement
+    ? ([
+        ...baseLinks,
+        { to: "/admin/team", label: "團隊管理", icon: Shield },
+      ] as const)
+    : baseLinks;
 
   return (
     <>
@@ -230,6 +255,7 @@ export default function Header() {
             </nav>
           </div>
           <div className="header-right">
+            <MobileNav />
             <ModeToggle />
             <UserMenu />
           </div>

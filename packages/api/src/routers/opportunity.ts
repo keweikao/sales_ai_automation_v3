@@ -15,7 +15,7 @@ import {
 } from "@Sales_ai_automation_v3/db/schema";
 import { randomUUID } from "node:crypto";
 import { ORPCError } from "@orpc/server";
-import { and, desc, eq, ilike, or } from "drizzle-orm";
+import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { protectedProcedure } from "../index";
@@ -355,22 +355,29 @@ export const listOpportunities = protectedProcedure
       );
     }
 
+    // 先查詢總數（不分頁）
+    const countResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(opportunities)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    const totalCount = Number(countResult[0]?.count ?? 0);
+
     const results = await db
       .select()
       .from(opportunities)
-      .where(and(...conditions))
-      .orderBy(desc(opportunities.createdAt))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(opportunities.updatedAt))
       .limit(limit)
       .offset(offset);
 
     // 獲取每個 opportunity 的 SPIN 分數和業務名稱
     const opportunitiesWithExtras = await Promise.all(
       results.map(async (opportunity) => {
-        // 獲取最新的 conversation（用於 SPIN 分數和 slack 用戶名 fallback）
+        // 獲取最新的 conversation（用於 SPIN 分數、案件編號和 slack 用戶名 fallback）
         const latestConversation = await db.query.conversations.findFirst({
           where: eq(conversations.opportunityId, opportunity.id),
           orderBy: (conversations, { desc }) => [desc(conversations.createdAt)],
-          columns: { id: true, slackUsername: true },
+          columns: { id: true, slackUsername: true, caseNumber: true },
         });
 
         // 獲取最新的 MEDDIC 分析（含 SPIN 分數）
@@ -430,14 +437,15 @@ export const listOpportunities = protectedProcedure
           createdAt: opportunity.createdAt,
           updatedAt: opportunity.updatedAt,
           spinScore,
-          ownerName, // 業務名稱
+          salesRepName: ownerName, // 業務名稱（前端使用 salesRepName）
+          latestCaseNumber: latestConversation?.caseNumber || null, // 最新案件編號
         };
       })
     );
 
     return {
       opportunities: opportunitiesWithExtras,
-      total: results.length,
+      total: totalCount,
       limit,
       offset,
     };
