@@ -381,6 +381,15 @@ function OpportunityDetailPage() {
   const [todoDescription, setTodoDescription] = useState("");
   const [todoDays, setTodoDays] = useState(7);
 
+  // Reject opportunity state
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [competitor, setCompetitor] = useState("");
+  const [rejectNote, setRejectNote] = useState("");
+
+  // Win opportunity state
+  const [isWinDialogOpen, setIsWinDialogOpen] = useState(false);
+
   // Create todo mutation
   const createTodoMutation = useMutation({
     mutationFn: async (data: {
@@ -402,6 +411,68 @@ function OpportunityDetailPage() {
       queryClient.invalidateQueries({
         queryKey: ["opportunities", "get", { opportunityId: id }],
       });
+    },
+  });
+
+  // Reject opportunity mutation
+  const rejectMutation = useMutation({
+    mutationFn: async (data: {
+      opportunityId: string;
+      rejectionReason: string;
+      competitor?: string;
+      note?: string;
+    }) => {
+      return await client.opportunities.reject(data);
+    },
+    onSuccess: () => {
+      // Reset form and close modal
+      setRejectReason("");
+      setCompetitor("");
+      setRejectNote("");
+      setIsRejectDialogOpen(false);
+      // Refetch opportunity data to update status and timeline
+      queryClient.invalidateQueries({
+        queryKey: ["opportunities", "get", { opportunityId: id }],
+      });
+      alert("已成功標記為拒絕");
+    },
+    onError: (error) => {
+      alert(`操作失敗：${error.message}`);
+    },
+  });
+
+  // Handle reject form submission
+  const handleRejectSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!rejectReason.trim()) {
+      alert("請輸入拒絕原因");
+      return;
+    }
+
+    rejectMutation.mutate({
+      opportunityId: id,
+      rejectionReason: rejectReason.trim(),
+      competitor: competitor.trim() || undefined,
+      note: rejectNote.trim() || undefined,
+    });
+  };
+
+  // Win opportunity mutation
+  const winMutation = useMutation({
+    mutationFn: async (data: { opportunityId: string }) => {
+      return await client.opportunities.win(data);
+    },
+    onSuccess: () => {
+      setIsWinDialogOpen(false);
+      // Refetch opportunity data to update status and timeline
+      queryClient.invalidateQueries({
+        queryKey: ["opportunities", "get", { opportunityId: id }],
+      });
+      alert("已成功標記為成交");
+    },
+    onError: (error) => {
+      alert(`操作失敗：${error.message}`);
     },
   });
 
@@ -503,13 +574,30 @@ function OpportunityDetailPage() {
                 </p>
               </div>
             </div>
-            <Button
-              className="inline-flex h-8 items-center justify-center rounded-md bg-[var(--ds-accent)] px-3 font-data text-sm text-white shadow-lg shadow-teal-500/20 transition-all duration-300 hover:bg-[var(--ds-accent-dark)]"
-              onClick={() => setIsAddTodoOpen(true)}
-            >
-              <ClipboardList className="mr-2 h-4 w-4" />
-              增加待辦
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                className="inline-flex h-8 items-center justify-center rounded-md bg-emerald-600 px-3 font-data text-sm text-white shadow-emerald-500/20 shadow-lg transition-all duration-300 hover:bg-emerald-700"
+                onClick={() => setIsWinDialogOpen(true)}
+              >
+                <Trophy className="mr-2 h-4 w-4" />
+                標記為成交
+              </Button>
+              <Button
+                className="inline-flex h-8 items-center justify-center rounded-md bg-[var(--ds-accent)] px-3 font-data text-sm text-white shadow-lg shadow-teal-500/20 transition-all duration-300 hover:bg-[var(--ds-accent-dark)]"
+                onClick={() => setIsAddTodoOpen(true)}
+              >
+                <ClipboardList className="mr-2 h-4 w-4" />
+                增加待辦
+              </Button>
+              <Button
+                className="inline-flex h-8 items-center justify-center rounded-md px-3 font-data text-sm shadow-lg transition-all duration-300"
+                onClick={() => setIsRejectDialogOpen(true)}
+                variant="destructive"
+              >
+                <HandMetal className="mr-2 h-4 w-4" />
+                標記為拒絕
+              </Button>
+            </div>
             {/* 暫時停用新增對話功能
             <Link
               className="inline-flex h-8 items-center justify-center rounded-md bg-[var(--ds-accent)] px-3 font-data text-sm text-white shadow-lg shadow-teal-500/20 transition-all duration-300 hover:bg-[var(--ds-accent-dark)]"
@@ -1390,6 +1478,153 @@ function OpportunityDetailPage() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Opportunity Dialog */}
+      <Dialog onOpenChange={setIsRejectDialogOpen} open={isRejectDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="font-display text-destructive">
+              標記機會為拒絕
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* 機會資訊顯示 */}
+          <div className="rounded-lg border border-border bg-muted/30 p-3">
+            <p className="font-data text-muted-foreground text-xs">
+              將標記為拒絕
+            </p>
+            <p className="font-data font-medium text-sm">
+              {opportunity.companyName}
+              <span className="ml-2 text-muted-foreground">
+                ({opportunity.customerNumber})
+              </span>
+            </p>
+          </div>
+
+          {/* 警告提示 */}
+          <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
+            <div className="text-sm">
+              <p className="font-semibold text-amber-600">注意</p>
+              <p className="text-muted-foreground">
+                此操作將建立一筆「客戶拒絕」記錄並結案，此操作無法撤銷。
+              </p>
+            </div>
+          </div>
+
+          <form className="space-y-4" onSubmit={handleRejectSubmit}>
+            {/* 拒絕原因（必填） */}
+            <div className="space-y-2">
+              <Label htmlFor="reject-reason">
+                拒絕原因 <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="reject-reason"
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="請說明客戶拒絕的原因..."
+                required
+                rows={3}
+                value={rejectReason}
+              />
+            </div>
+
+            {/* 競品資訊（選填） */}
+            <div className="space-y-2">
+              <Label htmlFor="competitor">競品資訊</Label>
+              <Input
+                id="competitor"
+                onChange={(e) => setCompetitor(e.target.value)}
+                placeholder="客戶選擇的競品（選填）"
+                value={competitor}
+              />
+            </div>
+
+            {/* 備註說明（選填） */}
+            <div className="space-y-2">
+              <Label htmlFor="reject-note">備註說明</Label>
+              <Textarea
+                id="reject-note"
+                onChange={(e) => setRejectNote(e.target.value)}
+                placeholder="其他補充說明..."
+                rows={2}
+                value={rejectNote}
+              />
+            </div>
+
+            {/* 按鈕區 */}
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                onClick={() => setIsRejectDialogOpen(false)}
+                type="button"
+                variant="outline"
+              >
+                取消
+              </Button>
+              <Button
+                disabled={!rejectReason.trim() || rejectMutation.isPending}
+                type="submit"
+                variant="destructive"
+              >
+                {rejectMutation.isPending ? "處理中..." : "確認拒絕"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Win Opportunity Dialog */}
+      <Dialog onOpenChange={setIsWinDialogOpen} open={isWinDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-display text-emerald-600">
+              <Trophy className="h-5 w-5" />
+              標記機會為成交
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* 機會資訊顯示 */}
+          <div className="rounded-lg border border-border bg-muted/30 p-3">
+            <p className="font-data text-muted-foreground text-xs">
+              將標記為成交
+            </p>
+            <p className="font-data font-medium text-sm">
+              {opportunity.companyName}
+              <span className="ml-2 text-muted-foreground">
+                ({opportunity.customerNumber})
+              </span>
+            </p>
+          </div>
+
+          {/* 確認提示 */}
+          <div className="flex items-start gap-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
+            <Trophy className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+            <div className="text-sm">
+              <p className="font-semibold text-emerald-600">恭喜成交！</p>
+              <p className="text-muted-foreground">
+                此操作將機會狀態更新為「已成交」，並記錄成交時間。
+              </p>
+            </div>
+          </div>
+
+          {/* 按鈕區 */}
+          <div className="flex justify-end gap-3">
+            <Button
+              onClick={() => setIsWinDialogOpen(false)}
+              type="button"
+              variant="outline"
+            >
+              取消
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700"
+              disabled={winMutation.isPending}
+              onClick={() => winMutation.mutate({ opportunityId: id })}
+            >
+              {winMutation.isPending ? "處理中..." : "確認成交"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </main>

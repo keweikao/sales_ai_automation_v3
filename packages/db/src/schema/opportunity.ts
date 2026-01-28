@@ -73,6 +73,8 @@ export const opportunities = pgTable("opportunities", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   lastContactedAt: timestamp("last_contacted_at"),
+  wonAt: timestamp("won_at"),
+  lostAt: timestamp("lost_at"),
 });
 
 // Relations

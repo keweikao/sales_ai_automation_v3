@@ -76,10 +76,10 @@ export const salesTodos = pgTable("sales_todos", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   opportunityId: text("opportunity_id").references(() => opportunities.id, {
-    onDelete: "set null",
+    onDelete: "cascade", // 刪除機會時，連帶刪除所有關聯的 Todo
   }),
   conversationId: text("conversation_id").references(() => conversations.id, {
-    onDelete: "set null",
+    onDelete: "set null", // 刪除對話時，Todo 保留但 conversationId 設為 null
   }),
 
   // customerNumber - 用於連接 opportunity（不依賴 opportunityId）

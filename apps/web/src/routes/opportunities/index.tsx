@@ -37,6 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TermTooltip } from "@/components/ui/term-tooltip";
 import { cn } from "@/lib/utils";
 import { client } from "@/utils/orpc";
@@ -78,6 +79,8 @@ interface OpportunityCardProps {
     meddicScore: { overall: number } | null;
     spinScore: number | null;
     updatedAt: Date;
+    wonAt: Date | null;
+    lostAt: Date | null;
   };
 }
 
@@ -190,12 +193,23 @@ function OpportunityCard({ opportunity }: OpportunityCardProps) {
         {/* 更新時間 */}
         <div className="border-border/50 border-t pt-3 text-center">
           <span className="font-data text-muted-foreground text-xs">
-            更新於{" "}
-            {new Intl.DateTimeFormat("zh-TW", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            }).format(new Date(opportunity.updatedAt))}
+            {opportunity.wonAt
+              ? `成交於 ${new Intl.DateTimeFormat("zh-TW", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                }).format(new Date(opportunity.wonAt))}`
+              : opportunity.lostAt
+                ? `拒絕於 ${new Intl.DateTimeFormat("zh-TW", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  }).format(new Date(opportunity.lostAt))}`
+                : `更新於 ${new Intl.DateTimeFormat("zh-TW", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  }).format(new Date(opportunity.updatedAt))}`}
           </span>
         </div>
       </CardContent>
@@ -208,6 +222,9 @@ function OpportunitiesPage() {
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
+  const [activeTab, setActiveTab] = useState<"active" | "won" | "lost">(
+    "active"
+  );
   const pageSize = 20;
 
   const opportunitiesQuery = useQuery({
@@ -215,6 +232,12 @@ function OpportunitiesPage() {
       "opportunities",
       "list",
       {
+        status:
+          activeTab === "won"
+            ? "won"
+            : activeTab === "lost"
+              ? "lost"
+              : undefined,
         search: search || undefined,
         limit: pageSize,
         offset: page * pageSize,
@@ -222,6 +245,12 @@ function OpportunitiesPage() {
     ],
     queryFn: async () => {
       const result = await client.opportunities.list({
+        status:
+          activeTab === "won"
+            ? "won"
+            : activeTab === "lost"
+              ? "lost"
+              : undefined,
         search: search || undefined,
         limit: pageSize,
         offset: page * pageSize,
@@ -275,6 +304,41 @@ function OpportunitiesPage() {
               value={search}
             />
           </div>
+        </div>
+
+        {/* Tabs */}
+        <div
+          className="animate-fade-in-up opacity-0"
+          style={{ animationDelay: "150ms", animationFillMode: "forwards" }}
+        >
+          <Tabs
+            onValueChange={(v) => {
+              setActiveTab(v as "active" | "won" | "lost");
+              setPage(0);
+            }}
+            value={activeTab}
+          >
+            <TabsList className="h-auto w-full justify-start rounded-none border-border border-b bg-transparent p-0">
+              <TabsTrigger
+                className="rounded-none border-transparent border-b-2 bg-transparent px-6 py-4 font-data text-sm uppercase tracking-wider transition-all duration-300 data-[state=active]:border-[var(--ds-accent)] data-[state=active]:text-[var(--ds-accent)]"
+                value="active"
+              >
+                進行中
+              </TabsTrigger>
+              <TabsTrigger
+                className="rounded-none border-transparent border-b-2 bg-transparent px-6 py-4 font-data text-sm uppercase tracking-wider transition-all duration-300 data-[state=active]:border-[var(--ds-accent)] data-[state=active]:text-[var(--ds-accent)]"
+                value="won"
+              >
+                已成交
+              </TabsTrigger>
+              <TabsTrigger
+                className="rounded-none border-transparent border-b-2 bg-transparent px-6 py-4 font-data text-sm uppercase tracking-wider transition-all duration-300 data-[state=active]:border-[var(--ds-accent)] data-[state=active]:text-[var(--ds-accent)]"
+                value="lost"
+              >
+                已拒絕
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
         {/* Table - Desktop View */}
@@ -437,11 +501,23 @@ function OpportunitiesPage() {
                       )}
                     </TableCell>
                     <TableCell className="font-data text-muted-foreground text-sm">
-                      {new Intl.DateTimeFormat("zh-TW", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      }).format(new Date(opportunity.updatedAt))}
+                      {opportunity.wonAt
+                        ? `成交於 ${new Intl.DateTimeFormat("zh-TW", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }).format(new Date(opportunity.wonAt))}`
+                        : opportunity.lostAt
+                          ? `拒絕於 ${new Intl.DateTimeFormat("zh-TW", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            }).format(new Date(opportunity.lostAt))}`
+                          : `更新於 ${new Intl.DateTimeFormat("zh-TW", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            }).format(new Date(opportunity.updatedAt))}`}
                     </TableCell>
                   </TableRow>
                 ))

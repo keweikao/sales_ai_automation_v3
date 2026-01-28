@@ -121,6 +121,17 @@ const getOpportunityByCustomerNumberSchema = z.object({
   customerNumber: z.string(),
 });
 
+const rejectOpportunitySchema = z.object({
+  opportunityId: z.string(),
+  rejectionReason: z.string().min(1),
+  competitor: z.string().optional(),
+  note: z.string().optional(),
+});
+
+const winOpportunitySchema = z.object({
+  opportunityId: z.string(),
+});
+
 // ============================================================
 // Create Opportunity
 // ============================================================
@@ -331,8 +342,11 @@ export const listOpportunities = protectedProcedure
       }
     }
 
+    // Status 篩選：如果沒指定 status，預設排除 won 和 lost（顯示進行中）
     if (status) {
       conditions.push(eq(opportunities.status, status));
+    } else {
+      conditions.push(sql`${opportunities.status} NOT IN ('won', 'lost')`);
     }
 
     if (source) {
@@ -436,6 +450,8 @@ export const listOpportunities = protectedProcedure
           meddicScore: opportunity.meddicScore,
           createdAt: opportunity.createdAt,
           updatedAt: opportunity.updatedAt,
+          wonAt: opportunity.wonAt,
+          lostAt: opportunity.lostAt,
           spinScore,
           salesRepName: ownerName, // 業務名稱（前端使用 salesRepName）
           latestCaseNumber: latestConversation?.caseNumber || null, // 最新案件編號
@@ -559,6 +575,8 @@ export const getOpportunity = protectedProcedure
       createdAt: opportunity.createdAt,
       updatedAt: opportunity.updatedAt,
       lastContactedAt: opportunity.lastContactedAt,
+      wonAt: opportunity.wonAt,
+      lostAt: opportunity.lostAt,
       conversations: opportunity.conversations.map((conv) => ({
         id: conv.id,
         caseNumber: conv.caseNumber,
@@ -649,6 +667,187 @@ export const getOpportunityByCustomerNumber = protectedProcedure
   });
 
 // ============================================================
+// Reject Opportunity
+// ============================================================
+
+export const rejectOpportunity = protectedProcedure
+  .input(rejectOpportunitySchema)
+  .handler(async ({ input, context }) => {
+    const { opportunityId, rejectionReason, competitor, note } = input;
+    const userId = context.session?.user.id;
+
+    if (!userId) {
+      throw new ORPCError("UNAUTHORIZED");
+    }
+
+    // 1. 權限檢查（複用 getOpportunity 的邏輯）
+    const opportunity = await db.query.opportunities.findFirst({
+      where: eq(opportunities.id, opportunityId),
+    });
+
+    if (!opportunity) {
+      throw new ORPCError("NOT_FOUND");
+    }
+
+    const userEmail = context.session?.user.email;
+    const userRole = getUserRole(userEmail);
+    const isOwner = opportunity.userId === userId;
+    const isSlackGenerated =
+      !opportunity.userId || opportunity.userId === "service-account";
+    const hasAdminAccess = userRole === "admin" || userRole === "manager";
+
+    if (!(isOwner || isSlackGenerated || hasAdminAccess)) {
+      throw new ORPCError("FORBIDDEN");
+    }
+
+    // 2. Transaction 確保資料一致性
+    return await db.transaction(async (tx) => {
+      // 2a. 建立「客戶拒絕」Todo
+      const todoId = randomUUID();
+      const dueDate = new Date();
+
+      const todoResult = await tx
+        .insert(salesTodos)
+        .values({
+          id: todoId,
+          userId: opportunity.userId,
+          opportunityId: opportunity.id,
+          customerNumber: opportunity.customerNumber,
+          title: `客戶拒絕 - ${opportunity.companyName}`,
+          description: `拒絕原因: ${rejectionReason}${competitor ? `\n競品: ${competitor}` : ""}${note ? `\n備註: ${note}` : ""}`,
+          dueDate,
+          originalDueDate: dueDate,
+          source: "web",
+          status: "lost",
+          postponeHistory: [],
+          lostRecord: {
+            reason: rejectionReason,
+            competitor,
+            note,
+            lostAt: new Date().toISOString(),
+            lostVia: "web",
+          },
+        })
+        .returning();
+
+      const todo = todoResult[0];
+      if (!todo) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR");
+      }
+
+      // 2b. 建立 Todo Log（審計追蹤）
+      await tx.insert(todoLogs).values({
+        id: randomUUID(),
+        todoId: todo.id,
+        opportunityId: opportunity.id,
+        userId,
+        action: "lost",
+        actionVia: "web",
+        changes: {
+          before: { status: "pending" },
+          after: { status: "lost" },
+          lostRecord: todo.lostRecord,
+        },
+        note: rejectionReason,
+      });
+
+      // 2c. 更新 Opportunity 狀態（同時設定 lostAt）
+      const updateResult = await tx
+        .update(opportunities)
+        .set({
+          rejectionReason,
+          selectedCompetitor: competitor,
+          status: "lost",
+          lostAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(opportunities.id, opportunityId))
+        .returning();
+
+      const updatedOpportunity = updateResult[0];
+      if (!updatedOpportunity) {
+        throw new ORPCError("INTERNAL_SERVER_ERROR");
+      }
+
+      return {
+        success: true,
+        message: "機會已標記為拒絕",
+        todo: {
+          id: todo.id,
+          status: todo.status,
+          lostRecord: todo.lostRecord,
+        },
+        opportunity: {
+          id: updatedOpportunity.id,
+          status: updatedOpportunity.status,
+          rejectionReason: updatedOpportunity.rejectionReason,
+        },
+      };
+    });
+  });
+
+// ============================================================
+// Win Opportunity
+// ============================================================
+
+export const winOpportunity = protectedProcedure
+  .input(winOpportunitySchema)
+  .handler(async ({ input, context }) => {
+    const { opportunityId } = input;
+    const userId = context.session?.user.id;
+
+    if (!userId) {
+      throw new ORPCError("UNAUTHORIZED");
+    }
+
+    // 1. 權限檢查（複用 getOpportunity 的邏輯）
+    const opportunity = await db.query.opportunities.findFirst({
+      where: eq(opportunities.id, opportunityId),
+    });
+
+    if (!opportunity) {
+      throw new ORPCError("NOT_FOUND");
+    }
+
+    const userEmail = context.session?.user.email;
+    const userRole = getUserRole(userEmail);
+    const isOwner = opportunity.userId === userId;
+    const isSlackGenerated =
+      !opportunity.userId || opportunity.userId === "service-account";
+    const hasAdminAccess = userRole === "admin" || userRole === "manager";
+
+    if (!(isOwner || isSlackGenerated || hasAdminAccess)) {
+      throw new ORPCError("FORBIDDEN");
+    }
+
+    // 2. 更新 Opportunity 狀態（不建立 Todo）
+    const updateResult = await db
+      .update(opportunities)
+      .set({
+        status: "won",
+        wonAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(opportunities.id, opportunityId))
+      .returning();
+
+    const updatedOpportunity = updateResult[0];
+    if (!updatedOpportunity) {
+      throw new ORPCError("INTERNAL_SERVER_ERROR");
+    }
+
+    return {
+      success: true,
+      message: "機會已標記為成交",
+      opportunity: {
+        id: updatedOpportunity.id,
+        status: updatedOpportunity.status,
+        wonAt: updatedOpportunity.wonAt,
+      },
+    };
+  });
+
+// ============================================================
 // Router Export
 // ============================================================
 
@@ -659,4 +858,6 @@ export const opportunityRouter = {
   list: listOpportunities,
   get: getOpportunity,
   getByCustomerNumber: getOpportunityByCustomerNumber,
+  reject: rejectOpportunity,
+  win: winOpportunity,
 };

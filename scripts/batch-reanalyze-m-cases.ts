@@ -193,7 +193,7 @@ async function fetchMCases(): Promise<{
 
   const allCount = Number(allCountResult[0]?.count ?? 0);
 
-  // 查詢有 transcript 的 M 開頭案件
+  // 查詢有 transcript 的 M 開頭案件（按更新日期降序排列 - 最新的優先）
   const cases = (await db
     .select({
       id: conversations.id,
@@ -208,7 +208,7 @@ async function fetchMCases(): Promise<{
     .where(
       sql`${conversations.caseNumber} LIKE 'M%' AND ${conversations.transcript} IS NOT NULL`
     )
-    .orderBy(conversations.createdAt)) as ConversationRecord[];
+    .orderBy(sql`${conversations.updatedAt} DESC NULLS LAST`)) as ConversationRecord[];
 
   const withTranscript = cases.length;
 
