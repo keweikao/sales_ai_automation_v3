@@ -4,7 +4,7 @@
  * Precision Dashboard Design System
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   AlertTriangle,
@@ -15,7 +15,7 @@ import {
   CalendarClock,
   Check,
   ChevronDown,
-  Edit,
+  ClipboardList,
   FileText,
   HandMetal,
   Lightbulb,
@@ -49,8 +49,17 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { client } from "@/utils/orpc";
 
 export const Route = createFileRoute("/opportunities/$id")({
@@ -365,7 +374,36 @@ function getTimelineEventTextColor(type: TimelineEventType): string {
 function OpportunityDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+  const [isAddTodoOpen, setIsAddTodoOpen] = useState(false);
+  const [todoTitle, setTodoTitle] = useState("");
+  const [todoDescription, setTodoDescription] = useState("");
+  const [todoDays, setTodoDays] = useState(7);
+
+  // Create todo mutation
+  const createTodoMutation = useMutation({
+    mutationFn: async (data: {
+      title: string;
+      description?: string;
+      dueDate: string;
+      opportunityId: string;
+      source: string;
+    }) => {
+      return await client.salesTodo.create(data);
+    },
+    onSuccess: () => {
+      // Reset form and close modal
+      setTodoTitle("");
+      setTodoDescription("");
+      setTodoDays(7);
+      setIsAddTodoOpen(false);
+      // Refetch opportunity data to update timeline
+      queryClient.invalidateQueries({
+        queryKey: ["opportunities", "get", { opportunityId: id }],
+      });
+    },
+  });
 
   const opportunityQuery = useQuery({
     queryKey: ["opportunities", "get", { opportunityId: id }],
@@ -465,24 +503,23 @@ function OpportunityDetailPage() {
                 </p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <Link
-                className="inline-flex h-8 items-center justify-center rounded-md border border-border bg-background px-3 font-data text-sm transition-all duration-300 hover:border-[var(--ds-accent)] hover:bg-muted hover:text-[var(--ds-accent)]"
-                params={{ id: opportunity.id }}
-                to="/opportunities/$id/edit"
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                編輯
-              </Link>
-              <Link
-                className="inline-flex h-8 items-center justify-center rounded-md bg-[var(--ds-accent)] px-3 font-data text-sm text-white shadow-lg shadow-teal-500/20 transition-all duration-300 hover:bg-[var(--ds-accent-dark)]"
-                search={{ opportunityId: opportunity.id }}
-                to="/conversations/new"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                新增對話
-              </Link>
-            </div>
+            <Button
+              className="inline-flex h-8 items-center justify-center rounded-md bg-[var(--ds-accent)] px-3 font-data text-sm text-white shadow-lg shadow-teal-500/20 transition-all duration-300 hover:bg-[var(--ds-accent-dark)]"
+              onClick={() => setIsAddTodoOpen(true)}
+            >
+              <ClipboardList className="mr-2 h-4 w-4" />
+              增加待辦
+            </Button>
+            {/* 暫時停用新增對話功能
+            <Link
+              className="inline-flex h-8 items-center justify-center rounded-md bg-[var(--ds-accent)] px-3 font-data text-sm text-white shadow-lg shadow-teal-500/20 transition-all duration-300 hover:bg-[var(--ds-accent-dark)]"
+              search={{ opportunityId: opportunity.id }}
+              to="/conversations/new"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              新增對話
+            </Link>
+            */}
           </div>
         </div>
 
@@ -1256,6 +1293,105 @@ function OpportunityDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Add Todo Modal */}
+      <Dialog onOpenChange={setIsAddTodoOpen} open={isAddTodoOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="font-display">新增待辦事項</DialogTitle>
+          </DialogHeader>
+          {/* 顯示綁定的機會資訊 */}
+          <div className="rounded-lg border border-border bg-muted/30 p-3">
+            <p className="font-data text-muted-foreground text-xs">綁定機會</p>
+            <p className="font-data font-medium text-sm">
+              {opportunity.companyName}
+              <span className="ml-2 text-muted-foreground">
+                ({opportunity.customerNumber})
+              </span>
+            </p>
+          </div>
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!todoTitle.trim()) {
+                return;
+              }
+
+              const dueDate = new Date();
+              dueDate.setDate(dueDate.getDate() + todoDays);
+
+              createTodoMutation.mutate({
+                title: todoTitle,
+                description: todoDescription || undefined,
+                dueDate: dueDate.toISOString(),
+                opportunityId: opportunity.id,
+                source: "web",
+              });
+            }}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="todo-title">待辦事項 *</Label>
+              <Input
+                id="todo-title"
+                onChange={(e) => setTodoTitle(e.target.value)}
+                placeholder="例：跟進客戶需求"
+                required
+                value={todoTitle}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="todo-description">備註說明</Label>
+              <Textarea
+                id="todo-description"
+                onChange={(e) => setTodoDescription(e.target.value)}
+                placeholder="補充說明..."
+                rows={3}
+                value={todoDescription}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="todo-days">幾天後到期</Label>
+              <div className="flex gap-2">
+                {[1, 3, 7, 14, 30].map((days) => (
+                  <Button
+                    className={todoDays === days ? "bg-[var(--ds-accent)]" : ""}
+                    key={days}
+                    onClick={() => setTodoDays(days)}
+                    size="sm"
+                    type="button"
+                    variant={todoDays === days ? "default" : "outline"}
+                  >
+                    {days} 天
+                  </Button>
+                ))}
+              </div>
+              <p className="font-data text-muted-foreground text-xs">
+                到期日：
+                {new Date(
+                  Date.now() + todoDays * 24 * 60 * 60 * 1000
+                ).toLocaleDateString("zh-TW")}
+              </p>
+            </div>
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                onClick={() => setIsAddTodoOpen(false)}
+                type="button"
+                variant="outline"
+              >
+                取消
+              </Button>
+              <Button
+                className="bg-[var(--ds-accent)] hover:bg-[var(--ds-accent-dark)]"
+                disabled={!todoTitle.trim() || createTodoMutation.isPending}
+                type="submit"
+              >
+                {createTodoMutation.isPending ? "建立中..." : "建立待辦"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
