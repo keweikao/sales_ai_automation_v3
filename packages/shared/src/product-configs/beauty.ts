@@ -10,23 +10,37 @@ export const beautyConfig: ProductLineConfig = {
       label: "店鋪類型",
       required: true,
       options: [
+        { value: "nail_salon", label: "美甲沙龍", emoji: "💅" },
+        { value: "eyelash_salon", label: "美睫沙龍", emoji: "👁️" },
+        { value: "facial_skincare", label: "美容護膚", emoji: "🧖" },
+        { value: "body_spa", label: "美體SPA", emoji: "💆" },
+        { value: "massage_therapy", label: "按摩整復", emoji: "🙌" },
         { value: "hair_salon", label: "美髮沙龍", emoji: "💇" },
-        { value: "nail_salon", label: "美甲店", emoji: "💅" },
-        { value: "beauty_spa", label: "美容SPA", emoji: "🧖" },
-        { value: "tattoo", label: "刺青", emoji: "🎨" },
-        { value: "massage", label: "按摩", emoji: "💆" },
+        { value: "mens_barber", label: "男士理髮", emoji: "✂️" },
+        { value: "brow_tattoo", label: "霧眉紋繡", emoji: "🎨" },
+        { value: "ear_cleaning", label: "採耳", emoji: "👂" },
+        { value: "hair_removal", label: "除毛", emoji: "🪒" },
+        { value: "fitness_yoga", label: "健身瑜伽", emoji: "🧘" },
+        { value: "pet_grooming", label: "寵物美容", emoji: "🐾" },
+        { value: "medical_aesthetics", label: "醫學美容", emoji: "💉" },
+        { value: "counseling", label: "身心諮商", emoji: "🧠" },
+        { value: "fortune_telling", label: "命理占卜", emoji: "🔮" },
         { value: "other", label: "其他", emoji: "✨" },
       ],
     },
 
-    staffCount: {
-      label: "員工數量",
+    serviceType: {
+      label: "經營型態",
       required: true,
       options: [
-        { value: "1-3", label: "1-3人", emoji: "👤" },
-        { value: "4-10", label: "4-10人", emoji: "👥" },
-        { value: "11-20", label: "11-20人", emoji: "👨‍👩‍👧" },
-        { value: "20+", label: "20人以上", emoji: "👨‍👩‍👧‍👦" },
+        { value: "solo_studio", label: "個人工作室 (1–2人)", emoji: "👤" },
+        { value: "small_shop", label: "小型單店 (3–5人)", emoji: "👥" },
+        { value: "medium_shop", label: "中型單店 (6–9人)", emoji: "👨‍👩‍👧" },
+        {
+          value: "multi_shop",
+          label: "多店多人經營 (多店組織或10人以上)",
+          emoji: "🏢",
+        },
       ],
     },
 
@@ -65,7 +79,7 @@ export const beautyConfig: ProductLineConfig = {
         definition: "Sign contract/Pay first month fee (簽約/付首月費用)",
       },
     ],
-    demoMetaFields: ["beautyType", "staffCount", "currentBeautySystem"],
+    demoMetaFields: ["storeType", "serviceType", "currentSystem"],
   },
 
   talkTracks: {
