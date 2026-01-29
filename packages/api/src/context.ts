@@ -26,10 +26,13 @@ export async function createContext({ context }: CreateContextOptions) {
   if (authHeader?.startsWith("Bearer ")) {
     const token = authHeader.slice(7);
     // Validate against API_TOKEN or SERVICE_API_TOKEN environment variable
+    // Use context.env (Hono) for Cloudflare Workers secrets, fallback to global env
+    const honoEnv = context.env as Record<string, unknown> | undefined;
     const envRecord = env as Record<string, unknown>;
-    const apiToken = (envRecord.API_TOKEN || envRecord.SERVICE_API_TOKEN) as
-      | string
-      | undefined;
+    const apiToken = (honoEnv?.API_TOKEN ||
+      honoEnv?.SERVICE_API_TOKEN ||
+      envRecord.API_TOKEN ||
+      envRecord.SERVICE_API_TOKEN) as string | undefined;
     if (apiToken && token === apiToken) {
       return {
         session: SERVICE_ACCOUNT_SESSION,

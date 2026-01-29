@@ -28,7 +28,7 @@ import {
   Trophy,
   User,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { LeadStatusBadge } from "@/components/lead/lead-status-badge";
 import {
@@ -394,6 +394,17 @@ function OpportunityDetailPage() {
   // Win opportunity state
   const [isWinDialogOpen, setIsWinDialogOpen] = useState(false);
 
+  // Audio player ref for segment click
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Handle transcript segment click - seek to specific time
+  const handleSegmentClick = (startTime: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = startTime;
+      audioRef.current.play();
+    }
+  };
+
   // Create todo mutation
   const createTodoMutation = useMutation({
     mutationFn: async (data: {
@@ -758,9 +769,12 @@ function OpportunityDetailPage() {
                       <div className="space-y-4">
                         {conversation.transcript.segments.map(
                           (segment, idx) => (
-                            <div
-                              className="flex gap-4 rounded-lg border border-border bg-muted/30 p-4 transition-all duration-300 hover:bg-muted/50"
+                            <button
+                              className="flex w-full cursor-pointer gap-4 rounded-lg border border-border bg-muted/30 p-4 text-left transition-all duration-300 hover:bg-muted/50 hover:ring-2 hover:ring-primary/50"
                               key={idx}
+                              onClick={() => handleSegmentClick(segment.start)}
+                              title="點擊跳轉至此段落"
+                              type="button"
                             >
                               <div className="shrink-0">
                                 <Badge
@@ -777,7 +791,7 @@ function OpportunityDetailPage() {
                               <p className="flex-1 text-foreground/80 leading-relaxed">
                                 {segment.text}
                               </p>
-                            </div>
+                            </button>
                           )
                         )}
                       </div>
@@ -1262,6 +1276,7 @@ function OpportunityDetailPage() {
                   <audio
                     className="w-full rounded-lg"
                     controls
+                    ref={audioRef}
                     src={conversation.audioUrl}
                   >
                     <track kind="captions" />

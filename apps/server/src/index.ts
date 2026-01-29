@@ -184,6 +184,124 @@ app.get("/api/admin/test-cache/:key", async (c) => {
 });
 
 // ============================================================
+// Admin API: 重試對話轉錄
+// ============================================================
+app.post("/api/admin/retry-conversation", async (c) => {
+  // 驗證 API Token
+  const authHeader = c.req.header("Authorization");
+  const envRecord = c.env as Record<string, unknown>;
+  const apiToken = (envRecord.API_TOKEN || env.API_TOKEN) as string | undefined;
+
+  if (!(authHeader?.startsWith("Bearer ") && apiToken)) {
+    return c.json({ error: "Unauthorized" }, 401);
+  }
+
+  const token = authHeader.slice(7);
+  if (token !== apiToken) {
+    return c.json({ error: "Invalid token" }, 401);
+  }
+
+  // 獲取參數
+  const body = await c.req.json<{
+    conversationId?: string;
+    caseNumber?: string;
+  }>();
+
+  if (!(body.conversationId || body.caseNumber)) {
+    return c.json({ error: "Must provide conversationId or caseNumber" }, 400);
+  }
+
+  try {
+    // 查詢對話
+    let conversation;
+    if (body.conversationId) {
+      conversation = await db.query.conversations.findFirst({
+        where: eq(conversations.id, body.conversationId),
+      });
+    } else if (body.caseNumber) {
+      conversation = await db.query.conversations.findFirst({
+        where: eq(conversations.caseNumber, body.caseNumber),
+      });
+    }
+
+    if (!conversation) {
+      return c.json({ error: "Conversation not found" }, 404);
+    }
+
+    // 檢查狀態
+    if (!["failed", "pending"].includes(conversation.status)) {
+      return c.json(
+        {
+          error: `Cannot retry conversation with status: ${conversation.status}`,
+          currentStatus: conversation.status,
+        },
+        400
+      );
+    }
+
+    // 檢查音檔
+    if (!conversation.audioUrl) {
+      return c.json({ error: "Conversation has no audio URL" }, 400);
+    }
+
+    // 重置狀態
+    await db
+      .update(conversations)
+      .set({
+        status: "pending",
+        errorMessage: null,
+        errorDetails: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(conversations.id, conversation.id));
+
+    // 發送到 Queue
+    const queue = envRecord.TRANSCRIPTION_QUEUE as
+      | { send: (msg: unknown) => Promise<void> }
+      | undefined;
+
+    if (!queue) {
+      return c.json({ error: "Queue not configured" }, 500);
+    }
+
+    const message = {
+      conversationId: conversation.id,
+      opportunityId: conversation.opportunityId,
+      audioUrl: conversation.audioUrl,
+      caseNumber: conversation.caseNumber,
+      productLine: conversation.productLine || "ichef",
+      metadata: {
+        fileName: conversation.title || "retry-audio",
+        fileSize: 0,
+        format: "mp3",
+      },
+      slackUser: conversation.slackUserId
+        ? {
+            id: conversation.slackUserId,
+            username: conversation.slackUsername || "unknown",
+          }
+        : undefined,
+    };
+
+    await queue.send(message);
+
+    console.log(
+      `[Admin] Retry conversation: ${conversation.caseNumber} (${conversation.id})`
+    );
+
+    return c.json({
+      success: true,
+      conversationId: conversation.id,
+      caseNumber: conversation.caseNumber,
+      message: "Conversation queued for reprocessing",
+    });
+  } catch (error) {
+    console.error("[Admin] Retry conversation failed:", error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// ============================================================
 // Cloudflare Workers Export
 // 合併 Hono fetch handler 和 Scheduled handler
 // ============================================================
