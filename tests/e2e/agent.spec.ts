@@ -9,7 +9,7 @@ import { expect, test } from "@playwright/test";
  * - 完整的分析流程
  */
 
-const API_BASE_URL = process.env.API_BASE_URL || "http://localhost:3000";
+const API_BASE_URL = process.env.TEST_API_URL || "http://localhost:3001";
 
 // 需要 API server 的測試，在沒有 server 時跳過
 const testWithServer = process.env.SKIP_WEB_SERVER ? test.skip : test;

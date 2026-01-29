@@ -1,6 +1,6 @@
 import { mockConversation, mockOpportunity } from "./mock-data";
 
-const API_BASE = process.env.API_BASE_URL || "http://localhost:3000";
+const API_BASE = process.env.TEST_API_URL || "http://localhost:3001";
 
 export async function createTestOpportunity(
   authCookie: string,
