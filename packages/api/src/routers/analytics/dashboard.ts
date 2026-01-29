@@ -11,7 +11,7 @@ import {
   userProfiles,
 } from "@Sales_ai_automation_v3/db/schema";
 import { ORPCError } from "@orpc/server";
-import { and, avg, count, desc, eq, gte, ne } from "drizzle-orm";
+import { and, avg, count, desc, eq, gte, lte, ne, type SQL } from "drizzle-orm";
 
 import { protectedProcedure } from "../../index";
 import { CACHE_TTL, CacheKeys, getKVCacheService } from "./cache";
@@ -288,12 +288,22 @@ export const getDashboard = protectedProcedure
     };
 
     // Total analyses (已完成分析的對話數)
-    const analysisConditions = [eq(conversations.status, "completed")];
+    const completedConvConditions: SQL<unknown>[] = [
+      eq(conversations.status, "completed"),
+    ];
     if (userCondition) {
-      analysisConditions.push(userCondition);
+      completedConvConditions.push(userCondition);
     }
-    if (dateConditions.length > 0) {
-      analysisConditions.push(...dateConditions);
+    // 日期過濾：使用 conversations.createdAt
+    if (dateFrom) {
+      completedConvConditions.push(
+        gte(conversations.createdAt, new Date(dateFrom))
+      );
+    }
+    if (dateTo) {
+      completedConvConditions.push(
+        lte(conversations.createdAt, new Date(dateTo))
+      );
     }
 
     const totalAnalysesResults = await db
@@ -303,8 +313,14 @@ export const getDashboard = protectedProcedure
         opportunities,
         eq(conversations.opportunityId, opportunities.id)
       )
-      .where(and(...analysisConditions));
+      .where(and(...completedConvConditions));
     const totalAnalysesResult = totalAnalysesResults[0] ?? { count: 0 };
+
+    // MEDDIC 查詢用的條件（基於 meddicAnalyses 表）
+    const meddicConditions = [...dateConditions];
+    if (userCondition) {
+      meddicConditions.push(userCondition);
+    }
 
     // Average overall score
     const avgScoreResults = await db
@@ -317,7 +333,7 @@ export const getDashboard = protectedProcedure
         eq(meddicAnalyses.opportunityId, opportunities.id)
       )
       .where(
-        analysisConditions.length > 0 ? and(...analysisConditions) : undefined
+        meddicConditions.length > 0 ? and(...meddicConditions) : undefined
       );
     const avgScoreResult = avgScoreResults[0];
 
@@ -332,9 +348,7 @@ export const getDashboard = protectedProcedure
         opportunities,
         eq(meddicAnalyses.opportunityId, opportunities.id)
       )
-      .where(
-        analysisConditions.length > 0 ? and(...analysisConditions) : undefined
-      )
+      .where(meddicConditions.length > 0 ? and(...meddicConditions) : undefined)
       .groupBy(meddicAnalyses.status);
 
     // Recent analyses
@@ -353,9 +367,7 @@ export const getDashboard = protectedProcedure
         opportunities,
         eq(meddicAnalyses.opportunityId, opportunities.id)
       )
-      .where(
-        analysisConditions.length > 0 ? and(...analysisConditions) : undefined
-      )
+      .where(meddicConditions.length > 0 ? and(...meddicConditions) : undefined)
       .orderBy(desc(meddicAnalyses.createdAt))
       .limit(10);
 
