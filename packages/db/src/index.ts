@@ -40,16 +40,13 @@ async function initTestDb(): Promise<DatabaseClient> {
  * 初始化 Production 環境的資料庫連線
  * 使用 Neon serverless driver (針對 Cloudflare Workers 優化)
  */
-function initProductionDb(): DatabaseClient {
-  // 動態 require 以避免在測試環境中載入 cloudflare:workers
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { env } = require("@Sales_ai_automation_v3/env/server");
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { neon } = require("@neondatabase/serverless");
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { drizzle } = require("drizzle-orm/neon-http");
+async function initProductionDb(): Promise<DatabaseClient> {
+  // 動態 import cloudflare:workers 以取得環境變數
+  const { env } = await import("cloudflare:workers");
+  const { neon } = await import("@neondatabase/serverless");
+  const { drizzle } = await import("drizzle-orm/neon-http");
 
-  const sql = neon(env.DATABASE_URL || "");
+  const sql = neon((env as Record<string, string>).DATABASE_URL || "");
   return drizzle(sql, { schema });
 }
 
@@ -65,7 +62,7 @@ export async function getDb(): Promise<DatabaseClient> {
   if (isTestEnv) {
     _db = await initTestDb();
   } else {
-    _db = initProductionDb();
+    _db = await initProductionDb();
   }
 
   _dbInitialized = true;
@@ -75,8 +72,8 @@ export async function getDb(): Promise<DatabaseClient> {
 // 為了向後相容，提供同步的 db export
 // 注意：在測試環境中，請改用 getDb() 函數
 if (!isTestEnv) {
-  // Production 環境：立即初始化
-  _db = initProductionDb();
+  // Production 環境：使用 top-level await 立即初始化
+  _db = await initProductionDb();
   _dbInitialized = true;
 }
 
