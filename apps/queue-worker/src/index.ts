@@ -1156,6 +1156,13 @@ export default {
       await handleDailyTodoReminder(env);
       console.log("[Scheduled] Running pending follow-up reminder...");
       await handlePendingFollowUpReminder(env);
+    } else if (trigger === "0 17 * * *") {
+      // 每日 01:00 (UTC+8) - Voice Tagging 批次處理
+      console.log("[Scheduled] Running daily voice tagging...");
+      const { handleDailyVoiceTagging } = await import(
+        "./handlers/voice-tagging"
+      );
+      await handleDailyVoiceTagging(env);
     }
   },
 };

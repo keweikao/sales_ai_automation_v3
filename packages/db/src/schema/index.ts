@@ -2,6 +2,7 @@ export * from "./alert";
 export * from "./auth";
 export * from "./competitor-info";
 export * from "./conversation";
+export * from "./customer-voice-tags";
 export * from "./follow-up";
 export * from "./lead-source";
 export * from "./meddic";
