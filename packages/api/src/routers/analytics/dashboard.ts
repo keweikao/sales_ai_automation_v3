@@ -287,22 +287,23 @@ export const getDashboard = protectedProcedure
       count: 0,
     };
 
-    // Total analyses
-    const analysisConditions = [...dateConditions];
+    // Total analyses (已完成分析的對話數)
+    const analysisConditions = [eq(conversations.status, "completed")];
     if (userCondition) {
       analysisConditions.push(userCondition);
+    }
+    if (dateConditions.length > 0) {
+      analysisConditions.push(...dateConditions);
     }
 
     const totalAnalysesResults = await db
       .select({ count: count() })
-      .from(meddicAnalyses)
+      .from(conversations)
       .innerJoin(
         opportunities,
-        eq(meddicAnalyses.opportunityId, opportunities.id)
+        eq(conversations.opportunityId, opportunities.id)
       )
-      .where(
-        analysisConditions.length > 0 ? and(...analysisConditions) : undefined
-      );
+      .where(and(...analysisConditions));
     const totalAnalysesResult = totalAnalysesResults[0] ?? { count: 0 };
 
     // Average overall score
