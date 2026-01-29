@@ -121,8 +121,8 @@ function getStatusColor(status: string | null): {
   bg: string;
   text: string;
   ring: string;
-  bar: string;
-  dot: string;
+  barColor: string;
+  dotColor: string;
 } {
   switch (status) {
     case "Strong":
@@ -130,40 +130,40 @@ function getStatusColor(status: string | null): {
         bg: "bg-emerald-500/10",
         text: "text-emerald-400",
         ring: "ring-emerald-500/30",
-        bar: "bg-emerald-400",
-        dot: "bg-emerald-400",
+        barColor: "#34d399", // emerald-400
+        dotColor: "#34d399",
       };
     case "Medium":
       return {
         bg: "bg-amber-500/10",
         text: "text-amber-400",
         ring: "ring-amber-500/30",
-        bar: "bg-amber-400",
-        dot: "bg-amber-400",
+        barColor: "#fbbf24", // amber-400
+        dotColor: "#fbbf24",
       };
     case "Weak":
       return {
         bg: "bg-orange-500/10",
         text: "text-orange-400",
         ring: "ring-orange-500/30",
-        bar: "bg-orange-400",
-        dot: "bg-orange-400",
+        barColor: "#fb923c", // orange-400
+        dotColor: "#fb923c",
       };
     case "At Risk":
       return {
         bg: "bg-red-500/10",
         text: "text-red-400",
         ring: "ring-red-500/30",
-        bar: "bg-red-400",
-        dot: "bg-red-400",
+        barColor: "#f87171", // red-400
+        dotColor: "#f87171",
       };
     default:
       return {
         bg: "bg-slate-500/10",
         text: "text-slate-400",
         ring: "ring-slate-500/30",
-        bar: "bg-slate-400",
-        dot: "bg-slate-400",
+        barColor: "#94a3b8", // slate-400
+        dotColor: "#94a3b8",
       };
   }
 }
@@ -294,23 +294,6 @@ function DashboardPage() {
         .status-bar {
           position: relative;
           overflow: hidden;
-        }
-
-        .status-bar::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(99, 94, 246, 0.3), transparent);
-          animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-          100% {
-            left: 100%;
-          }
         }
 
         .action-button {
@@ -585,7 +568,8 @@ function DashboardPage() {
                                   className={`flex h-8 w-8 items-center justify-center rounded ${colors.bg} ring-1 ${colors.ring}`}
                                 >
                                   <div
-                                    className={`h-2 w-2 rounded-full ${colors.dot}`}
+                                    className="h-2 w-2 rounded-full"
+                                    style={{ backgroundColor: colors.dotColor }}
                                   />
                                 </div>
                                 <span
@@ -603,10 +587,13 @@ function DashboardPage() {
                                 </span>
                               </div>
                             </div>
-                            <div className="status-bar relative h-2 overflow-hidden rounded-full bg-slate-800">
+                            <div className="status-bar h-2 overflow-hidden rounded-full bg-slate-800">
                               <div
-                                className={`h-full transition-all duration-1000 ${colors.bar}`}
-                                style={{ width: `${percentage}%` }}
+                                className="h-full transition-all duration-1000"
+                                style={{
+                                  width: `${percentage}%`,
+                                  backgroundColor: colors.barColor,
+                                }}
                               />
                             </div>
                           </div>
