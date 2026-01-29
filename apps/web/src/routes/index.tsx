@@ -201,7 +201,12 @@ function DashboardPage() {
 
   const dashboard = dashboardQuery.data;
   const isLoading = dashboardQuery.isLoading;
-  const todos = todosQuery.data;
+
+  // 將 todosByUser 轉換為扁平陣列
+  const todosData = todosQuery.data;
+  const todos = todosData?.todosByUser
+    ? Object.values(todosData.todosByUser).flat()
+    : [];
   const todosLoading = todosQuery.isLoading;
 
   return (

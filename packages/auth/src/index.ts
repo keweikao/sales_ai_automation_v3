@@ -31,14 +31,16 @@ export const auth = betterAuth({
 
     schema,
   }),
-  trustedOrigins: [env.CORS_ORIGIN, env.WEB_APP_URL],
+  trustedOrigins: [env.CORS_ORIGIN, env.WEB_APP_URL].filter(
+    (origin): origin is string => Boolean(origin)
+  ),
   emailAndPassword: {
     enabled: true,
   },
   socialProviders: {
     google: {
-      clientId: env.GOOGLE_CLIENT_ID,
-      clientSecret: env.GOOGLE_CLIENT_SECRET,
+      clientId: env.GOOGLE_CLIENT_ID ?? "",
+      clientSecret: env.GOOGLE_CLIENT_SECRET ?? "",
       redirectURI: `${env.BETTER_AUTH_URL}/api/auth/callback/google`,
     },
   },

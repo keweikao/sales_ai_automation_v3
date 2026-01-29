@@ -69,9 +69,9 @@ const sendCustomerSMS = protectedProcedure
         subject: "iCHEF",
       },
       {
-        apiUrl: context.env.EVERY8D_API_URL,
-        username: context.env.EVERY8D_USERNAME,
-        password: context.env.EVERY8D_PASSWORD,
+        apiUrl: context.env.EVERY8D_API_URL ?? "",
+        username: context.env.EVERY8D_USERNAME ?? "",
+        password: context.env.EVERY8D_PASSWORD ?? "",
       }
     );
 
