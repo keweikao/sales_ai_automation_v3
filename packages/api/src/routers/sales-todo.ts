@@ -766,8 +766,7 @@ export const listTodos = protectedProcedure
       where: eq(userProfiles.userId, userId),
     });
 
-    const isAdmin =
-      userProfile?.role === "admin" && userProfile?.department === "all";
+    const isAdmin = userProfile?.role === "admin";
     const isManager = userProfile?.role === "manager";
 
     // 建立查詢條件
