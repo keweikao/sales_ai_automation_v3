@@ -69,7 +69,35 @@ crons = [
   "*/15 * * * *",  # 每 15 分鐘執行健康檢查與自動修復
 ]
 
+# ============================================================
+# Staging 環境設定 - 部署前驗證用
+# ============================================================
+# 部署命令: bunx wrangler deploy --env staging
+[env.staging]
+name = "sales-ai-server-staging"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+BETTER_AUTH_URL = "https://sales-ai-server-staging.salesaiautomationv3.workers.dev"
+CORS_ORIGIN = "https://sales-ai-web-staging.pages.dev"
+WEB_APP_URL = "https://sales-ai-web-staging.pages.dev"
+ADMIN_EMAILS = "stephen.kao@ichef.com.tw"
+MANAGER_EMAILS = "wade.lin@ichef.com.tw,benjamin.we@ichef.com.tw"
+
+# Staging 環境 KV Namespace (與 production 共用，或建立獨立的)
+# 建議獨立: bun wrangler kv:namespace create "CACHE_KV" --env staging
+[[env.staging.kv_namespaces]]
+binding = "CACHE_KV"
+id = "066c8705db6f4f39955d7050ac12fe03"
+
+# Staging Queue Producer
+[[env.staging.queues.producers]]
+queue = "transcription-queue-staging"
+binding = "TRANSCRIPTION_QUEUE"
+
+# ============================================================
 # 開發環境設定
+# ============================================================
 [env.dev]
 name = "sales-ai-server-dev"
 

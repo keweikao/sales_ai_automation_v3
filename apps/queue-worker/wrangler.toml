@@ -40,7 +40,33 @@ max_retries = 3
 max_wait_time_ms = 60000
 dead_letter_queue = "transcription-dlq"
 
+# ============================================================
+# Staging 環境設定 - 部署前驗證用
+# ============================================================
+# 部署命令: bunx wrangler deploy --env staging
+[env.staging]
+name = "sales-ai-queue-worker-staging"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+SERVER_URL = "https://sales-ai-server-staging.salesaiautomationv3.workers.dev"
+WEB_APP_URL = "https://sales-ai-web-staging.pages.dev"
+
+# Staging KV Namespace
+[[env.staging.kv_namespaces]]
+binding = "CACHE_KV"
+id = "066c8705db6f4f39955d7050ac12fe03"
+
+# Staging Queue Consumer
+[[env.staging.queues.consumers]]
+queue = "transcription-queue-staging"
+max_batch_size = 1
+max_retries = 3
+max_wait_time_ms = 60000
+
+# ============================================================
 # 開發環境設定
+# ============================================================
 [env.dev]
 name = "sales-ai-queue-worker-dev"
 

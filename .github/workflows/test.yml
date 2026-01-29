@@ -8,6 +8,7 @@ on:
 
 env:
   # 測試環境變數
+  NODE_ENV: test
   DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
   BETTER_AUTH_SECRET: test-secret-for-ci
   TEST_API_URL: http://localhost:3001
@@ -35,12 +36,10 @@ jobs:
         run: bun run typecheck
 
   # 單元測試和整合測試
-  # TODO: Fix database driver compatibility (Neon serverless vs standard PG)
   unit-integration:
     name: Unit & Integration Tests
     runs-on: ubuntu-latest
     needs: lint
-    if: false  # Temporarily disabled - needs database driver fix for CI
 
     services:
       postgres:
@@ -72,17 +71,20 @@ jobs:
         working-directory: packages/db
         run: bunx drizzle-kit migrate
         env:
+          NODE_ENV: test
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Run unit tests
         run: bun run test:unit
         env:
+          NODE_ENV: test
           DATABASE_URL: ${{ env.DATABASE_URL }}
           BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
 
       - name: Run integration tests
         run: bun run test:integration
         env:
+          NODE_ENV: test
           DATABASE_URL: ${{ env.DATABASE_URL }}
           BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
 
@@ -96,12 +98,10 @@ jobs:
             test-results/
 
   # API 測試
-  # TODO: Fix database driver compatibility (Neon serverless vs standard PG)
   api-tests:
     name: API Tests
     runs-on: ubuntu-latest
     needs: lint
-    if: false  # Temporarily disabled - needs database driver fix for CI
 
     services:
       postgres:
@@ -133,6 +133,7 @@ jobs:
         working-directory: packages/db
         run: bunx drizzle-kit migrate
         env:
+          NODE_ENV: test
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Start server
@@ -140,23 +141,23 @@ jobs:
           bun run dev:server &
           sleep 10
         env:
+          NODE_ENV: test
           DATABASE_URL: ${{ env.DATABASE_URL }}
           BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
 
       - name: Run API tests
         run: bun run test:api
         env:
+          NODE_ENV: test
           DATABASE_URL: ${{ env.DATABASE_URL }}
           BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
           TEST_API_URL: ${{ env.TEST_API_URL }}
 
   # E2E 測試
-  # TODO: Re-enable when database tests are working
   e2e-tests:
     name: E2E Tests
     runs-on: ubuntu-latest
-    needs: lint
-    if: false  # Temporarily disabled - needs database tests to work first
+    needs: [unit-integration, api-tests]
 
     services:
       postgres:
@@ -191,11 +192,13 @@ jobs:
         working-directory: packages/db
         run: bunx drizzle-kit migrate
         env:
+          NODE_ENV: test
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Build application
         run: bun run build
         env:
+          NODE_ENV: test
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Start application
@@ -203,12 +206,14 @@ jobs:
           bun run preview &
           sleep 15
         env:
+          NODE_ENV: test
           DATABASE_URL: ${{ env.DATABASE_URL }}
           BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
 
       - name: Run E2E tests
         run: bun run test:e2e
         env:
+          NODE_ENV: test
           DATABASE_URL: ${{ env.DATABASE_URL }}
           BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
 
@@ -229,12 +234,11 @@ jobs:
           retention-days: 7
 
   # 效能測試（僅在 main 分支）
-  # TODO: Re-enable when database tests are working
   performance-tests:
     name: Performance Tests
     runs-on: ubuntu-latest
-    needs: lint
-    if: false  # Temporarily disabled - needs database tests to work first
+    needs: [unit-integration, api-tests]
+    if: github.ref == 'refs/heads/main'
 
     services:
       postgres:
@@ -266,24 +270,28 @@ jobs:
         working-directory: packages/db
         run: bunx drizzle-kit migrate
         env:
+          NODE_ENV: test
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Seed test data
         run: bun run db:seed
         env:
+          NODE_ENV: test
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Start server
         run: |
-          NODE_ENV=production bun run start:server &
+          bun run start:server &
           sleep 10
         env:
+          NODE_ENV: test
           DATABASE_URL: ${{ env.DATABASE_URL }}
           BETTER_AUTH_SECRET: ${{ env.BETTER_AUTH_SECRET }}
 
       - name: Run performance tests
         run: bun run test:performance
         env:
+          NODE_ENV: test
           DATABASE_URL: ${{ env.DATABASE_URL }}
           TEST_API_URL: ${{ env.TEST_API_URL }}
 
@@ -298,16 +306,53 @@ jobs:
   test-summary:
     name: Test Summary
     runs-on: ubuntu-latest
-    needs: [lint]
+    needs: [lint, unit-integration, api-tests, e2e-tests]
     if: always()
 
     steps:
       - name: Check test results
         run: |
+          echo "=== Test Results Summary ==="
+
           if [ "${{ needs.lint.result }}" == "failure" ]; then
             echo "❌ Lint & Type Check failed"
-            exit 1
+            FAILED=true
           else
             echo "✅ Lint & Type Check passed"
-            echo "⚠️ Note: Database tests are temporarily disabled (needs Neon vs standard PG driver fix)"
+          fi
+
+          if [ "${{ needs.unit-integration.result }}" == "failure" ]; then
+            echo "❌ Unit & Integration Tests failed"
+            FAILED=true
+          elif [ "${{ needs.unit-integration.result }}" == "skipped" ]; then
+            echo "⏭️ Unit & Integration Tests skipped"
+          else
+            echo "✅ Unit & Integration Tests passed"
+          fi
+
+          if [ "${{ needs.api-tests.result }}" == "failure" ]; then
+            echo "❌ API Tests failed"
+            FAILED=true
+          elif [ "${{ needs.api-tests.result }}" == "skipped" ]; then
+            echo "⏭️ API Tests skipped"
+          else
+            echo "✅ API Tests passed"
+          fi
+
+          if [ "${{ needs.e2e-tests.result }}" == "failure" ]; then
+            echo "❌ E2E Tests failed"
+            FAILED=true
+          elif [ "${{ needs.e2e-tests.result }}" == "skipped" ]; then
+            echo "⏭️ E2E Tests skipped"
+          else
+            echo "✅ E2E Tests passed"
+          fi
+
+          if [ "$FAILED" == "true" ]; then
+            echo ""
+            echo "❌ Some tests failed!"
+            exit 1
+          else
+            echo ""
+            echo "✅ All tests passed!"
           fi
