@@ -191,25 +191,32 @@ async function getNextCaseNumber(
   const prefixCode = PRODUCT_LINE_PREFIXES[productLine] || "IC";
   const prefix = `${yearMonth}-${prefixCode}`;
 
-  // Get the highest sequence number for this month and product line
+  console.log(`[getNextCaseNumber] Querying for prefix: ${prefix}`);
+
+  // 使用 MAX + SUBSTRING 直接取得最大序號，避免字串排序問題
   const result = await db
-    .select({ caseNumber: conversations.caseNumber })
+    .select({
+      maxSeq: sql<number>`MAX(
+        CAST(
+          SUBSTRING(${conversations.caseNumber} FROM '${sql.raw(prefixCode)}([0-9]+)$')
+          AS INTEGER
+        )
+      )`.as("max_seq"),
+    })
     .from(conversations)
-    .where(sql`${conversations.caseNumber} LIKE ${`${prefix}%`}`)
-    .orderBy(desc(conversations.caseNumber))
-    .limit(1);
+    .where(sql`${conversations.caseNumber} LIKE ${`${prefix}%`}`);
 
-  let nextSequence = 1;
-  const firstResult = result[0];
-  if (result.length > 0 && firstResult?.caseNumber) {
-    // Match both IC and BT prefixes
-    const match = firstResult.caseNumber.match(/-(IC|BT)(\d+)$/);
-    if (match?.[2]) {
-      nextSequence = Number.parseInt(match[2], 10) + 1;
-    }
-  }
+  const maxSeq = result[0]?.maxSeq;
+  console.log(`[getNextCaseNumber] Query result: maxSeq = ${maxSeq}`);
 
-  return generateCaseNumberFromDate(nextSequence, productLine);
+  const nextSequence = maxSeq != null ? maxSeq + 1 : 1;
+
+  const newCaseNumber = generateCaseNumberFromDate(nextSequence, productLine);
+  console.log(
+    `[getNextCaseNumber] Generated: ${newCaseNumber} (next sequence: ${nextSequence})`
+  );
+
+  return newCaseNumber;
 }
 
 // ============================================================
@@ -409,83 +416,102 @@ export const uploadConversation = protectedProcedure
         });
       }
 
-      // Step 4: Generate case number
-      let caseNumber: string;
+      // Step 4 & 5: Generate case number and insert with retry logic
+      // 處理並發時的唯一約束衝突
       const conversationId = randomUUID();
-      try {
-        caseNumber = await getNextCaseNumber(
-          resolvedProductLine as ProductLine
-        );
-        console.log(
-          `[${requestId}] 🎫 Generated conversationId: ${conversationId}, caseNumber: ${caseNumber} (${resolvedProductLine})`
-        );
-      } catch (error) {
-        console.error(
-          `[${requestId}] ❌ Failed to generate case number:`,
-          error
-        );
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: `案件編號生成失敗: ${error instanceof Error ? error.message : String(error)}`,
-        });
+      let insertedConversation;
+      const MAX_RETRIES = 3;
+
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          // 每次嘗試都重新生成 case number
+          const caseNumber = await getNextCaseNumber(
+            resolvedProductLine as ProductLine
+          );
+          console.log(
+            `[${requestId}] 🎫 Attempt ${attempt}: Generated conversationId: ${conversationId}, caseNumber: ${caseNumber} (${resolvedProductLine})`
+          );
+
+          console.log(
+            `[${requestId}] 💾 Creating conversation record with status: pending...`
+          );
+
+          const dbStartTime = Date.now();
+          const conversationResults = await db
+            .insert(conversations)
+            .values({
+              id: conversationId,
+              opportunityId,
+              caseNumber,
+              title:
+                title || `對話 - ${new Date().toLocaleDateString("zh-TW")}`,
+              type,
+              status: "pending", // 初始狀態為 pending
+              audioUrl,
+              // transcript 由 Queue Worker 轉錄後回填，不傳讓資料庫使用預設值 NULL
+              duration: metadata?.duration || 0,
+              conversationDate: metadata?.conversationDate
+                ? new Date(metadata.conversationDate)
+                : new Date(),
+              createdBy: resolvedCreatedBy, // 使用解析後的用戶 ID
+              // Slack 業務資訊
+              slackUserId: slackUser?.id,
+              slackUsername: slackUser?.username,
+              // 產品線
+              productLine: resolvedProductLine,
+              // Follow-up 追蹤狀態 (強制業務設定 follow-up 或標記拒絕)
+              followUpStatus: "pending",
+            })
+            .returning();
+
+          console.log(
+            `[${requestId}] ✓ DB insert completed in ${Date.now() - dbStartTime}ms`
+          );
+
+          insertedConversation = conversationResults[0];
+          if (!insertedConversation) {
+            throw new Error("No conversation returned from DB insert");
+          }
+
+          // 更新 opportunity 的 updatedAt，使其出現在機會列表最上方
+          await db
+            .update(opportunities)
+            .set({ updatedAt: new Date() })
+            .where(eq(opportunities.id, opportunityId));
+
+          // 成功，跳出重試循環
+          break;
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          const isUniqueViolation =
+            errorMessage.includes("unique") ||
+            errorMessage.includes("duplicate") ||
+            errorMessage.includes("case_number");
+
+          if (isUniqueViolation && attempt < MAX_RETRIES) {
+            console.warn(
+              `[${requestId}] ⚠️ Case number conflict on attempt ${attempt}, retrying...`
+            );
+            // 短暫延遲後重試
+            await new Promise((resolve) => setTimeout(resolve, 100 * attempt));
+            continue;
+          }
+
+          console.error(`[${requestId}] ❌ DB insert failed:`, error);
+          console.error(
+            `[${requestId}] Error stack:`,
+            error instanceof Error ? error.stack : "no stack"
+          );
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            message: `資料庫寫入失敗: ${errorMessage}`,
+          });
+        }
       }
 
-      // Step 5: 建立資料庫記錄 (status: "pending")
-      // 不再同步轉錄,而是推送到 Queue
-      console.log(
-        `[${requestId}] 💾 Creating conversation record with status: pending...`
-      );
-      let insertedConversation;
-      try {
-        const dbStartTime = Date.now();
-        const conversationResults = await db
-          .insert(conversations)
-          .values({
-            id: conversationId,
-            opportunityId,
-            caseNumber,
-            title: title || `對話 - ${new Date().toLocaleDateString("zh-TW")}`,
-            type,
-            status: "pending", // 初始狀態為 pending
-            audioUrl,
-            // transcript 由 Queue Worker 轉錄後回填，不傳讓資料庫使用預設值 NULL
-            duration: metadata?.duration || 0,
-            conversationDate: metadata?.conversationDate
-              ? new Date(metadata.conversationDate)
-              : new Date(),
-            createdBy: resolvedCreatedBy, // 使用解析後的用戶 ID
-            // Slack 業務資訊
-            slackUserId: slackUser?.id,
-            slackUsername: slackUser?.username,
-            // 產品線
-            productLine: resolvedProductLine,
-            // Follow-up 追蹤狀態 (強制業務設定 follow-up 或標記拒絕)
-            followUpStatus: "pending",
-          })
-          .returning();
-
-        console.log(
-          `[${requestId}] ✓ DB insert completed in ${Date.now() - dbStartTime}ms`
-        );
-
-        insertedConversation = conversationResults[0];
-        if (!insertedConversation) {
-          throw new Error("No conversation returned from DB insert");
-        }
-
-        // 更新 opportunity 的 updatedAt，使其出現在機會列表最上方
-        await db
-          .update(opportunities)
-          .set({ updatedAt: new Date() })
-          .where(eq(opportunities.id, opportunityId));
-      } catch (error) {
-        console.error(`[${requestId}] ❌ DB insert failed:`, error);
-        console.error(
-          `[${requestId}] Error stack:`,
-          error instanceof Error ? error.stack : "no stack"
-        );
-        console.error(`[${requestId}] Error cause:`, (error as any)?.cause);
+      if (!insertedConversation) {
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: `資料庫寫入失敗: ${error instanceof Error ? error.message : String(error)}`,
+          message: "資料庫寫入失敗：重試次數已達上限",
         });
       }
 
@@ -508,7 +534,7 @@ export const uploadConversation = protectedProcedure
           conversationId,
           opportunityId,
           audioUrl,
-          caseNumber,
+          caseNumber: insertedConversation.caseNumber,
           productLine: resolvedProductLine,
           metadata: {
             fileName: title || `audio-${Date.now()}`,
