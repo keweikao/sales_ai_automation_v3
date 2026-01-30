@@ -43,10 +43,24 @@ export default defineConfig({
       ],
   webServer: process.env.SKIP_WEB_SERVER
     ? undefined
-    : {
-        command: "npm run dev",
-        url: "http://localhost:3001",
-        reuseExistingServer: !process.env.CI,
-        timeout: 120_000,
-      },
+    : [
+        {
+          command: "bun run dev:server",
+          url: "http://localhost:3000/health",
+          reuseExistingServer: !process.env.CI,
+          timeout: 120_000,
+          env: {
+            NODE_ENV: "test",
+          },
+        },
+        {
+          command: "bun run dev:web",
+          url: "http://localhost:3001",
+          reuseExistingServer: !process.env.CI,
+          timeout: 120_000,
+          env: {
+            NODE_ENV: "test",
+          },
+        },
+      ],
 });
