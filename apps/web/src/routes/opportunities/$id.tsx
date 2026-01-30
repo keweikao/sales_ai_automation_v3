@@ -63,6 +63,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TermTooltip } from "@/components/ui/term-tooltip";
 import { Textarea } from "@/components/ui/textarea";
 import { client } from "@/utils/orpc";
 
@@ -905,67 +906,89 @@ function OpportunityDetailPage() {
                                       }
 
                                       const stages = [
-                                        { key: "situation", label: "S 情境" },
-                                        { key: "problem", label: "P 問題" },
-                                        { key: "implication", label: "I 影響" },
-                                        { key: "need_payoff", label: "N 需求" },
+                                        {
+                                          key: "situation",
+                                          label: "S 情境",
+                                          termKey: "situation",
+                                        },
+                                        {
+                                          key: "problem",
+                                          label: "P 問題",
+                                          termKey: "problem",
+                                        },
+                                        {
+                                          key: "implication",
+                                          label: "I 影響",
+                                          termKey: "implication",
+                                        },
+                                        {
+                                          key: "need_payoff",
+                                          label: "N 需求",
+                                          termKey: "needPayoff",
+                                        },
                                       ];
 
                                       return (
                                         <>
-                                          {stages.map(({ key, label }) => {
-                                            const data = spinAnalysis[key] as
-                                              | {
-                                                  score?: number;
-                                                  achieved?: boolean;
-                                                }
-                                              | undefined;
-                                            if (!data) {
-                                              return null;
-                                            }
-                                            const score = data.score ?? 0;
-                                            const achieved =
-                                              data.achieved ?? false;
+                                          {stages.map(
+                                            ({ key, label, termKey }) => {
+                                              const data = spinAnalysis[key] as
+                                                | {
+                                                    score?: number;
+                                                    achieved?: boolean;
+                                                  }
+                                                | undefined;
+                                              if (!data) {
+                                                return null;
+                                              }
+                                              const score = data.score ?? 0;
+                                              const achieved =
+                                                data.achieved ?? false;
 
-                                            return (
-                                              <div
-                                                className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-2.5"
-                                                key={key}
-                                              >
-                                                <div className="flex items-center gap-2">
+                                              return (
+                                                <div
+                                                  className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-2.5"
+                                                  key={key}
+                                                >
+                                                  <div className="flex items-center gap-2">
+                                                    <span
+                                                      className={
+                                                        achieved && score >= 60
+                                                          ? "text-[var(--ds-success)]"
+                                                          : score >= 30
+                                                            ? "text-[var(--ds-warning)]"
+                                                            : "text-[var(--ds-danger)]"
+                                                      }
+                                                    >
+                                                      {achieved && score >= 60
+                                                        ? "✅"
+                                                        : score >= 30
+                                                          ? "⚠️"
+                                                          : "❌"}
+                                                    </span>
+                                                    <TermTooltip
+                                                      termKey={termKey}
+                                                    >
+                                                      <span className="font-data text-sm">
+                                                        {label}
+                                                      </span>
+                                                    </TermTooltip>
+                                                  </div>
                                                   <span
-                                                    className={
-                                                      achieved && score >= 60
+                                                    className={`font-bold font-data text-sm ${
+                                                      score >= 60
                                                         ? "text-[var(--ds-success)]"
                                                         : score >= 30
                                                           ? "text-[var(--ds-warning)]"
                                                           : "text-[var(--ds-danger)]"
-                                                    }
+                                                    }`}
                                                   >
-                                                    {achieved && score >= 60
-                                                      ? "✅"
-                                                      : score >= 30
-                                                        ? "⚠️"
-                                                        : "❌"}
-                                                  </span>
-                                                  <span className="font-data text-sm">
-                                                    {label}
+                                                    {score}分
                                                   </span>
                                                 </div>
-                                                <span
-                                                  className={`font-bold font-data text-sm ${
-                                                    score >= 60
-                                                      ? "text-[var(--ds-success)]"
-                                                      : score >= 30
-                                                        ? "text-[var(--ds-warning)]"
-                                                        : "text-[var(--ds-danger)]"
-                                                  }`}
-                                                >
-                                                  {score}分
-                                                </span>
-                                              </div>
-                                            );
-                                          })}
+                                              );
+                                            }
+                                          )}
                                           {spinAnalysis.spin_completion_rate !==
                                             undefined && (
                                             <div className="mt-3 rounded-lg border border-cyan-500/30 bg-cyan-500/5 p-3 text-center">

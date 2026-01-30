@@ -29,24 +29,23 @@ export const glossary: Record<string, TermDefinition> = {
   },
   pain: {
     term: "Pain（痛點）",
-    definition: "客戶目前面臨的核心業務挑戰或痛點，以及其急迫程度。",
-    calculation: "根據痛點的明確程度、急迫性、影響範圍等進行評分，權重 35%。",
+    definition: "客戶哪裡痛？有多急？",
+    calculation: "例：「每天對帳要花 3 小時」",
   },
   decision: {
     term: "Decision（決策）",
-    definition: "了解客戶的決策者和決策流程，確認是否能接觸到關鍵決策人。",
-    calculation: "根據是否識別決策者、決策流程清晰度等因素評分，權重 25%。",
+    definition: "有跟能做主的人談嗎？",
+    calculation: "例：「老闆有在場」",
   },
   champion: {
     term: "Champion（支持度）",
-    definition: "在客戶組織內部積極推動此採購案的關鍵人物。",
-    calculation: "根據是否有支持者、其影響力和積極程度等進行評分，權重 25%。",
+    definition: "有人會幫我們講話嗎？",
+    calculation: "例：「店長說會跟老闆提」",
   },
   metrics: {
     term: "Metrics（量化）",
-    definition: "客戶預期透過解決方案達成的量化商業目標或 KPI。",
-    calculation:
-      "根據對話中提及的具體數字目標、ROI 預期、成本節省等進行評分，權重 15%。",
+    definition: "客戶有講到具體數字嗎？",
+    calculation: "例：「想省 30% 人力」",
   },
 
   // SPIN 相關術語
@@ -57,23 +56,23 @@ export const glossary: Record<string, TermDefinition> = {
   },
   situation: {
     term: "Situation（情境）",
-    definition: "了解客戶目前的情況和背景，建立對話基礎。",
-    calculation: "根據是否詢問並了解客戶現況進行評分。",
+    definition: "有問客戶現在怎麼做嗎？",
+    calculation: "例：「你們現在用什麼系統？」",
   },
   problem: {
     term: "Problem（問題）",
-    definition: "發掘客戶面臨的問題和困難。",
-    calculation: "根據是否識別出客戶的具體問題進行評分。",
+    definition: "有問到客戶的困擾嗎？",
+    calculation: "例：「最頭痛的是什麼？」",
   },
   implication: {
     term: "Implication（影響）",
-    definition: "深入探討問題帶來的影響和後果，強化客戶的痛點意識。",
-    calculation: "根據是否引導客戶思考問題的嚴重性進行評分。",
+    definition: "有讓客戶想到「不處理會怎樣」嗎？",
+    calculation: "例：「這樣下去會虧多少？」",
   },
   needPayoff: {
     term: "Need-Payoff（需求回報）",
-    definition: "引導客戶說出解決方案的價值和好處。",
-    calculation: "根據是否讓客戶認同解決方案的價值進行評分。",
+    definition: "有讓客戶說出「解決了有什麼好處」嗎？",
+    calculation: "例：「如果搞定了，對你有什麼幫助？」",
   },
 
   // 機會狀態相關
