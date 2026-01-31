@@ -67,3 +67,8 @@ transcription-compressed.json
 # MCP
 temp.mcp.json
 .mcp.json
+
+# Local test scripts with sensitive data
+verify-transcript-saved.ts
+check-agent4-summary.ts
+create-test-conversation.ts
