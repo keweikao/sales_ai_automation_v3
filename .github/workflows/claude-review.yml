@@ -19,28 +19,39 @@ jobs:
     name: Claude Code Review
     runs-on: ubuntu-latest
 
-    # 只在有 ANTHROPIC_API_KEY 時執行
-    if: ${{ secrets.ANTHROPIC_API_KEY != '' }}
-
     permissions:
       contents: read
       pull-requests: write
 
     steps:
+      - name: Check API Key
+        id: check-key
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "⚠️ ANTHROPIC_API_KEY 未設定，跳過 Claude 審查"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout repository
+        if: steps.check-key.outputs.skip != 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup Bun
+        if: steps.check-key.outputs.skip != 'true'
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3.5"
 
       - name: Install dependencies
+        if: steps.check-key.outputs.skip != 'true'
         run: bun install
 
       - name: Run Claude PR Review
+        if: steps.check-key.outputs.skip != 'true'
         id: review
         run: |
           # 執行審查並儲存結果
@@ -63,6 +74,7 @@ jobs:
           fi
 
       - name: Format Review Comment
+        if: steps.check-key.outputs.skip != 'true'
         id: format
         run: |
           # 使用 Node.js 格式化結果
@@ -127,6 +139,7 @@ jobs:
           EOF
 
       - name: Post Review Comment
+        if: steps.check-key.outputs.skip != 'true'
         uses: actions/github-script@v7
         with:
           script: |
@@ -159,7 +172,7 @@ jobs:
             });
 
       - name: Set Review Status
-        if: always()
+        if: steps.check-key.outputs.skip != 'true'
         run: |
           if [ "${{ steps.review.outputs.approved }}" == "true" ]; then
             echo "✅ PR 審查通過"

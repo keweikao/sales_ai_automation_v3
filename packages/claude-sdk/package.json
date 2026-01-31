@@ -22,5 +22,10 @@
   },
   "peerDependencies": {
     "@anthropic-ai/claude-code": ">=0.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@anthropic-ai/claude-code": {
+      "optional": true
+    }
   }
 }
