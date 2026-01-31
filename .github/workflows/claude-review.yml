@@ -1,0 +1,183 @@
+name: Claude PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main, develop]
+
+# 確保同一 PR 只有一個審查任務在執行
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  claude-review:
+    name: Claude Code Review
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Check API Key
+        id: check-key
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "⚠️ ANTHROPIC_API_KEY 未設定，跳過 Claude 審查"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout repository
+        if: steps.check-key.outputs.skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        if: steps.check-key.outputs.skip != 'true'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.5"
+
+      - name: Install dependencies
+        if: steps.check-key.outputs.skip != 'true'
+        run: bun install
+
+      - name: Run Claude PR Review
+        if: steps.check-key.outputs.skip != 'true'
+        id: review
+        run: |
+          # 執行審查並儲存結果
+          bun run scripts/claude/pr-review.ts \
+            --pr ${{ github.event.pull_request.number }} \
+            --json > review_result.json 2>&1 || true
+
+          # 讀取結果
+          if [ -f review_result.json ]; then
+            echo "review_result<<EOF" >> $GITHUB_OUTPUT
+            cat review_result.json >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+
+            # 檢查是否通過
+            APPROVED=$(jq -r '.approved // false' review_result.json)
+            echo "approved=$APPROVED" >> $GITHUB_OUTPUT
+          else
+            echo "approved=false" >> $GITHUB_OUTPUT
+            echo "review_result={\"error\": \"Review failed\"}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Format Review Comment
+        if: steps.check-key.outputs.skip != 'true'
+        id: format
+        run: |
+          # 使用 Node.js 格式化結果
+          node << 'EOF'
+          const fs = require('fs');
+
+          try {
+            const result = JSON.parse(fs.readFileSync('review_result.json', 'utf8'));
+
+            let comment = '## 🤖 Claude Code Review\n\n';
+
+            if (result.error) {
+              comment += `❌ 審查失敗: ${result.error}\n`;
+            } else {
+              const statusEmoji = result.approved ? '✅' : '❌';
+              const scoreEmoji = result.overallScore >= 80 ? '🟢' :
+                                 result.overallScore >= 60 ? '🟡' : '🔴';
+
+              comment += `${statusEmoji} **審查結果**: ${result.approved ? '通過' : '需要修改'}\n`;
+              comment += `${scoreEmoji} **評分**: ${result.overallScore}/100\n`;
+              comment += `📋 **測試覆蓋**: ${result.testCoverage}\n\n`;
+
+              comment += `### 摘要\n${result.summary}\n\n`;
+
+              if (result.issues && result.issues.length > 0) {
+                comment += `### ⚠️ 問題 (${result.issues.length})\n\n`;
+                for (const issue of result.issues) {
+                  const icon = issue.severity === 'error' ? '🔴' :
+                               issue.severity === 'warning' ? '🟡' : '🔵';
+                  comment += `${icon} **${issue.file}${issue.line ? ':' + issue.line : ''}**\n`;
+                  comment += `> ${issue.message}\n`;
+                  if (issue.suggestion) {
+                    comment += `> 💡 ${issue.suggestion}\n`;
+                  }
+                  comment += '\n';
+                }
+              }
+
+              if (result.securityConcerns && result.securityConcerns.length > 0) {
+                comment += `### 🔒 安全疑慮\n`;
+                for (const concern of result.securityConcerns) {
+                  comment += `- ${concern}\n`;
+                }
+                comment += '\n';
+              }
+
+              if (result.suggestions && result.suggestions.length > 0) {
+                comment += `### 💡 建議\n`;
+                for (const suggestion of result.suggestions) {
+                  comment += `- ${suggestion}\n`;
+                }
+              }
+            }
+
+            // 寫入檔案供下一步使用
+            fs.writeFileSync('comment.md', comment);
+            console.log('Comment formatted successfully');
+          } catch (err) {
+            console.error('Error formatting comment:', err);
+            fs.writeFileSync('comment.md', '## 🤖 Claude Code Review\n\n❌ 無法解析審查結果');
+          }
+          EOF
+
+      - name: Post Review Comment
+        if: steps.check-key.outputs.skip != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const comment = fs.readFileSync('comment.md', 'utf8');
+
+            // 找到並刪除之前的審查評論
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            for (const existingComment of comments) {
+              if (existingComment.body.startsWith('## 🤖 Claude Code Review')) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existingComment.id,
+                });
+              }
+            }
+
+            // 發布新評論
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment,
+            });
+
+      - name: Set Review Status
+        if: steps.check-key.outputs.skip != 'true'
+        run: |
+          if [ "${{ steps.review.outputs.approved }}" == "true" ]; then
+            echo "✅ PR 審查通過"
+          else
+            echo "❌ PR 需要修改"
+            # 不要讓 CI 失敗，只是提供建議
+            # exit 1
+          fi

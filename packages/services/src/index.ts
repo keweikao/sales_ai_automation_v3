@@ -254,3 +254,11 @@ export * from "./report/index";
 // ============================================================
 
 export * from "./nlp/index";
+
+// ============================================================
+// Claude Agents (Claude Agent SDK 整合)
+// ============================================================
+
+// NOTE: Claude Agents 有可選的 peer dependency (@anthropic-ai/claude-code)
+// 請直接從 "@sales_ai_automation_v3/claude-sdk" 或 CLI 腳本使用
+// export * from "./claude-agents/index.js";

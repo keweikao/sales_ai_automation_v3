@@ -29,6 +29,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sales_ai_automation_v3/claude-sdk": "workspace:*",
     "@Sales_ai_automation_v3/db": "workspace:*",
     "@aws-sdk/client-s3": "^3.967.0",
     "@aws-sdk/s3-request-presigner": "^3.967.0",

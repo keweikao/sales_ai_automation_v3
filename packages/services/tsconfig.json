@@ -16,7 +16,9 @@
     "downlevelIteration": true,
     "paths": {
       "@sales_ai_automation_v3/shared": ["../shared/src"],
-      "@sales_ai_automation_v3/shared/*": ["../shared/src/*"]
+      "@sales_ai_automation_v3/shared/*": ["../shared/src/*"],
+      "@sales_ai_automation_v3/claude-sdk": ["../claude-sdk/src"],
+      "@sales_ai_automation_v3/claude-sdk/*": ["../claude-sdk/src/*"]
     }
   },
   "include": ["src/**/*"],
@@ -26,6 +28,7 @@
     "src/agent/**/*",
     "src/mcp/**/*",
     "src/ops/**/*",
+    "src/claude-agents/**/*",
     "src/**/__tests__/**/*",
     "src/**/*.test.ts"
   ]

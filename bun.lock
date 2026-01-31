@@ -216,6 +216,20 @@
         "typescript": "catalog:",
       },
     },
+    "packages/claude-sdk": {
+      "name": "@sales_ai_automation_v3/claude-sdk",
+      "version": "0.1.0",
+      "dependencies": {
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@types/node": "catalog:",
+        "typescript": "catalog:",
+      },
+      "peerDependencies": {
+        "@anthropic-ai/claude-code": ">=0.2.0",
+      },
+    },
     "packages/config": {
       "name": "@Sales_ai_automation_v3/config",
       "version": "0.0.0",
@@ -273,6 +287,7 @@
         "@aws-sdk/s3-request-presigner": "^3.967.0",
         "@google/generative-ai": "^0.24.1",
         "@neondatabase/serverless": "^1.0.2",
+        "@sales_ai_automation_v3/claude-sdk": "workspace:*",
         "@slack/web-api": "^7.13.0",
         "drizzle-orm": "^0.45.1",
         "groq-sdk": "^0.8.0",
@@ -335,6 +350,8 @@
     "@ampproject/remapping": ["@ampproject/remapping@2.3.0", "", { "dependencies": { "@jridgewell/gen-mapping": "^0.3.5", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw=="],
 
     "@antfu/ni": ["@antfu/ni@25.0.0", "", { "dependencies": { "ansis": "^4.0.0", "fzf": "^0.5.2", "package-manager-detector": "^1.3.0", "tinyexec": "^1.0.1" }, "bin": { "na": "bin/na.mjs", "ni": "bin/ni.mjs", "nr": "bin/nr.mjs", "nci": "bin/nci.mjs", "nlx": "bin/nlx.mjs", "nun": "bin/nun.mjs", "nup": "bin/nup.mjs" } }, "sha512-9q/yCljni37pkMr4sPrI3G4jqdIk074+iukc5aFJl7kmDCCsiJrbZ6zKxnES1Gwg+i9RcDZwvktl23puGslmvA=="],
+
+    "@anthropic-ai/claude-code": ["@anthropic-ai/claude-code@2.1.27", "", { "optionalDependencies": { "@img/sharp-darwin-arm64": "^0.33.5", "@img/sharp-darwin-x64": "^0.33.5", "@img/sharp-linux-arm": "^0.33.5", "@img/sharp-linux-arm64": "^0.33.5", "@img/sharp-linux-x64": "^0.33.5", "@img/sharp-linuxmusl-arm64": "^0.33.5", "@img/sharp-linuxmusl-x64": "^0.33.5", "@img/sharp-win32-x64": "^0.33.5" }, "bin": { "claude": "cli.js" } }, "sha512-bmGNK5VRonYLijfMJV4dv51X8jJv4uRLER+Ng8N4AR67dlMfconhD1q+6L4U6RFVzCU1xPiYN1+eUTRaKLEFgA=="],
 
     "@aws-crypto/crc32": ["@aws-crypto/crc32@5.2.0", "", { "dependencies": { "@aws-crypto/util": "^5.2.0", "@aws-sdk/types": "^3.222.0", "tslib": "^2.6.2" } }, "sha512-nLbCWqQNgUiwwtFsen1AdzAtvuLRsQS8rYgMuxCrdKf9kOssamGLuPwyTY9wyYblNr9+1XM8v6zoDTPPSIeANg=="],
 
@@ -991,6 +1008,8 @@
     "@rollup/rollup-win32-x64-gnu": ["@rollup/rollup-win32-x64-gnu@4.55.1", "", { "os": "win32", "cpu": "x64" }, "sha512-xGGY5pXj69IxKb4yv/POoocPy/qmEGhimy/FoTpTSVju3FYXUQQMFCaZZXJVidsmGxRioZAwpThl/4zX41gRKg=="],
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.55.1", "", { "os": "win32", "cpu": "x64" }, "sha512-SPEpaL6DX4rmcXtnhdrQYgzQ5W2uW3SCJch88lB2zImhJRhIIK44fkUrgIV/Q8yUNfw5oyZ5vkeQsZLhCb06lw=="],
+
+    "@sales_ai_automation_v3/claude-sdk": ["@sales_ai_automation_v3/claude-sdk@workspace:packages/claude-sdk"],
 
     "@sales_ai_automation_v3/shared": ["@sales_ai_automation_v3/shared@workspace:packages/shared"],
 
