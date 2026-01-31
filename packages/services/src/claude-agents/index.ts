@@ -11,22 +11,39 @@
  * ```
  */
 
+// Phase 3 - E2E 測試修復
+export {
+  diagnoseE2ETests,
+  fixE2ETest,
+  formatDiagnosisAsMarkdown,
+  formatFixAsMarkdown,
+  runE2ETests,
+} from "./dev/e2e-fixer.js";
 // 開發自動化代理人
 export {
   formatReviewAsMarkdown,
   reviewPullRequest,
   securityScan,
 } from "./dev/pr-reviewer.js";
+// Phase 2 - 診斷代理人
+export {
+  analyzeKVPerformance,
+  analyzeWorkerLogs,
+  diagnoseConversation,
+  diagnoseSystemHealth,
+  formatDiagnoseAsMarkdown,
+  formatKVAnalysisAsMarkdown,
+  formatWorkerLogAsMarkdown,
+} from "./ops/index.js";
 
-// TODO: Phase 2 - 診斷代理人
-// export { diagnoseConversation, diagnoseSystemHealth } from "./ops/diagnose.js";
-// export { analyzeQueueWorkerLogs, analyzeKVCachePerformance } from "./ops/cloudflare.js";
-
-// TODO: Phase 3 - E2E 測試修復
-// export { fixE2ETests } from "./dev/e2e-fixer.js";
-
-// TODO: Phase 4 - Coach 增強
-// export { getInteractiveCoaching } from "./sales/coach-enhanced.js";
+// Phase 4 - 銷售教練增強
+export {
+  analyzeWithCoach,
+  askCoach,
+  formatCoachingAsMarkdown,
+  getTalkTracks,
+  scheduleFollowUp,
+} from "./sales/index.js";
 
 // TODO: Phase 5 - 銷售記憶
 // export { saveCustomerMemory, getCustomerHistory } from "./sales/memory-manager.js";
