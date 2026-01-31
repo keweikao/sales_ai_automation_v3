@@ -28,8 +28,6 @@ export const slackFileDownloadCheckTool: MCPTool<Input, Output> = {
     "檢查 Slack 檔案下載功能狀態。測試從 Slack 下載檔案的速度和可靠性。",
   inputSchema: SlackFileDownloadCheckInput,
   handler: async (input: Input): Promise<Output> => {
-    const _startTime = Date.now();
-
     try {
       const token = input.apiToken || process.env.SLACK_BOT_TOKEN;
       if (!token) {

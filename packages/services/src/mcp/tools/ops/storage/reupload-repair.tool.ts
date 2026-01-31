@@ -94,9 +94,10 @@ export const storageReuploadRepairTool: MCPTool<Input, Output> = {
 					`;
 
           if (result.length > 0) {
+            const row = result[0]!;
             conversationsToCheck.push({
-              id: result[0].id as string,
-              audio_url: result[0].audio_url as string,
+              id: row.id as string,
+              audio_url: row.audio_url as string,
             });
           }
         }

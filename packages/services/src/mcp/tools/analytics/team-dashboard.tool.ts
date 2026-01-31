@@ -129,21 +129,29 @@ export const teamDashboardTool: MCPTool<Input, Output> = {
           "../../../mcp/templates/report-templates.js"
         );
 
-        reportContent = generateTeamReport({
+        const teamPerf = {
           period: input.period,
           totalConversations: metrics.totalConversations,
           avgMeddicScore: metrics.avgMeddicScore,
-          dealCloseRate:
-            metrics.dealsClosed > 0
-              ? (metrics.dealsClosed / metrics.totalConversations) * 100
-              : 0,
+          dealsClosed: metrics.dealsClosed,
           avgDealValue: metrics.avgDealValue,
-          topPerformer: metrics.topPerformers[0] || {
-            name: "N/A",
-            convCount: 0,
-            avgScore: 0,
-          },
-        });
+          activeReps: metrics.topPerformers.length,
+        };
+        const repsPerf = metrics.topPerformers.map((p) => ({
+          repId: "",
+          repName: p.name,
+          conversationCount: p.convCount,
+          avgScore: p.avgScore,
+          avgMetricsScore: 0,
+          avgEconomicBuyerScore: 0,
+          avgDecisionCriteriaScore: 0,
+          avgDecisionProcessScore: 0,
+          avgIdentifyPainScore: 0,
+          avgChampionScore: 0,
+          opportunitiesCount: 0,
+          dealsWon: 0,
+        }));
+        reportContent = generateTeamReport(teamPerf, repsPerf);
 
         if (input.reportFormat === "markdown") {
           const timestamp = new Date().toISOString().split("T")[0];
@@ -157,7 +165,8 @@ export const teamDashboardTool: MCPTool<Input, Output> = {
             {
               path: reportPath,
               content: reportContent,
-              createDirs: true,
+              encoding: "utf-8",
+              createDirectories: true,
             },
             { timestamp: new Date() }
           );

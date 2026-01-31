@@ -9,11 +9,18 @@ import {
 } from "@Sales_ai_automation_v3/db/schema";
 import { env } from "@Sales_ai_automation_v3/env/server";
 import {
+  computeAttentionNeeded,
+  computeCloseCases,
   computeRepReport,
+  computeSystemHealth,
   computeTeamReport,
+  computeTodoStats,
   computeUploadRankings,
+  computeWeeklyTeamPerformance,
   createKVCacheService,
   extractCoachingNotes,
+  KV_KEYS,
+  KV_TTL,
 } from "@Sales_ai_automation_v3/services";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
@@ -160,14 +167,14 @@ app.get("/live", (c) => {
 
 // 手動觸發報表預計算（僅限管理員）
 app.post("/api/admin/precompute-reports", async (c) => {
-  const kv = (c.env as any).CACHE_KV as KVNamespace | undefined;
-  if (!kv) {
+  const envConfig = c.env as Env;
+  if (!envConfig.CACHE_KV) {
     return c.json({ error: "CACHE_KV not configured" }, 500);
   }
 
   try {
     console.log("[Reports] Manual precomputation triggered...");
-    await precomputeReports(kv);
+    await precomputeReports(envConfig);
     return c.json({
       success: true,
       message: "Reports precomputed successfully",
@@ -323,7 +330,11 @@ app.post("/api/admin/retry-conversation", async (c) => {
 
 // Type declarations for Cloudflare Workers
 interface Env {
+  // Database
+  DATABASE_URL?: string;
+  // Slack
   SLACK_BOT_TOKEN?: string;
+  // KV Cache
   CACHE_KV?: KVNamespace;
   // R2 Storage
   CLOUDFLARE_R2_ACCESS_KEY?: string;
@@ -354,13 +365,13 @@ export default {
       // ============================================================
       if (event.cron === "*/15 * * * *") {
         // 每 15 分鐘：報表預計算
-        if (cronEnv.CACHE_KV) {
+        if (cronEnv.CACHE_KV && cronEnv.DATABASE_URL) {
           console.log("[Reports] Starting precomputation...");
-          await precomputeReports(cronEnv.CACHE_KV);
+          await precomputeReports(cronEnv);
           console.log("[Reports] Precomputation completed");
         } else {
           console.warn(
-            "[Reports] CACHE_KV not configured, skipping precomputation"
+            "[Reports] CACHE_KV or DATABASE_URL not configured, skipping precomputation"
           );
         }
       } else if (event.cron === "0 19 * * *") {
@@ -381,9 +392,19 @@ export default {
 // Report Precomputation
 // ============================================================
 
-async function precomputeReports(kv: KVNamespace): Promise<void> {
+async function precomputeReports(cronEnv: Env): Promise<void> {
+  const { neon } = await import("@neondatabase/serverless");
+
+  const kv = cronEnv.CACHE_KV;
+  if (!kv) {
+    throw new Error("CACHE_KV not configured");
+  }
+
   const cacheService = createKVCacheService(kv);
   const TTL_SECONDS = 1800; // 30 分鐘
+
+  // 建立 raw SQL 查詢函數 (用於新版 compute 函數)
+  const rawSql = neon(cronEnv.DATABASE_URL || "");
 
   // 計算日期範圍
   const now = new Date();
@@ -395,6 +416,45 @@ async function precomputeReports(kv: KVNamespace): Promise<void> {
   thisWeekStart.setHours(0, 0, 0, 0);
 
   try {
+    // ========== Step 0: 新版報告預計算 ==========
+    console.log("[Reports] Computing new report data...");
+
+    // 計算系統健康資料
+    const systemHealth = await computeSystemHealth(rawSql);
+    await cacheService.set(
+      KV_KEYS.SYSTEM_HEALTH,
+      systemHealth,
+      KV_TTL.SYSTEM_HEALTH
+    );
+    console.log("[Reports] System health cached");
+
+    // 計算 Close Case 資料
+    const closeCases = await computeCloseCases(rawSql);
+    await cacheService.set(KV_KEYS.CLOSE_CASES, closeCases, KV_TTL.CLOSE_CASES);
+    console.log("[Reports] Close cases cached");
+
+    // 計算需關注資料
+    const attentionNeeded = await computeAttentionNeeded(rawSql);
+    await cacheService.set(
+      KV_KEYS.ATTENTION_NEEDED,
+      attentionNeeded,
+      KV_TTL.ATTENTION_NEEDED
+    );
+    console.log("[Reports] Attention needed cached");
+
+    // 計算待辦統計
+    const todoStats = await computeTodoStats(rawSql);
+    await cacheService.set(KV_KEYS.TODO_STATS, todoStats, KV_TTL.TODO_STATS);
+    console.log("[Reports] Todo stats cached");
+
+    // 計算團隊週表現
+    const weeklyTeamPerformance = await computeWeeklyTeamPerformance(rawSql);
+    await cacheService.set(
+      "report:weekly-team-performance",
+      weeklyTeamPerformance,
+      KV_TTL.TEAM_PERFORMANCE
+    );
+    console.log("[Reports] Weekly team performance cached");
     // ========== Step 1: 取得所有用戶和 profiles ==========
     const allUsers = await db.query.user.findMany({
       columns: { id: true, name: true, email: true },

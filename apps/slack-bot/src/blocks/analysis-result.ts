@@ -9,10 +9,19 @@ export interface AnalysisResultData {
   caseNumber: string;
   companyName: string;
 
-  // Agent 2: MEDDIC 評分
+  // Agent 2: PDCM 評分
   overallScore: number;
   status: "strong" | "medium" | "weak" | "at_risk";
-  dimensions: {
+  pdcmScores?: {
+    pain: number;
+    decision: number;
+    champion: number;
+    metrics: number;
+    totalScore: number;
+    dealProbability: "high" | "medium" | "low";
+  };
+  // Legacy: MEDDIC 六維度 (向下相容)
+  dimensions?: {
     metrics: number;
     economicBuyer: number;
     decisionCriteria: number;
@@ -68,7 +77,7 @@ export function buildAnalysisResultBlocks(data: AnalysisResultData): object[] {
       type: "header",
       text: {
         type: "plain_text",
-        text: "MEDDIC 分析完成",
+        text: "PDCM+SPIN 分析完成",
         emoji: true,
       },
     },
@@ -90,8 +99,54 @@ export function buildAnalysisResultBlocks(data: AnalysisResultData): object[] {
         text: `${statusEmoji} *總分: ${data.overallScore}/100* ${scoreColor}`,
       },
     },
-    // MEDDIC 六維度
-    {
+  ];
+
+  // PDCM 四維度 (優先使用)
+  if (data.pdcmScores) {
+    const probabilityEmoji =
+      data.pdcmScores.dealProbability === "high"
+        ? "🔥"
+        : data.pdcmScores.dealProbability === "medium"
+          ? "🤔"
+          : "❄️";
+    const probabilityText =
+      data.pdcmScores.dealProbability === "high"
+        ? "高"
+        : data.pdcmScores.dealProbability === "medium"
+          ? "中"
+          : "低";
+
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `${probabilityEmoji} *成交機率: ${probabilityText}*`,
+      },
+    });
+    blocks.push({
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*P* 痛點\n${getScoreBar(data.pdcmScores.pain / 20)} ${data.pdcmScores.pain}/100`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*D* 決策\n${getScoreBar(data.pdcmScores.decision / 20)} ${data.pdcmScores.decision}/100`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*C* 支持\n${getScoreBar(data.pdcmScores.champion / 20)} ${data.pdcmScores.champion}/100`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*M* 量化\n${getScoreBar(data.pdcmScores.metrics / 20)} ${data.pdcmScores.metrics}/100`,
+        },
+      ],
+    });
+  } else if (data.dimensions) {
+    // Legacy: MEDDIC 六維度 (向下相容)
+    blocks.push({
       type: "section",
       fields: [
         {
@@ -119,11 +174,12 @@ export function buildAnalysisResultBlocks(data: AnalysisResultData): object[] {
           text: `*C* Champion\n${getScoreBar(data.dimensions.champion)} ${data.dimensions.champion}/5`,
         },
       ],
-    },
-    {
-      type: "divider",
-    },
-  ];
+    });
+  }
+
+  blocks.push({
+    type: "divider",
+  });
 
   // 關鍵發現
   if (data.keyFindings.length > 0) {

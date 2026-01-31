@@ -62,7 +62,8 @@ export class MCPServer {
    * 批次註冊多個 Tools
    * @param tools - 要註冊的 Tools 陣列
    */
-  registerTools(tools: MCPTool<unknown, unknown>[]): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  registerTools(tools: MCPTool<any, any>[]): void {
     for (const tool of tools) {
       this.registerTool(tool);
     }
@@ -108,8 +109,9 @@ export class MCPServer {
     // 驗證輸入
     const parseResult = tool.inputSchema.safeParse(input);
     if (!parseResult.success) {
-      const errors = parseResult.error.errors.map(
-        (e) => `${e.path.join(".")}: ${e.message}`
+      const errors = parseResult.error.issues.map(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (e: any) => `${(e.path as string[]).join(".")}: ${e.message as string}`
       );
       throw new ToolValidationError(name, errors);
     }
@@ -227,7 +229,8 @@ export class MCPServer {
       definitions.push({
         name,
         description: tool.description,
-        inputSchema: zodToJsonSchema(tool.inputSchema) as Record<
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        inputSchema: zodToJsonSchema(tool.inputSchema as any) as Record<
           string,
           unknown
         >,
@@ -251,7 +254,11 @@ export class MCPServer {
     return {
       name: tool.name,
       description: tool.description,
-      inputSchema: zodToJsonSchema(tool.inputSchema) as Record<string, unknown>,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      inputSchema: zodToJsonSchema(tool.inputSchema as any) as Record<
+        string,
+        unknown
+      >,
     };
   }
 

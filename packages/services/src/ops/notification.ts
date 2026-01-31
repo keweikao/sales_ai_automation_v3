@@ -16,22 +16,6 @@ const OPS_ALERT_CHANNEL_ID = "C0A7C2HUXRR"; // Slack 警示頻道 ID
 // ============================================================
 
 /**
- * 取得狀態對應的 emoji
- */
-function _getStatusEmoji(status: string): string {
-  switch (status) {
-    case "healthy":
-      return "✅";
-    case "degraded":
-      return "⚠️";
-    case "critical":
-      return "🚨";
-    default:
-      return "❓";
-  }
-}
-
-/**
  * 格式化時間戳
  */
 function formatTimestamp(date: Date): string {
@@ -81,7 +65,7 @@ export async function sendOpsAlert(
       }),
     });
 
-    const result = await response.json();
+    const result = (await response.json()) as { ok: boolean; error?: string };
 
     if (result.ok) {
       console.log("[Ops Notification] Alert sent successfully to Slack");
@@ -212,7 +196,7 @@ export async function sendDailySummary(
       }),
     });
 
-    const result = await response.json();
+    const result = (await response.json()) as { ok: boolean; error?: string };
 
     if (result.ok) {
       console.log("[Ops Notification] Daily summary sent successfully");

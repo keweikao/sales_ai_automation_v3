@@ -85,10 +85,11 @@ export const analysisRerunRepairTool: MCPTool<Input, Output> = {
 					`;
 
           if (result.length > 0) {
+            const row = result[0]!;
             conversationsToAnalyze.push({
-              id: result[0].id as string,
-              case_number: result[0].case_number as string | null,
-              transcript: result[0].transcript as string,
+              id: row.id as string,
+              case_number: row.case_number as string | null,
+              transcript: row.transcript as string,
             });
           } else {
             actions.push(`⚠️ 找不到對話 ${conversationId} 或已分析`);

@@ -10,7 +10,7 @@
  */
 
 import { z } from "zod";
-import type { MCPTool } from "../mcp/types.js";
+import type { MCPTool } from "../types.js";
 
 // ============================================================
 // Google Drive API Client Setup

@@ -18,7 +18,7 @@ const PostgresQueryInputSchema = z.object({
 });
 
 const PostgresQueryOutputSchema = z.object({
-  rows: z.array(z.record(z.unknown())),
+  rows: z.array(z.record(z.string(), z.unknown())),
   rowCount: z.number(),
   fields: z.array(z.string()).optional(),
 });
@@ -49,7 +49,7 @@ export const postgresQueryTool: MCPTool<
       return {
         rows: result.rows as Record<string, unknown>[],
         rowCount: result.rowCount ?? 0,
-        fields: result.rows.length > 0 ? Object.keys(result.rows[0]) : [],
+        fields: result.rows.length > 0 ? Object.keys(result.rows[0]!) : [],
       };
     } catch (error) {
       throw new Error(

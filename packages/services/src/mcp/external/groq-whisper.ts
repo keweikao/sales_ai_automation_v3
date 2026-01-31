@@ -5,6 +5,7 @@
 
 import { z } from "zod";
 import { GroqWhisperService } from "../../transcription/groq-whisper.js";
+import type { ChunkedTranscriptResult } from "../../transcription/types.js";
 import type { MCPTool } from "../types.js";
 
 // ============================================================
@@ -82,8 +83,12 @@ export const groqTranscribeAudioTool: MCPTool<
         duration: result.duration,
         language: result.language || input.language,
         isChunked,
-        totalChunks: isChunked ? result.totalChunks : undefined,
-        processingTime: isChunked ? result.processingTime : undefined,
+        totalChunks: isChunked
+          ? (result as ChunkedTranscriptResult).totalChunks
+          : undefined,
+        processingTime: isChunked
+          ? (result as ChunkedTranscriptResult).processingTime
+          : undefined,
       };
     } catch (error) {
       throw new Error(

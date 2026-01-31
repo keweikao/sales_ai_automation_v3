@@ -232,7 +232,8 @@ export const exportSheetsTo = {
         {
           path: filePath,
           content: fileContent,
-          createDirs: true,
+          encoding: "utf-8",
+          createDirectories: true,
         },
         { timestamp: new Date() }
       );

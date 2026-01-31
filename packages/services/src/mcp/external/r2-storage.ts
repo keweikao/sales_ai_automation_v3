@@ -20,7 +20,7 @@ const R2UploadInputSchema = z.object({
     .object({
       conversationId: z.string().optional(),
       leadId: z.string().optional(),
-      customData: z.record(z.string()).optional(),
+      customData: z.record(z.string(), z.string()).optional(),
     })
     .optional(),
 });

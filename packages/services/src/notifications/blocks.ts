@@ -139,7 +139,7 @@ export function buildProcessingCompletedBlocks(
       fields: [
         {
           type: "mrkdwn",
-          text: `*📊 MEDDIC 分數:*\n*${analysisResult.overallScore}/100*`,
+          text: `*📊 PDCM 分數:*\n*${analysisResult.overallScore}/100*`,
         },
         {
           type: "mrkdwn",

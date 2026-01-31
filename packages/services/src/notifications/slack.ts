@@ -69,7 +69,7 @@ export class SlackNotificationServiceImpl implements SlackNotificationService {
     const fallbackText =
       "✅ 音檔處理完成 - 案件編號: " +
       params.caseNumber +
-      " (MEDDIC 分數: " +
+      " (PDCM 分數: " +
       params.analysisResult.overallScore +
       "/100)";
 

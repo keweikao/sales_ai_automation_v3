@@ -1,7 +1,7 @@
 /**
  * File 事件處理器
  *
- * 監聯音檔上傳事件，要求業務填寫客戶資訊後再進行轉錄和 MEDDIC 分析
+ * 監聯音檔上傳事件，要求業務填寫客戶資訊後再進行轉錄和 PDCM+SPIN 分析
  */
 
 import { ApiClient } from "../api-client";
@@ -240,7 +240,7 @@ export async function processAudioWithMetadata(
   );
   const processingMsg = await slackClient.postMessage({
     channel: pendingFile.channelId,
-    text: `:hourglass_flowing_sand: 正在處理音檔「${pendingFile.fileName}」...\n客戶：${metadata.customerName}\n轉錄和 MEDDIC 分析可能需要幾分鐘的時間。`,
+    text: `:hourglass_flowing_sand: 正在處理音檔「${pendingFile.fileName}」...\n客戶：${metadata.customerName}\n轉錄和 PDCM+SPIN 分析可能需要幾分鐘的時間。`,
     thread_ts: pendingFile.threadTs,
   });
   console.log(`[SlackBot:${processingId}] ✓ Processing message posted`);
@@ -299,7 +299,7 @@ export async function processAudioWithMetadata(
       // 訊息 1: Agent 1-3 合併分析報告
       await slackClient.postMessage({
         channel: pendingFile.channelId,
-        text: `MEDDIC 分析完成 - ${result.opportunityName}`,
+        text: `PDCM+SPIN 分析完成 - ${result.opportunityName}`,
         thread_ts: pendingFile.threadTs,
         blocks: buildAnalysisResultBlocks({
           conversationId: result.conversationId,
@@ -594,7 +594,7 @@ async function processAudioFile(
     caseNumber: uploadResult.caseNumber,
     transcriptPreview:
       uploadResult.message ||
-      "音檔已接收,正在處理轉錄和 MEDDIC 分析,完成後會通知您...",
+      "音檔已接收,正在處理轉錄和 PDCM+SPIN 分析,完成後會通知您...",
     opportunityId: opportunity.id,
     opportunityName: opportunity.companyName,
     contactPhone: opportunity.contactPhone,
@@ -729,12 +729,12 @@ function buildProcessingResultBlocks(
         type: "section",
         text: {
           type: "mrkdwn",
-          text: `*MEDDIC 評分:* ${result.analysisResult.overallScore}/100 ${scoreEmoji}\n*狀態:* ${formatStatus(result.analysisResult.status)}`,
+          text: `*PDCM+SPIN 評分:* ${result.analysisResult.overallScore}/100 ${scoreEmoji}\n*狀態:* ${formatStatus(result.analysisResult.status)}`,
         },
       }
     );
   } else {
-    // 轉錄已完成,MEDDIC 分析將在背景自動執行
+    // 轉錄已完成,PDCM+SPIN 分析將在背景自動執行
     blocks.push(
       {
         type: "divider",
@@ -743,7 +743,7 @@ function buildProcessingResultBlocks(
         type: "section",
         text: {
           type: "mrkdwn",
-          text: "🤖 *MEDDIC 分析*\n自動分析中,完成後會通知您...",
+          text: "🤖 *PDCM+SPIN 分析*\n自動分析中,完成後會通知您...",
         },
       }
     );

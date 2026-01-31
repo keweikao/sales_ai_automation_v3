@@ -50,7 +50,11 @@ export const geminiGenerateTextTool: MCPTool<
       return {
         text: response.text,
         model: input.model,
-        tokensUsed: response.raw?.usageMetadata?.totalTokenCount,
+        tokensUsed: (
+          response.raw as
+            | { usageMetadata?: { totalTokenCount?: number } }
+            | undefined
+        )?.usageMetadata?.totalTokenCount,
       };
     } catch (error) {
       throw new Error(
@@ -70,11 +74,11 @@ const GeminiGenerateJSONInputSchema = z.object({
   model: z.string().default("gemini-2.0-flash-exp"),
   temperature: z.number().min(0).max(1).default(0.3), // Lower for JSON
   maxTokens: z.number().min(1).max(32_768).default(8192),
-  schema: z.record(z.unknown()).optional(),
+  schema: z.record(z.string(), z.unknown()).optional(),
 });
 
 const GeminiGenerateJSONOutputSchema = z.object({
-  data: z.record(z.unknown()),
+  data: z.record(z.string(), z.unknown()),
   model: z.string(),
   tokensUsed: z.number().optional(),
 });
@@ -223,73 +227,6 @@ ${input.transcript}
 3. 資格狀態（qualified/needs_improvement/not_qualified）
 4. 至少 3 條可執行的建議
 5. 關鍵洞察（重要發現或警示）`;
-
-      const _schema = {
-        type: "object",
-        properties: {
-          overallScore: { type: "number" },
-          qualificationStatus: {
-            type: "string",
-            enum: ["qualified", "needs_improvement", "not_qualified"],
-          },
-          metrics: {
-            type: "object",
-            properties: {
-              score: { type: "number" },
-              findings: { type: "string" },
-            },
-          },
-          economicBuyer: {
-            type: "object",
-            properties: {
-              score: { type: "number" },
-              findings: { type: "string" },
-            },
-          },
-          decisionCriteria: {
-            type: "object",
-            properties: {
-              score: { type: "number" },
-              findings: { type: "string" },
-            },
-          },
-          decisionProcess: {
-            type: "object",
-            properties: {
-              score: { type: "number" },
-              findings: { type: "string" },
-            },
-          },
-          identifyPain: {
-            type: "object",
-            properties: {
-              score: { type: "number" },
-              findings: { type: "string" },
-            },
-          },
-          champion: {
-            type: "object",
-            properties: {
-              score: { type: "number" },
-              findings: { type: "string" },
-            },
-          },
-          recommendations: { type: "array", items: { type: "string" } },
-          keyInsights: { type: "array", items: { type: "string" } },
-        },
-        required: [
-          "overallScore",
-          "qualificationStatus",
-          "metrics",
-          "economicBuyer",
-          "decisionCriteria",
-          "decisionProcess",
-          "identifyPain",
-          "champion",
-          "recommendations",
-          "keyInsights",
-        ],
-      };
 
       const result = await geminiClient.generateJSON<MEDDICAnalysisOutput>(
         userPrompt,

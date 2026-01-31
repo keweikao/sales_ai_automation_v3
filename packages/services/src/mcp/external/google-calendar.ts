@@ -10,7 +10,7 @@
  */
 
 import { z } from "zod";
-import type { MCPTool } from "../mcp/types.js";
+import type { MCPTool } from "../types.js";
 
 // ============================================================
 // Google Calendar API Client Setup
@@ -20,6 +20,7 @@ interface CalendarEvent {
   id: string;
   summary: string;
   description?: string;
+  location?: string;
   start: {
     dateTime?: string;
     date?: string;

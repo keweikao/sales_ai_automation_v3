@@ -74,6 +74,33 @@ export interface VoiceTaggingResult {
 }
 
 /**
+ * AI 深度分析結果（Layer 2）
+ * 基於規則標籤的深度解讀
+ */
+export interface AIAnalysis {
+  // 針對每個規則標籤的深度解讀
+  tag_insights: {
+    [tag: string]: {
+      context: string; // 具體情境描述
+      quote: string; // 原文引述
+      sub_category: string; // 子分類（可聚合）
+      implicit_need?: string; // 隱含需求
+      suggested_response?: string; // 建議話術
+    };
+  };
+
+  // 競品識別（規則沒覆蓋的部分）
+  competitors: Array<{
+    name: string;
+    sentiment: "positive" | "negative" | "neutral";
+    context: string;
+  }>;
+
+  // 整體摘要
+  summary: string;
+}
+
+/**
  * 建構 AI Prompt
  */
 function buildAIPrompt(
@@ -440,4 +467,152 @@ export async function processConversationVoiceTags(
     aiCalls: aiResults.length > 0 ? 1 : 0,
     processingTime: Date.now() - startTime,
   };
+}
+
+// ============================================================
+// Layer 2: AI 深度分析（基於規則標籤）
+// ============================================================
+
+/**
+ * 建構 Layer 2 的 AI Prompt
+ * 基於規則標籤產出深度解讀
+ */
+function buildLayer2Prompt(
+  transcript: string,
+  ruleTags: {
+    features: string[];
+    pains: string[];
+    objections: string[];
+  }
+): string {
+  return `你是 iCHEF POS 系統的銷售對話分析專家。
+
+以下對話已經透過規則匹配識別出這些標籤：
+- 功能需求：${ruleTags.features.join(", ") || "無"}
+- 痛點：${ruleTags.pains.join(", ") || "無"}
+- 異議：${ruleTags.objections.join(", ") || "無"}
+
+請基於這些標籤，分析對話內容，提供深度解讀：
+
+1. 針對每個標籤，說明：
+   - context: 具體情境（客戶的實際狀況，20-50字）
+   - quote: 原文引述（最能代表的一句話）
+   - sub_category: 子分類（用於統計，如 price 可分為 hardware_cost/monthly_fee/platform_fee）
+   - suggested_response: 建議話術（業務可以怎麼回應，30-50字）
+
+2. 識別對話中提到的競品及客戶評價
+
+3. 一句話總結這個對話的關鍵洞察（30-50字）
+
+請用 JSON 格式回覆，不要有其他文字：
+{
+  "tag_insights": {
+    "標籤名稱": {
+      "context": "具體情境",
+      "quote": "原文引述",
+      "sub_category": "子分類",
+      "suggested_response": "建議話術"
+    }
+  },
+  "competitors": [
+    { "name": "競品名稱", "sentiment": "positive/negative/neutral", "context": "評價內容" }
+  ],
+  "summary": "一句話洞察"
+}
+
+對話內容（前 3000 字）：
+${transcript.substring(0, 3000)}`;
+}
+
+/**
+ * Layer 2: AI 深度分析
+ * 基於規則標籤產出深度解讀
+ */
+export async function analyzeWithAI(
+  transcript: string,
+  voiceTagResult: VoiceTaggingResult,
+  geminiApiKey: string
+): Promise<AIAnalysis | null> {
+  try {
+    const { createGeminiClient } = await import("../llm/gemini");
+    const gemini = createGeminiClient(geminiApiKey);
+
+    // 提取規則標籤
+    const ruleTags = {
+      features: voiceTagResult.features.map((f) => f.tag),
+      pains: voiceTagResult.pains.map((p) => p.tag),
+      objections: voiceTagResult.objections.map((o) => o.tag),
+    };
+
+    // 如果沒有任何標籤，跳過 AI 分析
+    if (
+      ruleTags.features.length === 0 &&
+      ruleTags.pains.length === 0 &&
+      ruleTags.objections.length === 0
+    ) {
+      return null;
+    }
+
+    const prompt = buildLayer2Prompt(transcript, ruleTags);
+    const result = await gemini.generateJSON<AIAnalysis>(prompt);
+
+    return result;
+  } catch (error) {
+    console.error("[Layer2] AI 分析失敗:", error);
+    return null;
+  }
+}
+
+/**
+ * 判斷是否應該執行 Layer 2 AI 分析
+ *
+ * 觸發條件（符合任一即觸發）：
+ * 1. MEDDIC 高分（>=70）：成交機會大，值得深度分析
+ * 2. MEDDIC 低分（<=40）：可能有問題需要了解
+ * 3. 規則匹配到競品：需要競爭情報
+ * 4. 長對話（>200句）：內容豐富，值得分析
+ * 5. 首次接觸：了解客戶初始需求
+ */
+export function shouldRunLayer2Analysis(
+  voiceTagResult: VoiceTaggingResult,
+  meddicScore?: number | null,
+  conversationMeta?: {
+    isFirstContact?: boolean;
+    durationMinutes?: number;
+  }
+): boolean {
+  // 1. MEDDIC 高分（>=70）- 成交機會大
+  if (meddicScore && meddicScore >= 70) {
+    return true;
+  }
+
+  // 2. MEDDIC 低分（<=40）- 可能有問題需要分析
+  if (meddicScore && meddicScore <= 40) {
+    return true;
+  }
+
+  // 3. 規則匹配到競品
+  if (voiceTagResult.competitors.length > 0) {
+    return true;
+  }
+
+  // 4. 長對話（>200 句，約 30 分鐘）
+  if (voiceTagResult.totalSentences > 200) {
+    return true;
+  }
+
+  // 5. 首次接觸
+  if (conversationMeta?.isFirstContact) {
+    return true;
+  }
+
+  // 6. 對話時長超過 30 分鐘
+  if (
+    conversationMeta?.durationMinutes &&
+    conversationMeta.durationMinutes > 30
+  ) {
+    return true;
+  }
+
+  return false;
 }

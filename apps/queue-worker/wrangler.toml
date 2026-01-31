@@ -20,7 +20,7 @@ WEB_APP_URL = "https://sales-ai-web.pages.dev"
 [triggers]
 crons = [
   "0 0 * * *",     # 每日 08:00 (UTC+8) - 健康報告
-  "0 0 * * 1",     # 每週一 08:00 (UTC+8) - 週報
+  "0 1 * * 1",     # 每週一 09:00 (UTC+8) - 週報
   "0 1 * * *",     # 每日 09:00 (UTC+8) - Todo 提醒
   "0 17 * * *",    # 每日 01:00 (UTC+8) - Voice Tagging 批次處理
 ]

@@ -82,9 +82,10 @@ export const transcriptionCancelRepairTool: MCPTool<Input, Output> = {
 					`;
 
           if (result.length > 0) {
+            const row = result[0]!;
             tasksToCancel.push({
-              id: result[0].id as string,
-              case_number: result[0].case_number as string | null,
+              id: row.id as string,
+              case_number: row.case_number as string | null,
             });
           } else {
             actions.push(`⚠️ 找不到對話 ${conversationId}`);

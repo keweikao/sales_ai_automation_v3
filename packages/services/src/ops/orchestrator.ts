@@ -19,7 +19,7 @@ import {
   databaseReconnectRepairTool,
   databaseReindexRepairTool,
 } from "../mcp/tools/ops/index.js";
-import type { ExecutionContext } from "../mcp/types.js";
+import type { ExecutionContext, MCPTool } from "../mcp/types.js";
 
 import type {
   HealthStatus,
@@ -108,7 +108,7 @@ export class OpsOrchestrator {
       databaseReconnectRepairTool,
       databaseCleanupRepairTool,
       databaseReindexRepairTool,
-    ]);
+    ] as MCPTool<unknown, unknown>[]);
 
     // TODO: 未來新增其他工具時在此註冊
     // - Transcription tools
@@ -140,8 +140,9 @@ export class OpsOrchestrator {
       }
 
       // 如果檢查本身失敗，回傳 critical 狀態
+      const toolName = ALL_CHECK_TOOLS[index] ?? "unknown";
       return {
-        toolName: ALL_CHECK_TOOLS[index],
+        toolName,
         status: "critical" as HealthStatus,
         timestamp: new Date(),
         details: `Check failed: ${result.reason instanceof Error ? result.reason.message : "Unknown error"}`,
@@ -291,7 +292,8 @@ export class OpsOrchestrator {
         return {
           toolName,
           success: (result as { success: boolean }).success,
-          details: (result as { details: string }).details,
+          details:
+            (result as { details?: string }).details ?? "Repair completed",
         };
       }
 

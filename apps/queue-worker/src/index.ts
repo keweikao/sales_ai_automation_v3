@@ -19,12 +19,18 @@ import {
   userProfiles,
 } from "@Sales_ai_automation_v3/db/schema";
 import {
+  type AttentionNeededData,
+  type CloseCaseData,
   createGeminiClient,
   createGroqWhisperService,
   createLambdaCompressor,
   createOrchestrator,
   createR2Service,
   createSlackNotificationService,
+  KV_KEYS,
+  type SystemHealthData,
+  type TodoStatsData,
+  type WeeklyRepPerformance,
 } from "@Sales_ai_automation_v3/services";
 import { randomUUID } from "node:crypto";
 import type {
@@ -1142,8 +1148,8 @@ export default {
     const trigger = controller.cron;
     console.log(`[Scheduled] Cron triggered: ${trigger}`);
 
-    if (trigger === "0 0 * * 1") {
-      // 每週一 - 週報
+    if (trigger === "0 1 * * 1") {
+      // 每週一 09:00 (UTC+8) - 週報
       console.log("[Scheduled] Running weekly report...");
       await handleWeeklyReport(env);
     } else if (trigger === "0 0 * * *") {
@@ -1173,55 +1179,187 @@ export default {
 
 async function handleDailyHealthReport(env: Env): Promise<void> {
   try {
-    const sql = neon(env.DATABASE_URL);
     const slackClient = new WebClient(env.SLACK_BOT_TOKEN);
 
-    // 統計過去 24 小時的處理數據
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
+    // 嘗試從 KV Cache 讀取
+    const cached = await env.CACHE_KV.get<SystemHealthData>(
+      KV_KEYS.SYSTEM_HEALTH,
+      "json"
+    );
 
-    // 排除已封存的對話 (archived 狀態)
-    const stats = await sql`
-      SELECT
-        COUNT(*) FILTER (WHERE status = 'completed') as completed_count,
-        COUNT(*) FILTER (WHERE status = 'failed') as failed_count,
-        COUNT(*) FILTER (WHERE status != 'archived') as total_count,
-        AVG(EXTRACT(EPOCH FROM (updated_at - created_at))) FILTER (WHERE status = 'completed') as avg_processing_time
-      FROM conversations
-      WHERE created_at >= ${yesterday.toISOString()}
-        AND status != 'archived'
-    `;
+    let healthData: SystemHealthData;
 
-    const result = stats[0] || {
-      completed_count: 0,
-      failed_count: 0,
-      total_count: 0,
-      avg_processing_time: 0,
+    if (cached) {
+      console.log("[Scheduled] Using cached SystemHealthData");
+      healthData = cached;
+    } else {
+      // Fallback: 直接 SQL 查詢
+      console.warn("[Scheduled] KV cache miss, falling back to SQL");
+      const sql = neon(env.DATABASE_URL);
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const oneHourAgo = new Date();
+      oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+
+      const stats = await sql`
+        SELECT
+          COUNT(*) FILTER (WHERE status = 'completed') as completed_count,
+          COUNT(*) FILTER (WHERE status = 'failed') as failed_count,
+          COUNT(*) FILTER (WHERE status IN ('pending', 'transcribing', 'analyzing')) as in_progress_count,
+          AVG(EXTRACT(EPOCH FROM (updated_at - created_at))) FILTER (WHERE status = 'completed') as avg_processing_time
+        FROM conversations
+        WHERE created_at >= ${yesterday.toISOString()}
+          AND status != 'archived'
+      `;
+
+      const failedCases = await sql`
+        SELECT
+          c.case_number,
+          c.error_details->>'code' as error_code,
+          c.error_message,
+          o.company_name
+        FROM conversations c
+        LEFT JOIN opportunities o ON c.opportunity_id = o.id
+        WHERE c.created_at >= ${yesterday.toISOString()}
+          AND c.status = 'failed'
+        ORDER BY c.created_at DESC
+        LIMIT 10
+      `;
+
+      const stuckCases = await sql`
+        SELECT
+          c.case_number,
+          c.status,
+          o.company_name,
+          EXTRACT(EPOCH FROM (NOW() - c.created_at)) / 3600 as hours_stuck
+        FROM conversations c
+        LEFT JOIN opportunities o ON c.opportunity_id = o.id
+        WHERE c.created_at < ${oneHourAgo.toISOString()}
+          AND c.status IN ('pending', 'transcribing', 'analyzing')
+        ORDER BY c.created_at ASC
+        LIMIT 10
+      `;
+
+      const result = stats[0] || {};
+
+      // 按錯誤代碼分組
+      const errorsByCode: SystemHealthData["processing"]["errorsByCode"] = {};
+      for (const c of failedCases as any[]) {
+        const code = c.error_code || "UNKNOWN_ERROR";
+        if (!errorsByCode[code]) {
+          errorsByCode[code] = { count: 0, stage: "database", cases: [] };
+        }
+        errorsByCode[code].count++;
+        if (errorsByCode[code].cases.length < 5) {
+          errorsByCode[code].cases.push({
+            caseNumber: c.case_number || "N/A",
+            companyName: c.company_name || "未知",
+            errorMessage: c.error_message,
+          });
+        }
+      }
+
+      healthData = {
+        generatedAt: new Date().toISOString(),
+        processing: {
+          last24h: {
+            completed: Number(result.completed_count) || 0,
+            failed: Number(result.failed_count) || 0,
+            inProgress: Number(result.in_progress_count) || 0,
+            avgProcessingTime: Math.round(
+              Number(result.avg_processing_time) || 0
+            ),
+          },
+          errorsByCode,
+          stuckCases: (stuckCases as any[]).map((c) => ({
+            caseNumber: c.case_number || "N/A",
+            companyName: c.company_name || "未知",
+            status: c.status,
+            hoursStuck: Number(c.hours_stuck) || 0,
+          })),
+        },
+        weeklyComparison: {
+          thisWeek: { uploads: 0, avgMeddic: 0 },
+          lastWeek: { uploads: 0, avgMeddic: 0 },
+          change: { uploadsPercent: 0, meddicDiff: 0 },
+        },
+      };
+    }
+
+    // 錯誤代碼對應的階段 emoji
+    const errorStageEmoji: Record<string, string> = {
+      AUDIO_TOO_LARGE: "📁",
+      INVALID_AUDIO_FORMAT: "📁",
+      FILE_DOWNLOAD_FAILED: "📥",
+      TRANSCRIPTION_FAILED: "🎙️",
+      TRANSCRIPTION_TIMEOUT: "🎙️",
+      GROQ_API_ERROR: "🎙️",
+      GEMINI_API_ERROR: "🧠",
+      DATABASE_ERROR: "💾",
+      RECORD_NOT_FOUND: "💾",
+      UNKNOWN_ERROR: "❓",
     };
+
+    const { processing } = healthData;
+    const { last24h, errorsByCode, stuckCases } = processing;
+
+    const completedCount = last24h.completed;
+    const failedCount = last24h.failed;
+    const inProgressCount = last24h.inProgress;
+    const finishedCount = completedCount + failedCount;
     const successRate =
-      result.total_count > 0
-        ? Math.round(
-            (Number(result.completed_count) / Number(result.total_count)) * 100
-          )
+      finishedCount > 0
+        ? Math.round((completedCount / finishedCount) * 100)
         : 100;
 
-    // 發送健康報告到 Slack
+    // 健康狀態 emoji
     const healthEmoji =
       successRate >= 95 ? "🟢" : successRate >= 80 ? "🟡" : "🔴";
-    const message = [
+
+    // 組裝訊息
+    const lines: string[] = [
       `${healthEmoji} *每日系統健康報告*`,
       `📅 ${new Date().toLocaleDateString("zh-TW")}`,
       "",
-      "*過去 24 小時處理統計*",
-      `• 完成: ${result.completed_count} 筆`,
-      `• 失敗: ${result.failed_count} 筆`,
-      `• 成功率: ${successRate}%`,
-      result.avg_processing_time
-        ? `• 平均處理時間: ${Math.round(Number(result.avg_processing_time))}s`
-        : "",
-    ]
-      .filter(Boolean)
-      .join("\n");
+      "*📊 處理結果 (過去 24 小時)*",
+      `• ✅ 成功: ${completedCount} 筆`,
+      `• ❌ 失敗: ${failedCount} 筆`,
+      `• ⏳ 進行中: ${inProgressCount} 筆`,
+      `• 成功率: ${successRate}% (${completedCount}/${finishedCount})`,
+    ];
+
+    if (last24h.avgProcessingTime) {
+      lines.push(`• 平均處理時間: ${last24h.avgProcessingTime}s`);
+    }
+
+    // 失敗分析
+    if (Object.keys(errorsByCode).length > 0) {
+      lines.push("", "*❌ 失敗分析*");
+      for (const [code, data] of Object.entries(errorsByCode)) {
+        const emoji = errorStageEmoji[code] || "❓";
+        lines.push(`• ${emoji} ${code}: ${data.count} 筆`);
+        for (const c of data.cases.slice(0, 3)) {
+          lines.push(`  - ${c.caseNumber} (${c.companyName})`);
+        }
+        if (data.cases.length > 3) {
+          lines.push(`  - ...還有 ${data.cases.length - 3} 筆`);
+        }
+      }
+    }
+
+    // 卡住的案件
+    if (stuckCases.length > 0) {
+      lines.push("", "*⚠️ 需關注 (卡住 >1hr)*");
+      for (const c of stuckCases) {
+        const hours = c.hoursStuck.toFixed(1);
+        lines.push(
+          `• ${c.caseNumber} (${c.companyName}) - ${c.status} ${hours}hr`
+        );
+      }
+    }
+
+    const message = lines.join("\n");
 
     await slackClient.chat.postMessage({
       channel: "C0A7C2HUXRR",
@@ -1236,15 +1374,12 @@ async function handleDailyHealthReport(env: Env): Promise<void> {
 
 async function handleWeeklyReport(env: Env): Promise<void> {
   try {
-    const sql = neon(env.DATABASE_URL);
     const slackClient = new WebClient(env.SLACK_BOT_TOKEN);
 
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
-
-    // MTD 開始日期（本月1號）
-    const mtdStart = new Date(year, month - 1, 1);
+    const weekNumber = Math.ceil(now.getDate() / 7);
 
     // 本週開始日期（週日）
     const weekStart = new Date(now);
@@ -1255,61 +1390,493 @@ async function handleWeeklyReport(env: Env): Promise<void> {
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
 
-    // 查詢各業務上傳統計（排除已封存的對話，以及 won/lost 狀態的機會）
-    const repStats = await sql`
-      SELECT
-        u.name as user_name,
-        COUNT(*) FILTER (WHERE c.created_at >= ${mtdStart.toISOString()}) as mtd_count,
-        COUNT(*) FILTER (WHERE c.created_at >= ${weekStart.toISOString()}) as week_count
-      FROM conversations c
-      JOIN "user" u ON c.created_by = u.id
-      LEFT JOIN opportunities o ON c.opportunity_id = o.id
-      WHERE c.created_at >= ${mtdStart.toISOString()}
-        AND c.status NOT IN ('archived', 'failed')
-        AND (o.status IS NULL OR o.status NOT IN ('won', 'lost'))
-      GROUP BY u.id, u.name
-      ORDER BY mtd_count DESC, week_count DESC
-    `;
-
-    // 總計（排除已封存的對話，以及 won/lost 狀態的機會）
-    const totals = await sql`
-      SELECT
-        COUNT(*) FILTER (WHERE c.created_at >= ${mtdStart.toISOString()}) as mtd_total,
-        COUNT(*) FILTER (WHERE c.created_at >= ${weekStart.toISOString()}) as week_total
-      FROM conversations c
-      LEFT JOIN opportunities o ON c.opportunity_id = o.id
-      WHERE c.created_at >= ${mtdStart.toISOString()}
-        AND c.status NOT IN ('archived', 'failed')
-        AND (o.status IS NULL OR o.status NOT IN ('won', 'lost'))
-    `;
-
-    const totalResult = totals[0] || { mtd_total: 0, week_total: 0 };
-
     // 格式化日期
     const weekStartStr = `${String(weekStart.getMonth() + 1).padStart(2, "0")}/${String(weekStart.getDate()).padStart(2, "0")}`;
     const weekEndStr = `${String(weekEnd.getMonth() + 1).padStart(2, "0")}/${String(weekEnd.getDate()).padStart(2, "0")}`;
 
-    // 組裝訊息
-    const rankEmojis = ["🥇", "🥈", "🥉"];
-    const repLines = repStats.map((rep, index) => {
-      const rank = index < 3 ? rankEmojis[index] : `${index + 1}.`;
-      return `${rank} ${rep.user_name}: MTD ${rep.mtd_count} / 本週 ${rep.week_count}`;
-    });
+    // ========================================
+    // 從 KV Cache 讀取資料
+    // ========================================
+    const [
+      cachedSystemHealth,
+      cachedCloseCases,
+      cachedAttention,
+      cachedTodoStats,
+    ] = await Promise.all([
+      env.CACHE_KV.get<SystemHealthData>(KV_KEYS.SYSTEM_HEALTH, "json"),
+      env.CACHE_KV.get<CloseCaseData>(KV_KEYS.CLOSE_CASES, "json"),
+      env.CACHE_KV.get<AttentionNeededData>(KV_KEYS.ATTENTION_NEEDED, "json"),
+      env.CACHE_KV.get<TodoStatsData>(KV_KEYS.TODO_STATS, "json"),
+    ]);
 
-    const message = [
-      `📊 *音檔上傳週報 (${year}/${String(month).padStart(2, "0")})*`,
+    // 判斷是否有 cache
+    const hasCache = cachedSystemHealth && cachedCloseCases && cachedAttention;
+
+    // 如果沒有 cache，fallback 到 SQL
+    const sql = hasCache ? null : neon(env.DATABASE_URL);
+
+    // ========================================
+    // 資料整備
+    // ========================================
+    let thisWeekUploads = 0;
+    let lastWeekUploads = 0;
+    let thisWeekMeddic = 0;
+    let lastWeekMeddic = 0;
+    let uploadChange = 0;
+    let meddicChange = 0;
+    let thisWeekWon = 0;
+    let thisWeekLost = 0;
+    let thisWeekWinRate = 0;
+    let mtdWon = 0;
+    let mtdLost = 0;
+    let mtdWinRate = 0;
+    let mtdUploads = 0;
+    let repPerformance: any[] = [];
+    let inactiveReps: any[] = [];
+    let wonCases: any[] = [];
+    let lostCases: any[] = [];
+    let staleHighScoreOpps: any[] = [];
+    let oppsWithoutTodos: any[] = [];
+    let overdueTodos: any[] = [];
+
+    if (hasCache) {
+      console.log("[Scheduled] Using cached data for weekly report");
+
+      // 從 SystemHealthData 取得週比較
+      const weeklyComp = cachedSystemHealth.weeklyComparison;
+      thisWeekUploads = weeklyComp.thisWeek.uploads;
+      lastWeekUploads = weeklyComp.lastWeek.uploads;
+      thisWeekMeddic = weeklyComp.thisWeek.avgMeddic;
+      lastWeekMeddic = weeklyComp.lastWeek.avgMeddic;
+      uploadChange = weeklyComp.change.uploadsPercent;
+      meddicChange = weeklyComp.change.meddicDiff;
+
+      // 從 CloseCaseData 取得 Close Case 資料
+      thisWeekWon = cachedCloseCases.thisWeek.wonCount;
+      thisWeekLost = cachedCloseCases.thisWeek.lostCount;
+      thisWeekWinRate = cachedCloseCases.thisWeek.winRate;
+      mtdWon = cachedCloseCases.mtd.wonCount;
+      mtdLost = cachedCloseCases.mtd.lostCount;
+      mtdWinRate = cachedCloseCases.mtd.winRate;
+      wonCases = cachedCloseCases.thisWeek.won.map((c) => ({
+        company_name: c.companyName,
+        user_name: c.userName,
+        status: "won",
+      }));
+      lostCases = cachedCloseCases.thisWeek.lost.map((c) => ({
+        company_name: c.companyName,
+        user_name: c.userName,
+        rejection_reason: c.rejectionReason,
+        selected_competitor: c.selectedCompetitor,
+        status: "lost",
+      }));
+
+      // 從 AttentionNeededData 取得需關注資料
+      inactiveReps = cachedAttention.inactiveReps.map((r) => ({
+        user_name: r.userName,
+      }));
+      staleHighScoreOpps = cachedAttention.staleHighScore.map((o) => ({
+        company_name: o.companyName,
+        overall_score: o.meddicScore,
+        user_name: o.userName,
+        days_since_contact: o.daysSinceContact,
+      }));
+      oppsWithoutTodos = cachedAttention.noTodos.map((o) => ({
+        company_name: o.companyName,
+        user_name: o.userName,
+        days_since_created: o.daysSinceCreated,
+      }));
+
+      // 從 TodoStatsData 取得逾期待辦
+      if (cachedTodoStats) {
+        overdueTodos = Object.entries(cachedTodoStats.overdue.byUser).map(
+          ([_userId, data]) => ({
+            user_name: data.userName,
+            overdue_count: data.count,
+          })
+        );
+      }
+
+      // 團隊表現需要額外取得，嘗試從 team performance 取得
+      const cachedTeamPerf = await env.CACHE_KV.get<{
+        weeklyPerformance: WeeklyRepPerformance[];
+      }>(KV_KEYS.TEAM_PERFORMANCE("default"), "json");
+      if (cachedTeamPerf?.weeklyPerformance) {
+        repPerformance = cachedTeamPerf.weeklyPerformance.map((r) => ({
+          user_name: r.userName,
+          week_uploads: r.weekUploads,
+          avg_meddic: r.avgMeddic,
+          week_won: r.weekWon,
+        }));
+      }
+    } else {
+      // Fallback: 直接 SQL 查詢
+      console.warn(
+        "[Scheduled] KV cache miss, falling back to SQL for weekly report"
+      );
+
+      // MTD 開始日期（本月1號）
+      const mtdStart = new Date(year, month - 1, 1);
+
+      // 上週開始日期
+      const lastWeekStart = new Date(weekStart);
+      lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+
+      // 7 天前（用於高分未跟進判斷）
+      const sevenDaysAgo = new Date(now);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      // 1. 本週 vs 上週概覽統計
+      const overviewStats = await sql!`
+      SELECT
+        COUNT(*) FILTER (WHERE c.created_at >= ${weekStart.toISOString()} AND c.status = 'completed') as this_week_uploads,
+        COUNT(*) FILTER (WHERE c.created_at >= ${lastWeekStart.toISOString()} AND c.created_at < ${weekStart.toISOString()} AND c.status = 'completed') as last_week_uploads,
+        AVG(m.overall_score) FILTER (WHERE c.created_at >= ${weekStart.toISOString()}) as this_week_avg_meddic,
+        AVG(m.overall_score) FILTER (WHERE c.created_at >= ${lastWeekStart.toISOString()} AND c.created_at < ${weekStart.toISOString()}) as last_week_avg_meddic
+      FROM conversations c
+      LEFT JOIN meddic_analyses m ON c.id = m.conversation_id
+      WHERE c.created_at >= ${lastWeekStart.toISOString()}
+        AND c.status NOT IN ('archived', 'failed')
+    `;
+
+      // ========================================
+      // 2. Close Case 統計 (本週 + MTD)
+      // ========================================
+      const closeCaseStats = await sql!`
+        SELECT
+          COUNT(*) FILTER (WHERE o.won_at >= ${weekStart.toISOString()}) as this_week_won,
+          COUNT(*) FILTER (WHERE o.lost_at >= ${weekStart.toISOString()}) as this_week_lost,
+          COUNT(*) FILTER (WHERE o.won_at >= ${mtdStart.toISOString()}) as mtd_won,
+          COUNT(*) FILTER (WHERE o.lost_at >= ${mtdStart.toISOString()}) as mtd_lost
+        FROM opportunities o
+        WHERE (o.won_at >= ${mtdStart.toISOString()} OR o.lost_at >= ${mtdStart.toISOString()})
+      `;
+
+      // ========================================
+      // 3. 本週 Close Case 詳情
+      // ========================================
+      const closedCasesThisWeek = await sql!`
+        SELECT
+          o.customer_number,
+          o.company_name,
+          o.status,
+          o.rejection_reason,
+          o.selected_competitor,
+          u.name as user_name
+        FROM opportunities o
+        JOIN "user" u ON o.user_id = u.id
+        WHERE (o.won_at >= ${weekStart.toISOString()} OR o.lost_at >= ${weekStart.toISOString()})
+        ORDER BY COALESCE(o.won_at, o.lost_at) DESC
+        LIMIT 10
+      `;
+
+      // ========================================
+      // 4. 各業務本週表現（上傳數 + 平均 MEDDIC + Won）
+      // ========================================
+      const repPerfResult = await sql!`
+        SELECT
+          u.id as user_id,
+          u.name as user_name,
+          COUNT(DISTINCT c.id) FILTER (WHERE c.created_at >= ${weekStart.toISOString()} AND c.status = 'completed') as week_uploads,
+          ROUND(AVG(m.overall_score) FILTER (WHERE c.created_at >= ${weekStart.toISOString()})) as avg_meddic,
+          COUNT(DISTINCT o2.id) FILTER (WHERE o2.won_at >= ${weekStart.toISOString()}) as week_won
+        FROM "user" u
+        LEFT JOIN conversations c ON c.created_by = u.id AND c.status NOT IN ('archived', 'failed')
+        LEFT JOIN meddic_analyses m ON c.id = m.conversation_id
+        LEFT JOIN opportunities o2 ON o2.user_id = u.id
+        WHERE EXISTS (
+          SELECT 1 FROM conversations c2 WHERE c2.created_by = u.id
+        )
+        GROUP BY u.id, u.name
+        ORDER BY week_uploads DESC, avg_meddic DESC NULLS LAST
+      `;
+
+      // ========================================
+      // 5. 本週未上傳的業務
+      // ========================================
+      const inactiveRepsResult = await sql!`
+        SELECT u.name as user_name
+        FROM "user" u
+        WHERE EXISTS (
+          SELECT 1 FROM conversations c WHERE c.created_by = u.id
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM conversations c2
+          WHERE c2.created_by = u.id
+            AND c2.created_at >= ${weekStart.toISOString()}
+            AND c2.status NOT IN ('archived', 'failed')
+        )
+      `;
+
+      // ========================================
+      // 6. 高分但超過 7 天未跟進的機會
+      // ========================================
+      const staleOppsResult = await sql!`
+        SELECT
+          o.customer_number,
+          o.company_name,
+          m.overall_score,
+          u.name as user_name,
+          EXTRACT(DAY FROM NOW() - o.last_contacted_at) as days_since_contact
+        FROM opportunities o
+        JOIN "user" u ON o.user_id = u.id
+        JOIN meddic_analyses m ON m.opportunity_id = o.id
+        WHERE o.status NOT IN ('won', 'lost')
+          AND m.overall_score >= 70
+          AND (o.last_contacted_at IS NULL OR o.last_contacted_at < ${sevenDaysAgo.toISOString()})
+        ORDER BY m.overall_score DESC
+        LIMIT 5
+      `;
+
+      // ========================================
+      // 7. 逾期待辦統計（按業務）
+      // ========================================
+      const overdueTodosResult = await sql!`
+        SELECT
+          u.name as user_name,
+          COUNT(*) as overdue_count
+        FROM sales_todos st
+        JOIN "user" u ON st.user_id = u.id
+        WHERE st.status = 'pending'
+          AND st.due_date < ${now.toISOString()}
+        GROUP BY u.id, u.name
+        ORDER BY overdue_count DESC
+      `;
+
+      // ========================================
+      // 8. 未成交/未拒絕且無待辦的機會（可能被遺忘）
+      // ========================================
+      const oppsWithoutTodosResult = await sql!`
+        SELECT
+          o.customer_number,
+          o.company_name,
+          u.name as user_name,
+          EXTRACT(DAY FROM NOW() - o.created_at) as days_since_created
+        FROM opportunities o
+        JOIN "user" u ON o.user_id = u.id
+        WHERE o.status NOT IN ('won', 'lost')
+          AND NOT EXISTS (
+            SELECT 1 FROM sales_todos st
+            WHERE st.opportunity_id = o.id
+              AND st.status = 'pending'
+          )
+          AND o.created_at < ${sevenDaysAgo.toISOString()}
+        ORDER BY o.created_at ASC
+        LIMIT 10
+      `;
+
+      // ========================================
+      // 9. MTD 累計統計
+      // ========================================
+      const mtdStatsResult = await sql!`
+        SELECT
+          COUNT(*) FILTER (WHERE c.status = 'completed') as mtd_uploads
+        FROM conversations c
+        WHERE c.created_at >= ${mtdStart.toISOString()}
+          AND c.status NOT IN ('archived', 'failed')
+      `;
+
+      // ========================================
+      // 組裝 fallback 結果
+      // ========================================
+      const overview = overviewStats[0] || {};
+      const closeCase = closeCaseStats[0] || {};
+      const mtd = mtdStatsResult[0] || {};
+
+      thisWeekUploads = Number(overview.this_week_uploads) || 0;
+      lastWeekUploads = Number(overview.last_week_uploads) || 0;
+      thisWeekMeddic = Number(overview.this_week_avg_meddic) || 0;
+      lastWeekMeddic = Number(overview.last_week_avg_meddic) || 0;
+
+      thisWeekWon = Number(closeCase.this_week_won) || 0;
+      thisWeekLost = Number(closeCase.this_week_lost) || 0;
+      thisWeekWinRate =
+        thisWeekWon + thisWeekLost > 0
+          ? Math.round((thisWeekWon / (thisWeekWon + thisWeekLost)) * 100)
+          : 0;
+
+      mtdWon = Number(closeCase.mtd_won) || 0;
+      mtdLost = Number(closeCase.mtd_lost) || 0;
+      mtdWinRate =
+        mtdWon + mtdLost > 0
+          ? Math.round((mtdWon / (mtdWon + mtdLost)) * 100)
+          : 0;
+
+      mtdUploads = Number(mtd.mtd_uploads) || 0;
+      repPerformance = repPerfResult as any[];
+      inactiveReps = inactiveRepsResult as any[];
+      staleHighScoreOpps = staleOppsResult as any[];
+      oppsWithoutTodos = oppsWithoutTodosResult as any[];
+      overdueTodos = overdueTodosResult as any[];
+
+      // 整理 Close Case 資料
+      wonCases = (closedCasesThisWeek as any[]).filter(
+        (c) => c.status === "won"
+      );
+      lostCases = (closedCasesThisWeek as any[]).filter(
+        (c) => c.status === "lost"
+      );
+
+      uploadChange =
+        lastWeekUploads > 0
+          ? Math.round(
+              ((thisWeekUploads - lastWeekUploads) / lastWeekUploads) * 100
+            )
+          : 0;
+      meddicChange = Math.round(thisWeekMeddic - lastWeekMeddic);
+    }
+
+    // WoW 變化字串
+    const uploadChangeStr =
+      uploadChange >= 0 ? `↑${uploadChange}%` : `↓${Math.abs(uploadChange)}%`;
+    const meddicChangeStr =
+      meddicChange >= 0 ? `↑${meddicChange}` : `↓${Math.abs(meddicChange)}`;
+
+    const lines: string[] = [
+      `📊 *業務週報 (${year}/${String(month).padStart(2, "0")} W${weekNumber})*`,
+      `📆 ${weekStartStr} (日) - ${weekEndStr} (六)`,
       "",
-      `📅 MTD 上傳總數: ${totalResult.mtd_total} 筆`,
-      `📆 本週上傳 (${weekStartStr}-${weekEndStr}): ${totalResult.week_total} 筆`,
+      "━━━━━━━━━━━━━━━━━━━━",
+      "📈 *本週概覽*",
+      "━━━━━━━━━━━━━━━━━━━━",
+      `• 音檔上傳: ${thisWeekUploads} 筆 (${uploadChangeStr} vs 上週)`,
+      `• 平均 MEDDIC: ${Math.round(thisWeekMeddic)} 分 (${meddicChangeStr} vs 上週)`,
+      `• Close Case: Won ${thisWeekWon} / Lost ${thisWeekLost} (Win Rate ${thisWeekWinRate}%)`,
+    ];
+
+    // 團隊表現
+    lines.push(
       "",
-      "👥 *各業務上傳統計*",
-      ...repLines,
+      "━━━━━━━━━━━━━━━━━━━━",
+      "👥 *團隊表現*",
+      "━━━━━━━━━━━━━━━━━━━━"
+    );
+    const rankEmojis = ["🥇", "🥈", "🥉"];
+    const activeReps = (repPerformance as any[]).filter(
+      (r) => Number(r.week_uploads) > 0
+    );
+    for (let i = 0; i < activeReps.length && i < 10; i++) {
+      const rep = activeReps[i];
+      const rank = i < 3 ? rankEmojis[i] : `${i + 1}.`;
+      const meddic = rep.avg_meddic ? `${rep.avg_meddic}分` : "-";
+      const won = Number(rep.week_won) > 0 ? ` | Won ${rep.week_won}` : "";
+      lines.push(
+        `${rank} ${rep.user_name}: ${rep.week_uploads}筆 | ${meddic}${won}`
+      );
+    }
+
+    // 本週未上傳
+    if ((inactiveReps as any[]).length > 0) {
+      const names = (inactiveReps as any[]).map((r) => r.user_name).join("、");
+      lines.push("", `⚠️ 本週未上傳: ${names}`);
+    }
+
+    // 本週 Close Case 詳情
+    if (wonCases.length > 0 || lostCases.length > 0) {
+      lines.push(
+        "",
+        "━━━━━━━━━━━━━━━━━━━━",
+        "🏆 *本週 Close Case*",
+        "━━━━━━━━━━━━━━━━━━━━"
+      );
+
+      if (wonCases.length > 0) {
+        lines.push(`✅ Won (${thisWeekWon}筆):`);
+        for (const c of wonCases.slice(0, 3)) {
+          lines.push(`  • ${c.company_name} - ${c.user_name}`);
+        }
+        if (wonCases.length > 3) {
+          lines.push(`  • ...還有 ${wonCases.length - 3} 筆`);
+        }
+      }
+
+      if (lostCases.length > 0) {
+        lines.push(`❌ Lost (${thisWeekLost}筆):`);
+        for (const c of lostCases.slice(0, 3)) {
+          const reason = c.selected_competitor
+            ? `選擇競品 (${c.selected_competitor})`
+            : c.rejection_reason || "未註明原因";
+          lines.push(`  • ${c.company_name} - ${reason}`);
+        }
+        if (lostCases.length > 3) {
+          lines.push(`  • ...還有 ${lostCases.length - 3} 筆`);
+        }
+      }
+    }
+
+    // 需關注區塊
+    const hasStaleOpps = (staleHighScoreOpps as any[]).length > 0;
+    const hasOverdueTodos = (overdueTodos as any[]).length > 0;
+    const hasOppsWithoutTodos = (oppsWithoutTodos as any[]).length > 0;
+
+    if (hasStaleOpps || hasOverdueTodos || hasOppsWithoutTodos) {
+      lines.push(
+        "",
+        "━━━━━━━━━━━━━━━━━━━━",
+        "⚠️ *需關注*",
+        "━━━━━━━━━━━━━━━━━━━━"
+      );
+
+      if (hasStaleOpps) {
+        lines.push(
+          `🔥 高分但 >7天未跟進 (${(staleHighScoreOpps as any[]).length}筆):`
+        );
+        for (const opp of (staleHighScoreOpps as any[]).slice(0, 3)) {
+          const days = opp.days_since_contact
+            ? Math.round(Number(opp.days_since_contact))
+            : "N/A";
+          lines.push(
+            `  • ${opp.company_name} (${opp.overall_score}分) - ${opp.user_name} [${days}天]`
+          );
+        }
+      }
+
+      if (hasOppsWithoutTodos) {
+        lines.push(
+          `🕳️ 無待辦的進行中機會 (${(oppsWithoutTodos as any[]).length}筆):`
+        );
+        for (const opp of (oppsWithoutTodos as any[]).slice(0, 3)) {
+          const days = Math.round(Number(opp.days_since_created));
+          lines.push(
+            `  • ${opp.company_name} - ${opp.user_name} [建立 ${days} 天]`
+          );
+        }
+        if ((oppsWithoutTodos as any[]).length > 3) {
+          lines.push(
+            `  • ...還有 ${(oppsWithoutTodos as any[]).length - 3} 筆`
+          );
+        }
+      }
+
+      if (hasOverdueTodos) {
+        const totalOverdue = (overdueTodos as any[]).reduce(
+          (sum, t) => sum + Number(t.overdue_count),
+          0
+        );
+        const todoSummary = (overdueTodos as any[])
+          .slice(0, 3)
+          .map((t) => `${t.user_name}: ${t.overdue_count}筆`)
+          .join("、");
+        lines.push(`📋 逾期待辦 (${totalOverdue}筆): ${todoSummary}`);
+      }
+    }
+
+    // MTD 累計
+    lines.push(
       "",
-      `🔗 <${env.WEB_APP_URL}/reports/mtd-uploads|查看詳細列表>`,
-    ].join("\n");
+      "━━━━━━━━━━━━━━━━━━━━",
+      "📊 *MTD 累計*",
+      "━━━━━━━━━━━━━━━━━━━━",
+      `• 上傳: ${mtdUploads} 筆`,
+      `• Won: ${mtdWon} 筆 | Lost: ${mtdLost} 筆 | Win Rate ${mtdWinRate}%`,
+      "",
+      `🔗 <${env.WEB_APP_URL}/reports|查看詳細報表>`
+    );
+
+    const message = lines.join("\n");
 
     await slackClient.chat.postMessage({
-      channel: "C0A7C2HUXRR",
+      channel: "C0A4F762FE0", // #sales-ai-reports
       text: message,
     });
 

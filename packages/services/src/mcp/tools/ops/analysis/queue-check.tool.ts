@@ -52,7 +52,7 @@ export const analysisQueueCheckTool: MCPTool<Input, Output> = {
 
       if (queueLength > 0) {
         // 計算最舊訊息的年齡
-        const oldestMessage = queueResult[0];
+        const oldestMessage = queueResult[0]!;
         const createdAt = new Date(oldestMessage.created_at as string);
         const ageMs = Date.now() - createdAt.getTime();
         oldestMessageAgeMinutes = Math.floor(ageMs / (1000 * 60));

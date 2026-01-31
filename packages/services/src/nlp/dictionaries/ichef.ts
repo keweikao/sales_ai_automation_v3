@@ -99,6 +99,24 @@ export const ICHEF_FEATURE_TAGS: Record<string, FeatureTag> = {
     keywords: ["菜單", "品項", "套餐", "加購", "客製化", "口味"],
     category: "核心功能",
   },
+
+  // 從 AI 分析學習的新標籤 (2026-01-31)
+  stamp_card: {
+    keywords: ["記杯", "集點", "點數", "會員點數", "印花", "累積"],
+    category: "行銷",
+  },
+  multi_pot: {
+    keywords: ["多鍋", "分鍋", "雙鍋", "鴛鴦鍋", "兩個鍋", "三個鍋"],
+    category: "核心功能",
+  },
+  online_booking: {
+    keywords: ["線上訂位", "網路訂位", "線上預約", "網路預約", "Google 訂位"],
+    category: "整合",
+  },
+  qr_ordering: {
+    keywords: ["掃碼點餐", "QR", "手機點餐", "自助點餐", "掃描點餐"],
+    category: "核心功能",
+  },
 };
 
 /**
@@ -133,6 +151,24 @@ export const ICHEF_PAIN_TAGS: Record<string, PainTag> = {
   system_issues: {
     keywords: ["當機", "卡住", "跑很慢", "不穩", "斷線", "連不上"],
     severityBoost: ["常常", "一直", "尖峰時"],
+  },
+
+  // 從 AI 分析學習的新標籤 (2026-01-31)
+  platform_commission: {
+    keywords: ["抽成", "平台費", "佣金", "手續費", "趴數", "平台抽"],
+    severityBoost: ["太高", "很高", "吃掉", "划不來"],
+  },
+  no_show: {
+    keywords: ["no show", "放鴿子", "訂位沒來", "爽約", "沒出現", "空桌"],
+    severityBoost: ["常常", "週末", "假日", "很多"],
+  },
+  learning_curve: {
+    keywords: ["學習曲線", "不會用", "太複雜", "要學很久", "操作複雜", "難學"],
+    severityBoost: ["員工", "新人", "每次"],
+  },
+  hardware_cost: {
+    keywords: ["機器錢", "設備費", "硬體", "買iPad", "買機器", "設備成本"],
+    severityBoost: ["額外", "還要", "加上去"],
   },
 };
 

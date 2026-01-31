@@ -60,16 +60,6 @@ export const storageCleanupRepairTool: MCPTool<Input, Output> = {
       // 實際修復邏輯
       actions.push("🔧 開始清理舊檔案...");
 
-      const { R2StorageService } = await import("../../../../storage/r2.js");
-
-      const _r2Service = new R2StorageService({
-        accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY || "",
-        secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_KEY || "",
-        endpoint: process.env.CLOUDFLARE_R2_ENDPOINT || "",
-        bucket: process.env.CLOUDFLARE_R2_BUCKET || "",
-        region: "auto",
-      });
-
       // 計算截止日期
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - input.olderThanDays);

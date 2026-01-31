@@ -70,7 +70,7 @@ export const repPerformanceTool: MCPTool<Input, Output> = {
         throw new Error(`Rep not found: ${input.repId}`);
       }
 
-      const repName = repInfo[0].name as string;
+      const repName = repInfo[0]!.name as string;
 
       // 查詢績效數據
       const perfStats = await sql`
@@ -155,7 +155,7 @@ export const repPerformanceTool: MCPTool<Input, Output> = {
 			`;
 
       const trends = trendStats.map((t) => ({
-        week: (t.week as Date).toISOString().split("T")[0],
+        week: (t.week as Date)?.toISOString().split("T")[0] ?? "",
         avgScore: Number((t.avg_score as number)?.toFixed(1) || 0),
         convCount: Number(t.conv_count),
       }));
@@ -228,7 +228,8 @@ ${trends.map((t) => `- **${t.week}**: ${t.convCount} 通話, 平均評分 ${t.av
           {
             path: reportPath,
             content: reportContent,
-            createDirs: true,
+            encoding: "utf-8",
+            createDirectories: true,
           },
           { timestamp: new Date() }
         );

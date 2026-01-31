@@ -274,7 +274,7 @@ const SlackPostAlertInputSchema = z.object({
   alertType: z.string(),
   severity: z.enum(["info", "warning", "critical"]),
   message: z.string(),
-  details: z.record(z.string()).optional(),
+  details: z.record(z.string(), z.string()).optional(),
   actionRequired: z.string().optional(),
 });
 
@@ -295,12 +295,6 @@ function buildAlertBlocks(input: SlackPostAlertInput): SlackBlock[] {
     info: ":information_source:",
     warning: ":warning:",
     critical: ":rotating_light:",
-  };
-
-  const _severityColor: Record<string, string> = {
-    info: "#2196F3",
-    warning: "#FF9800",
-    critical: "#F44336",
   };
 
   const blocks: SlackBlock[] = [];
