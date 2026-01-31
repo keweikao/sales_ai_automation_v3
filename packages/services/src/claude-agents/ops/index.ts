@@ -14,6 +14,20 @@ export {
   type KVPerformanceResult,
   type WorkerLogOptions,
 } from "./cloudflare.js";
+// Datadog 可觀測性代理人 (Phase 5)
+export {
+  type AlertConfig,
+  type Anomaly,
+  type AnomalyDetectionOptions,
+  type AnomalyDetectionResult,
+  type APMAnalysisOptions,
+  type APMMetrics,
+  analyzeAPM,
+  detectAnomalies,
+  formatAnomaliesAsMarkdown,
+  formatAPMAsMarkdown,
+  generateAlertConfig,
+} from "./datadog.js";
 // 診斷代理人
 export {
   type ConversationDiagnoseOptions,
